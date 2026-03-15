@@ -39,57 +39,38 @@
         </div>
       </header>
 
-      <section class="board">
-        <div class="board-col">
-          <div class="col-title">待排期 (Backlog)</div>
-          <el-card class="card">
-            <div class="card-title">支持从 opencode 获取工作区</div>
-            <div class="tag-row tag-row--space">
-              <span class="tag tag--neutral">P3 低</span>
-            </div>
-          </el-card>
-        </div>
+      <section class="board" v-if="loading">
+        <div class="board-loading">加载中...</div>
+      </section>
 
-        <div class="board-col">
-          <div class="col-title">待办 (Todo)</div>
-          <el-card class="card card-clickable" @click="goIssueDetail">
-            <div class="card-title">issues 标签修改功能</div>
+      <section class="board" v-else>
+        <div
+          v-for="column in columns"
+          :key="column.status"
+          class="board-col"
+          @dragover.prevent
+          @drop="onDrop(column.status)"
+        >
+          <div class="col-title" :class="column.titleClass">
+            {{ column.title }}
+          </div>
+          <div v-if="column.items.length === 0" class="empty-col">暂无任务</div>
+          <el-card
+            v-for="issue in column.items"
+            :key="issue.id"
+            class="card card-clickable"
+            draggable="true"
+            @click="goIssueDetail(issue.id)"
+            @dragstart="onDragStart(issue)"
+          >
+            <div class="card-title">{{ issue.title }}</div>
             <div class="tag-row">
-              <span class="tag tag--p0">P0 紧急</span>
-            </div>
-          </el-card>
-        </div>
-
-        <div class="board-col">
-          <div class="col-title">进行中 (In Progress)</div>
-          <el-card class="card card--primary card-clickable" @click="goIssueDetail">
-            <div class="card-title">issues 状态自动轮转</div>
-            <div class="tag-row">
-              <span class="tag tag--p1">P1 高</span>
-            </div>
-          </el-card>
-        </div>
-
-        <div class="board-col">
-          <div class="col-title">审核中 (In Review)</div>
-          <el-card class="card card--warning">
-            <div class="card-title">工作区状态实时刷新</div>
-            <div class="tag-row">
-              <span class="tag tag--neutral">P2 中</span>
-            </div>
-          </el-card>
-        </div>
-
-        <div class="board-col">
-          <div class="col-title col-title--success">已完成 (Done)</div>
-        </div>
-
-        <div class="board-col">
-          <div class="col-title col-title--error">已阻塞 (Blocked)</div>
-          <el-card class="card card--error">
-            <div class="card-title">数据库迁移错误</div>
-            <div class="tag-row">
-              <span class="tag tag--p0">P0 紧急</span>
+              <span class="tag" :class="priorityClass(issue.priority)">
+                {{ priorityLabel(issue.priority) }}
+              </span>
+              <span v-for="tag in issue.tags" :key="tag" class="tag tag--neutral">
+                {{ tag }}
+              </span>
             </div>
           </el-card>
         </div>
@@ -99,12 +80,147 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from "vue";
+import { computed, onMounted, ref } from "vue";
 import { useRouter } from "vue-router";
+import { ElMessage } from "element-plus";
 import AppShell from "../../components/AppShell.vue";
+import { buildApi } from "../../lib/api";
+
+type IssueDTO = {
+  id: string;
+  title: string;
+  description?: string | null;
+  status: string;
+  priority?: number | null;
+  workspaceId: string;
+  tags: string[];
+  createdAt: string;
+  updatedAt: string;
+};
 
 const activeViewMode = ref<"state" | "priority">("state");
 const router = useRouter();
+const apiBase = import.meta.env.VITE_API_BASE ?? "http://localhost:3001";
+const api = buildApi(apiBase);
+
+const loading = ref(true);
+const issues = ref<IssueDTO[]>([]);
+const dragging = ref<IssueDTO | null>(null);
+
+const columns = computed(() => [
+  {
+    status: "Backlog",
+    title: "待排期 (Backlog)",
+    titleClass: "",
+    items: issues.value.filter((issue) => issue.status === "Backlog"),
+  },
+  {
+    status: "Todo",
+    title: "待办 (Todo)",
+    titleClass: "",
+    items: issues.value.filter((issue) => issue.status === "Todo"),
+  },
+  {
+    status: "InProgress",
+    title: "进行中 (In Progress)",
+    titleClass: "",
+    items: issues.value.filter((issue) => issue.status === "InProgress"),
+  },
+  {
+    status: "Review",
+    title: "审核中 (In Review)",
+    titleClass: "",
+    items: issues.value.filter((issue) => issue.status === "Review"),
+  },
+  {
+    status: "Done",
+    title: "已完成 (Done)",
+    titleClass: "col-title--success",
+    items: issues.value.filter((issue) => issue.status === "Done"),
+  },
+  {
+    status: "Blocked",
+    title: "已阻塞 (Blocked)",
+    titleClass: "col-title--error",
+    items: issues.value.filter((issue) => issue.status === "Blocked"),
+  },
+]);
+
+const loadIssues = async () => {
+  loading.value = true;
+  try {
+    const response = await api.listIssues();
+    issues.value = response.data ?? [];
+  } catch (error) {
+    ElMessage.error("加载任务失败");
+  } finally {
+    loading.value = false;
+  }
+};
+
+const updateIssueInList = (updated: IssueDTO) => {
+  const index = issues.value.findIndex((issue) => issue.id === updated.id);
+  if (index === -1) {
+    issues.value = [updated, ...issues.value];
+    return;
+  }
+  issues.value = [
+    ...issues.value.slice(0, index),
+    updated,
+    ...issues.value.slice(index + 1),
+  ];
+};
+
+const onDragStart = (issue: IssueDTO) => {
+  dragging.value = issue;
+};
+
+const onDrop = async (status: string) => {
+  if (!dragging.value) return;
+  const target = dragging.value;
+  dragging.value = null;
+  if (target.status === status) return;
+
+  const prevStatus = target.status;
+  updateIssueInList({ ...target, status });
+  try {
+    const response = await api.updateIssue(target.id, { status });
+    updateIssueInList(response.data);
+  } catch (error) {
+    updateIssueInList({ ...target, status: prevStatus });
+    ElMessage.error("状态更新失败");
+  }
+};
+
+const priorityLabel = (priority?: number | null) => {
+  switch (priority) {
+    case 0:
+      return "P0 紧急";
+    case 1:
+      return "P1 高";
+    case 2:
+      return "P2 中";
+    case 3:
+      return "P3 低";
+    default:
+      return "P?";
+  }
+};
+
+const priorityClass = (priority?: number | null) => {
+  switch (priority) {
+    case 0:
+      return "tag--p0";
+    case 1:
+      return "tag--p1";
+    case 2:
+      return "tag--neutral";
+    case 3:
+      return "tag--neutral";
+    default:
+      return "tag--neutral";
+  }
+};
 
 const createTask = () => {
   router.push("/tasks/new");
@@ -120,9 +236,11 @@ const goStateView = () => {
   router.push("/board");
 };
 
-const goIssueDetail = () => {
-  router.push("/issues/AUTH-102");
+const goIssueDetail = (id: string) => {
+  router.push(`/issues/${id}`);
 };
+
+onMounted(loadIssues);
 </script>
 
 <style scoped>
@@ -199,34 +317,38 @@ const goIssueDetail = () => {
 }
 
 .mode--active {
-  background: var(--kanban-primary);
   color: var(--kanban-text-primary);
+  font-weight: 600;
 }
 
 .mode--muted {
-  background: var(--kanban-muted);
-  color: var(--kanban-text-primary);
+  color: var(--kanban-primary);
 }
 
 .board {
-  flex: 1;
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   gap: 16px;
-  min-width: 0;
 }
 
 .board-col {
-  flex: 1;
   display: flex;
   flex-direction: column;
   gap: 12px;
-  min-width: 0;
+  min-height: 120px;
+}
+
+.board-loading {
+  padding: 24px;
+  border-radius: 8px;
+  background: var(--kanban-surface);
+  border: 1px solid var(--kanban-border);
+  font-size: 14px;
 }
 
 .col-title {
-  font-size: 14px;
+  font-size: 16px;
   font-weight: 600;
-  color: var(--kanban-text-secondary);
 }
 
 .col-title--success {
@@ -237,74 +359,52 @@ const goIssueDetail = () => {
   color: var(--kanban-error);
 }
 
-.card {
-  background: var(--kanban-surface);
-  border: 1px solid var(--kanban-border);
+.empty-col {
+  font-size: 12px;
+  color: var(--kanban-text-secondary);
+  padding: 8px 0;
 }
 
-.card :deep(.el-card__body) {
-  padding: 16px;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
+.card {
+  border-radius: 10px;
 }
 
 .card-clickable {
-  cursor: pointer;
-}
-
-.card--primary {
-  border-color: var(--kanban-primary);
-}
-
-.card--warning {
-  border-color: var(--kanban-warning);
-}
-
-.card--error {
-  background: var(--kanban-error-surface);
-  border-color: var(--kanban-error);
+  cursor: grab;
 }
 
 .card-title {
-  font-size: 14px;
-  font-weight: 500;
-  color: var(--kanban-text-primary);
+  font-weight: 600;
+  margin-bottom: 8px;
 }
 
 .tag-row {
   display: flex;
-  gap: 8px;
-}
-
-.tag-row--space {
-  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 6px;
 }
 
 .tag {
-  display: inline-flex;
-  align-items: center;
-  padding: 4px 8px;
+  padding: 2px 6px;
   border-radius: 4px;
-  font-size: 12px;
-  font-weight: 400;
-  border: 1px solid transparent;
-}
-
-.tag--neutral {
+  font-size: 11px;
   background: var(--kanban-surface);
-  border-color: var(--kanban-border);
-  color: var(--kanban-text-secondary);
+  border: 1px solid var(--kanban-border);
 }
 
 .tag--p0 {
-  background: var(--kanban-error-surface);
-  border-color: var(--kanban-error);
-  color: var(--kanban-error);
+  background: #ef4444;
+  color: #fff;
+  border-color: transparent;
 }
 
 .tag--p1 {
-  background: var(--kanban-p1-surface);
-  color: var(--kanban-warning);
+  background: #f59e0b;
+  color: #fff;
+  border-color: transparent;
+}
+
+.tag--neutral {
+  color: var(--kanban-text-secondary);
 }
 </style>
