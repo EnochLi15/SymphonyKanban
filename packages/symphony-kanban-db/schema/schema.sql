@@ -15,6 +15,7 @@ CREATE TABLE IF NOT EXISTS issues (
   workspace_id TEXT NOT NULL,
   created_at TEXT NOT NULL,
   updated_at TEXT NOT NULL,
+  deleted_at TEXT,
   FOREIGN KEY (workspace_id) REFERENCES workspaces(id) ON DELETE RESTRICT
 );
 

@@ -27,6 +27,14 @@ db.pragma("foreign_keys = ON");
 const schemaSql = fs.readFileSync(schemaPath, "utf-8");
 db.exec(schemaSql);
 
+const issueCols = db
+  .prepare("PRAGMA table_info(issues)")
+  .all() as Array<{ name: string }>;
+const hasDeletedAt = issueCols.some((c) => c.name === "deleted_at");
+if (!hasDeletedAt) {
+  db.prepare("ALTER TABLE issues ADD COLUMN deleted_at TEXT").run();
+}
+
 const DEFAULT_WORKSPACE_ID = "wksp-default";
 const DEFAULT_WORKSPACE_NAME = "Symphony-Kanban";
 
