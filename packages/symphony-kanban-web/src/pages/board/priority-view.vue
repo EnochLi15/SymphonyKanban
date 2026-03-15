@@ -88,17 +88,17 @@ const activeViewMode = ref<"state" | "priority">("priority");
 const router = useRouter();
 
 const createTask = () => {
-  router.push("/tasks/create-task-modal");
+  router.push("/tasks/new");
 };
 
 const goPriorityView = () => {
   activeViewMode.value = "priority";
-  router.push("/board/priority-view");
+  router.push("/board/priority");
 };
 
 const goStateView = () => {
   activeViewMode.value = "state";
-  router.push("/board/kanban-board-view");
+  router.push("/board");
 };
 </script>
 

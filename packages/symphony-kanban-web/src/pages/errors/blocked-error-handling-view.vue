@@ -49,11 +49,11 @@ const goBack = () => {
 const router = useRouter();
 
 const goSessionView = () => {
-  router.push("/sessions/web-session-run");
+  router.push("/sessions/AUTH-102");
 };
 
 const goIssueView = () => {
-  router.push("/issues/issue-detail-view");
+  router.push("/issues/AUTH-102");
 };
 </script>
 

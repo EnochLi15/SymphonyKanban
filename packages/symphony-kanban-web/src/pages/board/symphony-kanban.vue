@@ -158,11 +158,11 @@ import { useRouter } from "vue-router";
 
 const router = useRouter();
 
-const goKanban = () => router.push("/board/kanban-board-view");
-const goReview = () => router.push("/review/review-view");
-const goSettings = () => router.push("/settings/global-settings-view");
-const goCreateTask = () => router.push("/tasks/create-task-modal");
-const goSession = () => router.push("/sessions/web-session-run");
+const goKanban = () => router.push("/board");
+const goReview = () => router.push("/reviews/USER-PROFILE");
+const goSettings = () => router.push("/settings");
+const goCreateTask = () => router.push("/tasks/new");
+const goSession = () => router.push("/sessions/AUTH-102");
 </script>
 
 <style scoped>

@@ -30,7 +30,7 @@ import AppShell from "../../components/AppShell.vue";
 const router = useRouter();
 
 const goWorkspaceSettings = () => {
-  router.push("/workspace/workspace-settings-view");
+  router.push("/workspaces/Symphony-Kanban");
 };
 </script>
 

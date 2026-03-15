@@ -63,11 +63,11 @@ const goBack = () => {
 const router = useRouter();
 
 const goBoardView = () => {
-  router.push("/board/kanban-board-view");
+  router.push("/board");
 };
 
 const goSessionView = () => {
-  router.push("/sessions/web-session-run");
+  router.push("/sessions/AUTH-102");
 };
 </script>
 

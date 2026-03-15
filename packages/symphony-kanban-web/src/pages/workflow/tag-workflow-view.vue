@@ -17,11 +17,11 @@
           <div class="params-row">
             <div class="param-block">
               <div class="param-label">最大并发 (max_concurrent_agents)</div>
-              <el-input class="param-input" model-value="10" readonly />
+              <el-input class="param-input" model-value="10"  />
             </div>
             <div class="param-block">
               <div class="param-label">迭代上限 (max_turns)</div>
-              <el-input class="param-input" model-value="20" readonly />
+              <el-input class="param-input" model-value="20"  />
             </div>
           </div>
 
@@ -31,7 +31,7 @@
             type="textarea"
             :rows="5"
             model-value="- Todo: run agent\n- In Progress: code and test\n- Review: merge pr"
-            readonly
+            
           />
 
           <div class="form-label">规则 (Rules)</div>
@@ -40,7 +40,7 @@
             type="textarea"
             :rows="5"
             model-value="1. 必须使用 TypeScript\n2. 禁止使用 any\n3. 函数必须包含 JSDoc"
-            readonly
+            
           />
 
           <div class="form-label">验收标准 (Acceptance Criteria)</div>
@@ -49,7 +49,7 @@
             type="textarea"
             :rows="5"
             model-value="- 测试覆盖率 > 80%\n- CI 流程全绿\n- 完成代码自审"
-            readonly
+            
           />
         </div>
 

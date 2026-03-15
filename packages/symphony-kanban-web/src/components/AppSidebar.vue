@@ -53,7 +53,7 @@ const route = useRoute();
 const { theme, setTheme } = useTheme();
 
 const activeKey = computed(() => {
-  if (route.path.startsWith("/workspace")) return "workspaces";
+  if (route.path.startsWith("/workspaces")) return "workspaces";
   if (route.path.startsWith("/board")) return "boards";
   if (route.path.startsWith("/workflow")) return "tags";
   if (route.path.startsWith("/settings")) return "settings";
@@ -63,17 +63,17 @@ const activeKey = computed(() => {
 const handleSelect = (index: string) => {
   switch (index) {
     case "workspaces":
-      router.push("/workspace/workspace-management-view");
+      router.push("/workspaces");
       break;
     case "boards":
     case "boards-recent":
-      router.push("/board/kanban-board-view");
+      router.push("/board");
       break;
     case "tags":
-      router.push("/workflow/tag-workflow-view");
+      router.push("/workflow");
       break;
     case "settings":
-      router.push("/settings/global-settings-view");
+      router.push("/settings");
       break;
     default:
       break;
