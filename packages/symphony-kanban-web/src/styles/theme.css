@@ -1,0 +1,135 @@
+:root {
+  --kanban-bg: #111111;
+  --kanban-surface: #1c1c1e;
+  --kanban-border: #333333;
+  --kanban-primary: #007aff;
+  --kanban-text-primary: #ffffff;
+  --kanban-text-secondary: #999999;
+  --kanban-muted: #666666;
+  --kanban-success: #34c759;
+  --kanban-warning: #f57c00;
+  --kanban-error: #e53935;
+  --kanban-error-surface: #3a1618;
+  --kanban-p1-surface: #4a2b0f;
+  --kanban-hint-bg: #001100;
+  --kanban-hint-border: #00ff00;
+  --kanban-hint-text: #00dd00;
+}
+
+.theme-dark {
+  --kanban-bg: #111111;
+  --kanban-surface: #1c1c1e;
+  --kanban-border: #333333;
+  --kanban-primary: #007aff;
+  --kanban-text-primary: #ffffff;
+  --kanban-text-secondary: #999999;
+  --kanban-muted: #666666;
+  --kanban-success: #34c759;
+  --kanban-warning: #f57c00;
+  --kanban-error: #e53935;
+  --kanban-error-surface: #3a1618;
+  --kanban-p1-surface: #4a2b0f;
+  --kanban-hint-bg: #001100;
+  --kanban-hint-border: #00ff00;
+  --kanban-hint-text: #00dd00;
+  --el-color-primary: var(--kanban-primary);
+  --el-color-success: var(--kanban-success);
+  --el-color-warning: var(--kanban-warning);
+  --el-color-danger: var(--kanban-error);
+  --el-color-info: #8b949e;
+  --el-text-color-primary: var(--kanban-text-primary);
+  --el-text-color-regular: var(--kanban-text-secondary);
+  --el-text-color-secondary: #8b949e;
+  --el-text-color-placeholder: #6b7280;
+  --el-text-color-disabled: #4b5563;
+  --el-border-color: var(--kanban-border);
+  --el-border-color-light: #3f3f46;
+  --el-border-color-lighter: #27272a;
+  --el-border-color-extra-light: #1f2937;
+  --el-fill-color: #1f2937;
+  --el-fill-color-light: #1c1c1e;
+  --el-fill-color-lighter: #18181b;
+  --el-fill-color-extra-light: #111827;
+  --el-fill-color-dark: #0f172a;
+  --el-fill-color-blank: var(--kanban-surface);
+  --el-bg-color: var(--kanban-bg);
+  --el-bg-color-page: #0b0c10;
+  --el-bg-color-overlay: var(--kanban-surface);
+  --el-mask-color: rgba(0, 0, 0, 0.6);
+  --el-mask-color-extra-light: rgba(0, 0, 0, 0.3);
+  --el-box-shadow: 0 4px 12px rgba(0, 0, 0, 0.45);
+  --el-box-shadow-light: 0 2px 8px rgba(0, 0, 0, 0.35);
+  --el-box-shadow-lighter: 0 1px 4px rgba(0, 0, 0, 0.25);
+  --el-border-radius-base: 6px;
+  --el-border-radius-small: 4px;
+  --el-border-radius-round: 20px;
+  --el-border-radius-circle: 100%;
+}
+
+.theme-light {
+  --kanban-bg: #f8fafc;
+  --kanban-surface: #ffffff;
+  --kanban-border: #e2e8f0;
+  --kanban-primary: #2563eb;
+  --kanban-text-primary: #0f172a;
+  --kanban-text-secondary: #64748b;
+  --kanban-muted: #94a3b8;
+  --kanban-success: #16a34a;
+  --kanban-warning: #d97706;
+  --kanban-error: #dc2626;
+  --kanban-error-surface: #fee2e2;
+  --kanban-p1-surface: #ffedd5;
+  --kanban-hint-bg: #efffef;
+  --kanban-hint-border: #16a34a;
+  --kanban-hint-text: #15803d;
+  --el-color-primary: var(--kanban-primary);
+  --el-color-success: var(--kanban-success);
+  --el-color-warning: var(--kanban-warning);
+  --el-color-danger: var(--kanban-error);
+  --el-color-info: #64748b;
+  --el-text-color-primary: var(--kanban-text-primary);
+  --el-text-color-regular: var(--kanban-text-secondary);
+  --el-text-color-secondary: #475569;
+  --el-text-color-placeholder: #94a3b8;
+  --el-text-color-disabled: #cbd5f5;
+  --el-border-color: var(--kanban-border);
+  --el-border-color-light: #e5e7eb;
+  --el-border-color-lighter: #f1f5f9;
+  --el-border-color-extra-light: #f8fafc;
+  --el-fill-color: #f8fafc;
+  --el-fill-color-light: #f1f5f9;
+  --el-fill-color-lighter: #e2e8f0;
+  --el-fill-color-extra-light: #e5e7eb;
+  --el-fill-color-dark: #cbd5e1;
+  --el-fill-color-blank: var(--kanban-surface);
+  --el-bg-color: var(--kanban-bg);
+  --el-bg-color-page: #f8fafc;
+  --el-bg-color-overlay: var(--kanban-surface);
+  --el-mask-color: rgba(15, 23, 42, 0.5);
+  --el-mask-color-extra-light: rgba(15, 23, 42, 0.3);
+  --el-box-shadow: 0 4px 12px rgba(15, 23, 42, 0.15);
+  --el-box-shadow-light: 0 2px 8px rgba(15, 23, 42, 0.12);
+  --el-box-shadow-lighter: 0 1px 4px rgba(15, 23, 42, 0.08);
+  --el-border-radius-base: 6px;
+  --el-border-radius-small: 4px;
+  --el-border-radius-round: 20px;
+  --el-border-radius-circle: 100%;
+}
+
+.theme-dark .el-button.is-text:hover {
+  background-color: rgba(255, 255, 255, 0.08);
+  color: var(--kanban-text-primary);
+}
+
+.theme-dark .el-button.is-text:active {
+  background-color: rgba(255, 255, 255, 0.12);
+}
+
+.theme-light .el-button.is-text:hover {
+  background-color: rgba(15, 23, 42, 0.08);
+  color: var(--kanban-text-primary);
+}
+
+.theme-light .el-button.is-text:active {
+  background-color: rgba(15, 23, 42, 0.12);
+}

@@ -1,0 +1,13 @@
+html,
+body,
+#app {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--kanban-bg);
+  color: var(--kanban-text-primary);
+  font-family: "Inter", "DM Sans", "Space Grotesk", system-ui, -apple-system,
+    sans-serif;
+}
