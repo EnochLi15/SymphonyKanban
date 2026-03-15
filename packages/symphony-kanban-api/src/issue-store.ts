@@ -35,41 +35,40 @@ const getTagNames = (issueId: string): string[] => {
   return tags.map((t) => t.name);
 };
 
+const mapIssueRow = (row: IssueRow): IssueDTO => ({
+  id: row.id,
+  title: row.title,
+  description: row.description,
+  status: row.status,
+  priority: row.priority,
+  workspaceId: row.workspace_id,
+  tags: getTagNames(row.id),
+  createdAt: row.created_at,
+  updatedAt: row.updated_at,
+  deletedAt: row.deleted_at,
+});
+
 export const getIssueById = (id: string): IssueDTO | null => {
   const row = db
     .prepare("SELECT * FROM issues WHERE id = ? AND deleted_at IS NULL")
     .get(id) as IssueRow | undefined;
   if (!row) return null;
-  return {
-    id: row.id,
-    title: row.title,
-    description: row.description,
-    status: row.status,
-    priority: row.priority,
-    workspaceId: row.workspace_id,
-    tags: getTagNames(row.id),
-    createdAt: row.created_at,
-    updatedAt: row.updated_at,
-    deletedAt: row.deleted_at,
-  };
+  return mapIssueRow(row);
+};
+
+export const getIssueByIdIncludingDeleted = (id: string): IssueDTO | null => {
+  const row = db
+    .prepare("SELECT * FROM issues WHERE id = ?")
+    .get(id) as IssueRow | undefined;
+  if (!row) return null;
+  return mapIssueRow(row);
 };
 
 export const listIssues = (): IssueDTO[] => {
   const rows = db
     .prepare("SELECT * FROM issues WHERE deleted_at IS NULL ORDER BY created_at DESC")
     .all() as IssueRow[];
-  return rows.map((row) => ({
-    id: row.id,
-    title: row.title,
-    description: row.description,
-    status: row.status,
-    priority: row.priority,
-    workspaceId: row.workspace_id,
-    tags: getTagNames(row.id),
-    createdAt: row.created_at,
-    updatedAt: row.updated_at,
-    deletedAt: row.deleted_at,
-  }));
+  return rows.map(mapIssueRow);
 };
 
 export const writeIssueEvent = (

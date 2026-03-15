@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { db } from "../src/db.js";
+import request from "supertest";
 
 describe("schema", () => {
   it("includes deleted_at on issues", () => {
@@ -25,5 +26,13 @@ describe("issue-store", () => {
     if (!row) return;
     const issue = getIssueById(row.id);
     expect(issue?.tags).toBeDefined();
+  });
+});
+
+describe("issues api", () => {
+  it("returns 404 for missing issue", async () => {
+    const { app } = await import("../src/app.js");
+    const res = await request(app).get("/issues/non-existent");
+    expect(res.status).toBe(404);
   });
 });
