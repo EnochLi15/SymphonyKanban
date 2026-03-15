@@ -5,5 +5,6 @@ import ElementPlus from "element-plus";
 import "element-plus/dist/index.css";
 import "./styles/base.css";
 import "./styles/theme.css";
+import "./styles/layout.css";
 
 createApp(App).use(router).use(ElementPlus).mount("#app");

@@ -6,24 +6,24 @@
         <span class="logo-text">Symphony</span>
       </div>
       <nav class="nav-group">
-        <button class="nav-item nav-item--active" type="button">
+        <el-button class="nav-item nav-item--active" text @click="goKanban">
           <span class="nav-icon"></span>
           Board
-        </button>
-        <button class="nav-item" type="button">
+        </el-button>
+        <el-button class="nav-item" text @click="goReview">
           <span class="nav-icon nav-icon--check"></span>
           Review Center
-        </button>
-        <button class="nav-item" type="button">
+        </el-button>
+        <el-button class="nav-item" text>
           <span class="nav-icon nav-icon--archive"></span>
           Archive
-        </button>
+        </el-button>
       </nav>
       <div class="nav-spacer"></div>
-      <button class="nav-item" type="button">
+      <el-button class="nav-item" text @click="goSettings">
         <span class="nav-icon nav-icon--settings"></span>
         Settings
-      </button>
+      </el-button>
     </aside>
 
     <main class="main-content">
@@ -33,14 +33,14 @@
           <span class="header-badge">Sprint 42</span>
         </div>
         <div class="header-actions">
-          <button class="header-button header-button--ghost" type="button">
+          <el-button class="header-button header-button--ghost" text @click="goCreateTask">
             <span class="button-icon"></span>
             New Issue
-          </button>
-          <button class="header-button header-button--primary" type="button">
+          </el-button>
+          <el-button class="header-button header-button--primary" @click="goSession">
             <span class="button-icon button-icon--play"></span>
             Run Agent
-          </button>
+          </el-button>
         </div>
       </header>
 
@@ -108,7 +108,9 @@
                   CI Pass
                 </span>
               </div>
-              <button class="footer-button" type="button">Review PR</button>
+              <el-button class="footer-button" @click="goReview">
+                Review PR
+              </el-button>
             </div>
           </div>
         </div>
@@ -150,6 +152,18 @@
     </main>
   </div>
 </template>
+
+<script setup lang="ts">
+import { useRouter } from "vue-router";
+
+const router = useRouter();
+
+const goKanban = () => router.push("/board/kanban-board-view");
+const goReview = () => router.push("/review/review-view");
+const goSettings = () => router.push("/settings/global-settings-view");
+const goCreateTask = () => router.push("/tasks/create-task-modal");
+const goSession = () => router.push("/sessions/web-session-run");
+</script>
 
 <style scoped>
 .symphony-view {
@@ -213,6 +227,7 @@
   font-size: 14px;
   font-weight: 500;
   text-align: left;
+  justify-content: flex-start;
 }
 
 .nav-item--active {
