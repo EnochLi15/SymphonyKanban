@@ -1,49 +1,118 @@
-
-
 <template>
   <AppShell>
     <div class="issue-content">
       <header class="issue-header">
         <div class="header-left">
           <el-button class="app-back-button" text @click="goBack">← 返回</el-button>
-          <h1 class="issue-title">任务详情: AUTH-102</h1>
+          <h1 class="issue-title">任务详情</h1>
         </div>
+        <el-button
+          class="danger-button"
+          type="danger"
+          plain
+          :loading="deleting"
+          @click="confirmDelete"
+        >
+          删除任务
+        </el-button>
       </header>
 
-      <section class="issue-details">
+      <section class="issue-details" v-if="loading">
+        <div class="loading">加载中...</div>
+      </section>
+
+      <section class="issue-details" v-else>
         <div class="main-col">
-          <div class="title-input">
-            支持从 opencode 获取工作区
+          <div class="field-card">
+            <div class="field-label">标题</div>
+            <el-input
+              v-model="draft.title"
+              placeholder="请输入任务标题"
+              @input="onTitleInput"
+              @blur="flushTitle"
+            />
           </div>
 
-          <div class="subtasks">
-            <div class="subtasks-title">子任务拆解 (Breakdown)</div>
-            <div class="subtask subtask--done">- [x] 读取 opencode 配置文件</div>
-            <div class="subtask">- [ ] 解析 workspace 路径与状态</div>
-            <el-button class="subtask-add" text>+ 添加子任务</el-button>
+          <div class="field-card">
+            <div class="field-label">描述</div>
+            <el-input
+              v-model="draft.description"
+              type="textarea"
+              :rows="6"
+              placeholder="请输入任务描述"
+              @input="onDescriptionInput"
+              @blur="flushDescription"
+            />
           </div>
         </div>
 
         <aside class="side-col">
-          <div class="meta-row">状态: 待排期 (Backlog)</div>
-          <div class="meta-row">优先级: P2 中</div>
-          <div class="meta-row">标签: feature, integration</div>
+          <div class="field-card">
+            <div class="field-label">状态</div>
+            <el-select
+              v-model="draft.status"
+              placeholder="选择状态"
+              @change="saveStatus"
+            >
+              <el-option
+                v-for="option in statusOptions"
+                :key="option.value"
+                :label="option.label"
+                :value="option.value"
+              />
+            </el-select>
+          </div>
 
-          <div class="section-title">进程配置:</div>
-          <div class="meta-row meta-row--muted">并发上限: 2</div>
-          <div class="meta-row meta-row--success">Todo 自动运行: 开启</div>
-          <div class="meta-row meta-row--muted">排队执行优先级: 高</div>
-          <div class="meta-row meta-row--danger">超时熔断: 30分钟</div>
+          <div class="field-card">
+            <div class="field-label">优先级</div>
+            <el-select
+              v-model="draft.priority"
+              placeholder="选择优先级"
+              @change="savePriority"
+            >
+              <el-option
+                v-for="option in priorityOptions"
+                :key="option.value"
+                :label="option.label"
+                :value="option.value"
+              />
+            </el-select>
+          </div>
 
-          <div class="section-title">调度配置 (Schedule):</div>
-          <div class="schedule-box">
-            <div class="schedule-row">
-              <span class="schedule-label">启用定时触发</span>
-              <el-switch v-model="scheduleEnabled" class="schedule-switch" />
-            </div>
-            <div class="schedule-hint">执行频率 (Cron / Interval)</div>
-            <div class="schedule-input">0 0 * * * (每天零点)</div>
-            <div class="schedule-next">下次执行: 2026-03-16 00:00</div>
+          <div class="field-card">
+            <div class="field-label">标签</div>
+            <el-select
+              v-model="draft.tags"
+              multiple
+              filterable
+              allow-create
+              default-first-option
+              placeholder="选择或创建标签"
+              @change="saveTags"
+            >
+              <el-option
+                v-for="tag in tagOptions"
+                :key="tag.name"
+                :label="tag.name"
+                :value="tag.name"
+              />
+            </el-select>
+          </div>
+
+          <div class="field-card">
+            <div class="field-label">工作区</div>
+            <el-select
+              v-model="draft.workspaceId"
+              placeholder="选择工作区"
+              @change="saveWorkspace"
+            >
+              <el-option
+                v-for="workspace in workspaces"
+                :key="workspace.id"
+                :label="workspace.name"
+                :value="workspace.id"
+              />
+            </el-select>
           </div>
         </aside>
       </section>
@@ -52,16 +121,177 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from "vue";
-import { useRouter } from "vue-router";
+import { onMounted, reactive, ref } from "vue";
+import { useRoute, useRouter } from "vue-router";
+import { ElMessage, ElMessageBox } from "element-plus";
 import AppShell from "../../components/AppShell.vue";
+import { buildApi } from "../../lib/api";
+
+const router = useRouter();
+const route = useRoute();
+const apiBase = import.meta.env.VITE_API_BASE ?? "http://localhost:3001";
+const api = buildApi(apiBase);
+
+const loading = ref(true);
+const deleting = ref(false);
+const workspaces = ref<Array<{ id: string; name: string }>>([]);
+const tagOptions = ref<Array<{ id: string; name: string }>>([]);
+
+const statusOptions = [
+  { label: "待排期 (Backlog)", value: "Backlog" },
+  { label: "待办 (Todo)", value: "Todo" },
+  { label: "进行中 (In Progress)", value: "InProgress" },
+  { label: "审核中 (Review)", value: "Review" },
+  { label: "已阻塞 (Blocked)", value: "Blocked" },
+  { label: "已完成 (Done)", value: "Done" },
+];
+
+const priorityOptions = [
+  { label: "P0 紧急", value: 0 },
+  { label: "P1 高", value: 1 },
+  { label: "P2 中", value: 2 },
+  { label: "P3 低", value: 3 },
+];
+
+const draft = reactive({
+  id: "",
+  title: "",
+  description: "",
+  status: "Backlog",
+  priority: 2,
+  workspaceId: "",
+  tags: [] as string[],
+});
+
+const snapshot = ref({ ...draft });
+const debounceTimers: Record<string, number | undefined> = {};
+
+const syncDraft = (data: typeof draft) => {
+  draft.id = data.id;
+  draft.title = data.title ?? "";
+  draft.description = data.description ?? "";
+  draft.status = data.status;
+  draft.priority = data.priority ?? 2;
+  draft.workspaceId = data.workspaceId;
+  draft.tags = Array.isArray(data.tags) ? [...data.tags] : [];
+  snapshot.value = { ...draft };
+};
+
+const loadOptions = async () => {
+  try {
+    const [workspaceRes, tagRes] = await Promise.all([
+      api.listWorkspaces(),
+      api.listTags(),
+    ]);
+    workspaces.value = workspaceRes.data ?? [];
+    tagOptions.value = tagRes.data ?? [];
+  } catch (error) {
+    // eslint-disable-next-line no-console
+    console.error("Failed to load options", error);
+  }
+};
+
+const loadIssue = async () => {
+  loading.value = true;
+  try {
+    const response = await api.getIssue(String(route.params.id));
+    syncDraft(response.data);
+  } catch (error) {
+    ElMessage.warning("任务已删除");
+    router.push("/board");
+  } finally {
+    loading.value = false;
+  }
+};
+
+const savePatch = async (patch: Record<string, unknown>) => {
+  try {
+    const response = await api.updateIssue(draft.id, patch);
+    syncDraft(response.data);
+  } catch (error) {
+    syncDraft(snapshot.value);
+    ElMessage.error("保存失败");
+  }
+};
+
+const scheduleSave = (field: string, value: unknown) => {
+  const existingTimer = debounceTimers[field];
+  if (existingTimer) {
+    window.clearTimeout(existingTimer);
+  }
+  debounceTimers[field] = window.setTimeout(() => {
+    savePatch({ [field]: value });
+  }, 500);
+};
+
+const flushSave = (field: string, value: unknown) => {
+  const existingTimer = debounceTimers[field];
+  if (existingTimer) {
+    window.clearTimeout(existingTimer);
+  }
+  savePatch({ [field]: value });
+};
+
+const onTitleInput = (value: string) => {
+  scheduleSave("title", value);
+};
+
+const onDescriptionInput = (value: string) => {
+  scheduleSave("description", value);
+};
+
+const flushTitle = () => {
+  flushSave("title", draft.title);
+};
+
+const flushDescription = () => {
+  flushSave("description", draft.description);
+};
+
+const saveStatus = () => {
+  savePatch({ status: draft.status });
+};
+
+const savePriority = () => {
+  savePatch({ priority: draft.priority });
+};
+
+const saveWorkspace = () => {
+  savePatch({ workspace_id: draft.workspaceId });
+};
+
+const saveTags = () => {
+  savePatch({ tags: draft.tags });
+};
+
+const confirmDelete = async () => {
+  try {
+    await ElMessageBox.confirm("确定删除该任务？", "删除确认", {
+      type: "warning",
+    });
+  } catch {
+    return;
+  }
+
+  deleting.value = true;
+  try {
+    await api.deleteIssue(draft.id);
+    ElMessage.success("任务已删除");
+    router.push("/board");
+  } catch (error) {
+    ElMessage.error("删除失败");
+  } finally {
+    deleting.value = false;
+  }
+};
 
 const goBack = () => {
   router.back();
 };
 
-const router = useRouter();
-const scheduleEnabled = ref(true);
+onMounted(async () => {
+  await Promise.all([loadOptions(), loadIssue()]);
+});
 </script>
 
 <style scoped>
@@ -98,6 +328,14 @@ const scheduleEnabled = ref(true);
   min-width: 0;
 }
 
+.loading {
+  padding: 24px;
+  border-radius: 8px;
+  background: var(--kanban-surface);
+  border: 1px solid var(--kanban-border);
+  font-size: 14px;
+}
+
 .main-col {
   flex: 1;
   display: flex;
@@ -106,132 +344,34 @@ const scheduleEnabled = ref(true);
   min-width: 0;
 }
 
-.title-input {
-  padding: 16px;
-  border-radius: 8px;
-  background: var(--kanban-surface);
-  border: 1px solid var(--kanban-border);
-  font-size: 18px;
-  font-weight: 600;
-}
-
-.subtasks {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.subtasks-title {
-  font-size: 16px;
-  font-weight: 600;
-}
-
-.subtask {
-  padding: 12px;
-  border-radius: 6px;
-  background: var(--kanban-surface);
-  border: 1px solid var(--kanban-border);
-  font-size: 14px;
-  font-weight: 400;
-  color: var(--kanban-text-primary);
-}
-
-.subtask--done {
-  color: var(--kanban-text-secondary);
-}
-
-.subtask-add {
-  padding: 12px;
-  border-radius: 6px;
-  background: transparent;
-  border: 1px solid var(--kanban-primary);
-  color: var(--kanban-primary);
-  font-size: 14px;
-  font-weight: 400;
-  text-align: left;
-}
-
 .side-col {
   width: 300px;
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 16px;
   padding: 24px;
   border-radius: 8px;
   background: var(--kanban-surface);
   box-sizing: border-box;
 }
 
-.meta-row {
-  font-size: 14px;
-  font-weight: 400;
-  color: var(--kanban-text-primary);
-}
-
-.meta-row--muted {
-  color: var(--kanban-text-secondary);
-}
-
-.meta-row--success {
-  color: var(--kanban-success);
-}
-
-.meta-row--danger {
-  color: var(--kanban-error);
-}
-
-.section-title {
-  font-size: 16px;
-  font-weight: 600;
-}
-
-.schedule-box {
+.field-card {
   display: flex;
   flex-direction: column;
   gap: 12px;
   padding: 16px;
-  border-radius: 6px;
-  background: var(--kanban-bg);
+  border-radius: 8px;
+  background: var(--kanban-surface);
   border: 1px solid var(--kanban-border);
 }
 
-.schedule-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.schedule-label {
+.field-label {
   font-size: 13px;
-  font-weight: 400;
-  color: var(--kanban-text-primary);
-}
-
-.schedule-switch :deep(.el-switch__core) {
-  background: var(--kanban-primary);
-  border-color: var(--kanban-primary);
-}
-
-.schedule-hint {
-  font-size: 12px;
-  font-weight: 400;
+  font-weight: 600;
   color: var(--kanban-text-secondary);
 }
 
-.schedule-input {
-  padding: 10px;
-  border-radius: 4px;
-  background: var(--kanban-surface);
-  border: 1px solid var(--kanban-border);
-  font-size: 13px;
-  font-weight: 400;
-  font-family: "Space Grotesk", "Inter", "DM Sans", system-ui, -apple-system, sans-serif;
-  color: var(--kanban-text-primary);
-}
-
-.schedule-next {
-  font-size: 11px;
-  font-weight: 400;
-  color: var(--kanban-success);
+.danger-button {
+  border-radius: 6px;
 }
 </style>
