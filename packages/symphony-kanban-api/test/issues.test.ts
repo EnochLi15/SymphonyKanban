@@ -8,3 +8,10 @@ describe("schema", () => {
     expect(names).toContain("deleted_at");
   });
 });
+
+describe("app", () => {
+  it("exports express app", async () => {
+    const { app } = await import("../src/app.js");
+    expect(app).toBeTruthy();
+  });
+});
