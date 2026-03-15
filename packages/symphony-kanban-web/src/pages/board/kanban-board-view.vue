@@ -16,26 +16,54 @@
             <span class="hint-trigger">!</span>
           </el-tooltip>
         </div>
-        <div class="view-modes">
-          <el-button
-            class="mode"
-            :class="{ 'mode--active': activeViewMode === 'state' }"
-            text
-            @click="goStateView"
-          >
-            状态视图
-          </el-button>
-          <el-button
-            class="mode"
-            :class="{ 'mode--active': activeViewMode === 'priority' }"
-            text
-            @click="goPriorityView"
-          >
-            优先级视图
-          </el-button>
-          <el-button class="mode mode--muted" text @click="createTask">
-            + 新建任务
-          </el-button>
+        <div class="board-actions">
+          <div class="filters">
+            <el-select
+              v-model="filters.workspaceId"
+              class="filter-select"
+              size="small"
+              placeholder="工作区"
+            >
+              <el-option label="全部工作区" value="all" />
+              <el-option
+                v-for="workspace in workspaces"
+                :key="workspace.id"
+                :label="workspace.name"
+                :value="workspace.id"
+              />
+            </el-select>
+            <el-select
+              v-model="filters.tags"
+              class="filter-select"
+              size="small"
+              multiple
+              collapse-tags
+              placeholder="标签筛选"
+            >
+              <el-option v-for="tag in tags" :key="tag.name" :label="tag.name" :value="tag.name" />
+            </el-select>
+          </div>
+          <div class="view-modes">
+            <el-button
+              class="mode"
+              :class="{ 'mode--active': activeViewMode === 'state' }"
+              text
+              @click="goStateView"
+            >
+              状态视图
+            </el-button>
+            <el-button
+              class="mode"
+              :class="{ 'mode--active': activeViewMode === 'priority' }"
+              text
+              @click="goPriorityView"
+            >
+              优先级视图
+            </el-button>
+            <el-button class="mode mode--muted" text @click="createTask">
+              + 新建任务
+            </el-button>
+          </div>
         </div>
       </header>
 
@@ -68,6 +96,12 @@
               <span class="tag" :class="priorityClass(issue.priority)">
                 {{ priorityLabel(issue.priority) }}
               </span>
+              <span class="tag tag--neutral">
+                {{ statusLabel(issue.status) }}
+              </span>
+              <span class="tag tag--neutral">
+                {{ issue.workspaceName ?? issue.workspaceId }}
+              </span>
               <span v-for="tag in issue.tags" :key="tag" class="tag tag--neutral">
                 {{ tag }}
               </span>
@@ -85,6 +119,16 @@ import { useRouter } from "vue-router";
 import { ElMessage } from "element-plus";
 import AppShell from "../../components/AppShell.vue";
 import { buildApi } from "../../lib/api";
+import {
+  filterIssues,
+  groupByStatus,
+  priorityLabel,
+  priorityMeta,
+  sortIssues,
+  statusLabel,
+  type FilterState,
+  type IssueView,
+} from "./issue-board-utils";
 
 type IssueDTO = {
   id: string;
@@ -98,59 +142,92 @@ type IssueDTO = {
   updatedAt: string;
 };
 
+type WorkspaceDTO = {
+  id: string;
+  name: string;
+};
+
+type TagDTO = {
+  id: string;
+  name: string;
+};
+
 const activeViewMode = ref<"state" | "priority">("state");
 const router = useRouter();
 const apiBase = import.meta.env.VITE_API_BASE ?? "http://localhost:3001";
 const api = buildApi(apiBase);
 
 const loading = ref(true);
-const issues = ref<IssueDTO[]>([]);
-const dragging = ref<IssueDTO | null>(null);
+const issues = ref<IssueView[]>([]);
+const dragging = ref<IssueView | null>(null);
+const workspaces = ref<WorkspaceDTO[]>([]);
+const tags = ref<TagDTO[]>([]);
+const filters = ref<FilterState>({ workspaceId: "all", tags: [] });
+
+const workspaceMap = computed(
+  () => new Map(workspaces.value.map((workspace) => [workspace.id, workspace.name])),
+);
+
+const filteredIssues = computed(() => filterIssues(issues.value, filters.value));
+const sortedIssues = computed(() => sortIssues(filteredIssues.value));
+const groupedIssues = computed(() => groupByStatus(sortedIssues.value));
 
 const columns = computed(() => [
   {
     status: "Backlog",
     title: "待排期 (Backlog)",
     titleClass: "",
-    items: issues.value.filter((issue) => issue.status === "Backlog"),
+    items: groupedIssues.value.Backlog,
   },
   {
     status: "Todo",
     title: "待办 (Todo)",
     titleClass: "",
-    items: issues.value.filter((issue) => issue.status === "Todo"),
+    items: groupedIssues.value.Todo,
   },
   {
     status: "InProgress",
     title: "进行中 (In Progress)",
     titleClass: "",
-    items: issues.value.filter((issue) => issue.status === "InProgress"),
+    items: groupedIssues.value.InProgress,
   },
   {
     status: "Review",
     title: "审核中 (In Review)",
     titleClass: "",
-    items: issues.value.filter((issue) => issue.status === "Review"),
+    items: groupedIssues.value.Review,
   },
   {
     status: "Done",
     title: "已完成 (Done)",
     titleClass: "col-title--success",
-    items: issues.value.filter((issue) => issue.status === "Done"),
+    items: groupedIssues.value.Done,
   },
   {
     status: "Blocked",
     title: "已阻塞 (Blocked)",
     titleClass: "col-title--error",
-    items: issues.value.filter((issue) => issue.status === "Blocked"),
+    items: groupedIssues.value.Blocked,
   },
 ]);
+
+const withWorkspaceName = (issue: IssueDTO): IssueView => ({
+  ...issue,
+  workspaceName: workspaceMap.value.get(issue.workspaceId),
+});
 
 const loadIssues = async () => {
   loading.value = true;
   try {
-    const response = await api.listIssues();
-    issues.value = response.data ?? [];
+    const [issuesResponse, workspacesResponse, tagsResponse] = await Promise.all([
+      api.listIssues(),
+      api.listWorkspaces(),
+      api.listTags(),
+    ]);
+    workspaces.value = workspacesResponse.data ?? [];
+    tags.value = tagsResponse.data ?? [];
+    const data = (issuesResponse.data ?? []) as IssueDTO[];
+    issues.value = data.map(withWorkspaceName);
   } catch (error) {
     ElMessage.error("加载任务失败");
   } finally {
@@ -159,19 +236,16 @@ const loadIssues = async () => {
 };
 
 const updateIssueInList = (updated: IssueDTO) => {
+  const next = withWorkspaceName(updated);
   const index = issues.value.findIndex((issue) => issue.id === updated.id);
   if (index === -1) {
-    issues.value = [updated, ...issues.value];
+    issues.value = [next, ...issues.value];
     return;
   }
-  issues.value = [
-    ...issues.value.slice(0, index),
-    updated,
-    ...issues.value.slice(index + 1),
-  ];
+  issues.value = [...issues.value.slice(0, index), next, ...issues.value.slice(index + 1)];
 };
 
-const onDragStart = (issue: IssueDTO) => {
+const onDragStart = (issue: IssueView) => {
   dragging.value = issue;
 };
 
@@ -192,34 +266,11 @@ const onDrop = async (status: string) => {
   }
 };
 
-const priorityLabel = (priority?: number | null) => {
-  switch (priority) {
-    case 0:
-      return "P0 紧急";
-    case 1:
-      return "P1 高";
-    case 2:
-      return "P2 中";
-    case 3:
-      return "P3 低";
-    default:
-      return "P?";
-  }
-};
-
 const priorityClass = (priority?: number | null) => {
-  switch (priority) {
-    case 0:
-      return "tag--p0";
-    case 1:
-      return "tag--p1";
-    case 2:
-      return "tag--neutral";
-    case 3:
-      return "tag--neutral";
-    default:
-      return "tag--neutral";
-  }
+  const code = priorityMeta(priority).code;
+  if (code === "P0") return "tag--p0";
+  if (code === "P1") return "tag--p1";
+  return "tag--neutral";
 };
 
 const createTask = () => {
@@ -257,6 +308,27 @@ onMounted(loadIssues);
   align-items: center;
   justify-content: space-between;
   gap: 16px;
+}
+
+.board-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.filters {
+  display: flex;
+  gap: 8px;
+  padding: 4px 8px;
+  border-radius: 6px;
+  background: var(--kanban-surface);
+  border: 1px solid var(--kanban-border);
+}
+
+.filter-select {
+  min-width: 150px;
 }
 
 .board-title {
