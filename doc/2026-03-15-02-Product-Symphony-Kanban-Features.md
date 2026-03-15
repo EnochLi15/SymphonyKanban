@@ -304,12 +304,27 @@ Symphony Kanban 的看板必须先是一个可靠的 issue 系统。
 > 我希望当任务在执行中出现错误或不可恢复状态时，它能自动进入 Blocked 并提示原因，  
 > 并且能在一个明确的界面中让我选择重跑、修改上下文或手动接管。
 
+6. **优先级视图快速排序**
+
+> 作为个人开发者，  
+> 我希望能够用四象限优先级视图快速归类任务，  
+> 这样我能在多任务并行时更快决定先做什么。
+
+7. **全局 MCP 服务提供**
+
+> 作为使用多个工具的用户，  
+> 我希望提供 MCP 服务，让 agent 直接通过 MCP 对看板上的任务进行增删改查。
+
+
 ### 2.3 验收标准（Acceptance Criteria）
 
 **任务管理**
 
 - 可以创建/编辑/删除任务，并设置：标题、描述、优先级、标签、状态、所属 workspace。
+- 任务创建使用统一弹窗入口，至少包含 Workspace、标题、优先级、标签、描述与定时触发开关。
 - 看板视图中，任务状态列（例如：Backlog/Todo/In Progress/Review/Done/Blocked）与任务实际状态一致。
+- 提供任务详情页，可维护子任务拆解、调度配置与进程配置等关键信息。
+- 提供优先级视图（Eisenhower 四象限），用于按优先级策略组织任务。
 
 **标签与 workflow**
 
@@ -326,6 +341,7 @@ Symphony Kanban 的看板必须先是一个可靠的 issue 系统。
 - 变更文件列表
 - diff 视图
 - 执行命令（可选）
+- 提供工作区管理视图（列表 + 添加入口），并提供工作区配置页（路径与全局上下文规则注入）。
 
 **Review 流程**
 
@@ -343,7 +359,25 @@ Symphony Kanban 的看板必须先是一个可靠的 issue 系统。
 - 每一次“完成尝试”必须记录至少一条 proof of work：包括变更内容（diff 或提交记录）和简短说明（例如 agent 总结或手写总结）。
 - 没有 proof of work 的任务不得自动进入 Done 状态。
 
-### 2.4 非目标（Non-Goals）
+**全局设置**
+
+- 提供 MCP 服务 JSON 配置入口（`mcp_config.json`），全局作用于所有工作区。
+
+### 2.4 UX 界面清单（基于当前 UX 设计稿）
+
+- 1. Kanban Board View（含用户旅程提示、状态列、视图切换与新建入口）
+- 2. Web Session Run View（嵌入式会话监控区域）
+- 3. Review View（Agent 总结 / Diff 概览 / 测试证据）
+- 4. Blocked/Error Handling View（错误提示 + 上下文快照 + 恢复操作）
+- 5. Issue Detail View（子任务、优先级、调度与进程配置）
+- 6. Tag & Workflow View（标签管理、工作流定义、生命周期钩子）
+- 7. Workspace Management View（工作区列表与添加）
+- 8. Workspace Settings View（路径配置与全局上下文注入）
+- 9. Priority View（Eisenhower 四象限）
+- 10. Create Task Modal（新建任务弹窗）
+- 11. Global Settings View（MCP 服务集成配置）
+
+### 2.5 非目标（Non-Goals）
 
 当前版本 **明确不做**：
 
