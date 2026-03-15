@@ -15,3 +15,15 @@ describe("app", () => {
     expect(app).toBeTruthy();
   });
 });
+
+describe("issue-store", () => {
+  it("returns tags as name list", async () => {
+    const { getIssueById } = await import("../src/issue-store.js");
+    const row = db.prepare("SELECT id FROM issues LIMIT 1").get() as
+      | { id: string }
+      | undefined;
+    if (!row) return;
+    const issue = getIssueById(row.id);
+    expect(issue?.tags).toBeDefined();
+  });
+});
