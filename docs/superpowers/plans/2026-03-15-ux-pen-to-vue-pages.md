@@ -17,8 +17,6 @@
 - Create: `/Users/enoch/Workspace/SymphonyKanban/.worktrees/codex/ux-pen-to-vue-pages/packages/symphony-kanban-web/src/gen/frame-utils.ts`
 - Create: `/Users/enoch/Workspace/SymphonyKanban/.worktrees/codex/ux-pen-to-vue-pages/packages/symphony-kanban-web/src/gen/frame-utils.test.ts`
 - Create: `/Users/enoch/Workspace/SymphonyKanban/.worktrees/codex/ux-pen-to-vue-pages/packages/symphony-kanban-web/src/gen/ux-frames.json`
-- Create: `/Users/enoch/Workspace/SymphonyKanban/.worktrees/codex/ux-pen-to-vue-pages/packages/symphony-kanban-web/src/gen/generate.ts`
-- Create: `/Users/enoch/Workspace/SymphonyKanban/.worktrees/codex/ux-pen-to-vue-pages/packages/symphony-kanban-web/scripts/generate-ux-pages.ts`
 - Create: `/Users/enoch/Workspace/SymphonyKanban/.worktrees/codex/ux-pen-to-vue-pages/packages/symphony-kanban-web/src/pages/<module>/<Page>.vue`
 - Modify: `/Users/enoch/Workspace/SymphonyKanban/.worktrees/codex/ux-pen-to-vue-pages/packages/symphony-kanban-web/package.json`
 - Modify: `/Users/enoch/Workspace/SymphonyKanban/.worktrees/codex/ux-pen-to-vue-pages/packages/symphony-kanban-web/src/main.ts`
@@ -247,72 +245,18 @@ git -C /Users/enoch/Workspace/SymphonyKanban/.worktrees/codex/ux-pen-to-vue-page
 git -C /Users/enoch/Workspace/SymphonyKanban/.worktrees/codex/ux-pen-to-vue-pages commit -m "chore(web): snapshot ux frames"
 ```
 
-### Task 4: Implement generator + route output
+### Task 4: Generate routes + pages directly from MCP snapshot
 
 **Files:**
-- Create: `/Users/enoch/Workspace/SymphonyKanban/.worktrees/codex/ux-pen-to-vue-pages/packages/symphony-kanban-web/src/gen/generate.ts`
-- Create: `/Users/enoch/Workspace/SymphonyKanban/.worktrees/codex/ux-pen-to-vue-pages/packages/symphony-kanban-web/scripts/generate-ux-pages.ts`
 - Create: `/Users/enoch/Workspace/SymphonyKanban/.worktrees/codex/ux-pen-to-vue-pages/packages/symphony-kanban-web/src/router/routes.generated.ts`
 - Create: `/Users/enoch/Workspace/SymphonyKanban/.worktrees/codex/ux-pen-to-vue-pages/packages/symphony-kanban-web/src/pages/<module>/<Page>.vue`
 - Modify: `/Users/enoch/Workspace/SymphonyKanban/.worktrees/codex/ux-pen-to-vue-pages/packages/symphony-kanban-web/package.json`
 
-- [ ] **Step 1: Write failing test for generated routes**
+- [ ] **Step 1: Generate routes + pages from snapshot**
 
-Add to `frame-utils.test.ts`:
-```ts
-import { buildRoutes } from "./generate";
-
-it("buildRoutes produces module + page paths", () => {
-  const routes = buildRoutes([
-    { id: "1", name: "Board Overview" },
-    { id: "2", name: "Project List" }
-  ]);
-  expect(routes.some((r) => r.path === "/board/board-overview")).toBe(true);
-  expect(routes.some((r) => r.path === "/project/project-list")).toBe(true);
-});
-```
-
-- [ ] **Step 2: Run tests to verify they fail**
-
-Run: `pnpm -C /Users/enoch/Workspace/SymphonyKanban/.worktrees/codex/ux-pen-to-vue-pages/packages/symphony-kanban-web test`
-Expected: FAIL with module not found `./generate`.
-
-- [ ] **Step 3: Implement generator logic**
-
-`src/gen/generate.ts`:
-```ts
-import { groupFrames, slugify, FrameMeta } from "./frame-utils";
-
-export type GeneratedRoute = {
-  name: string;
-  path: string;
-  componentPath: string;
-  module: string;
-};
-
-export function buildRoutes(frames: FrameMeta[]): GeneratedRoute[] {
-  const grouped = groupFrames(frames);
-  const routes: GeneratedRoute[] = [];
-  Object.entries(grouped).forEach(([module, moduleFrames]) => {
-    moduleFrames.forEach((frame) => {
-      const pageSlug = slugify(frame.name);
-      routes.push({
-        name: `${module}-${pageSlug}`,
-        path: `/${module}/${pageSlug}`,
-        componentPath: `../pages/${module}/${pageSlug}.vue`,
-        module,
-      });
-    });
-  });
-  return routes;
-}
-```
-
-`scripts/generate-ux-pages.ts` should:
-- read `src/gen/ux-frames.json`
-- call `buildRoutes`
-- create `src/router/routes.generated.ts`
-- generate page `.vue` stubs (template placeholders with frame name)
+Use the MCP-derived `src/gen/ux-frames.json` plus `frame-utils` heuristics to directly author:
+- `src/router/routes.generated.ts`
+- `src/pages/<module>/<page>.vue`
 
 `src/router/routes.generated.ts` format:
 ```ts
@@ -323,22 +267,17 @@ export const generatedRoutes: RouteRecordRaw[] = [
 ];
 ```
 
-- [ ] **Step 4: Run tests to verify they pass**
+Each page should render at least the frame name and key sections as static markup.
+
+- [ ] **Step 2: Run tests**
 
 Run: `pnpm -C /Users/enoch/Workspace/SymphonyKanban/.worktrees/codex/ux-pen-to-vue-pages/packages/symphony-kanban-web test`
 Expected: PASS.
 
-- [ ] **Step 5: Run generator**
-
-Run: `pnpm -C /Users/enoch/Workspace/SymphonyKanban/.worktrees/codex/ux-pen-to-vue-pages/packages/symphony-kanban-web generate:ux`
-Expected: `routes.generated.ts` and page files created.
-
-- [ ] **Step 6: Commit**
+- [ ] **Step 3: Commit**
 
 ```bash
 git -C /Users/enoch/Workspace/SymphonyKanban/.worktrees/codex/ux-pen-to-vue-pages add \
-  packages/symphony-kanban-web/src/gen/generate.ts \
-  packages/symphony-kanban-web/scripts/generate-ux-pages.ts \
   packages/symphony-kanban-web/src/router/routes.generated.ts \
   packages/symphony-kanban-web/src/pages \
   packages/symphony-kanban-web/package.json
@@ -368,4 +307,3 @@ Add a short summary to the PR/notes of inferred module → page mapping (from ge
 ## Plan Review Loop Notes
 
 Subagent-based plan review is unavailable in this environment; proceed with self-review and spot-check against the spec.
-
