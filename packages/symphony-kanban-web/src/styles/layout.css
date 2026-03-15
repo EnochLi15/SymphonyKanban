@@ -1,16 +1,29 @@
 .app-shell {
   display: flex;
-  min-height: 900px;
+  min-height: 100vh;
+  height: 100vh;
   width: 100%;
   background: var(--kanban-bg);
   color: var(--kanban-text-primary);
   font-family: "Inter", "DM Sans", "Space Grotesk", system-ui, -apple-system,
     sans-serif;
+  overflow: hidden;
 }
 
 .app-main {
   flex: 1;
   min-width: 0;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.app-page {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
 }
 
 .app-sidebar {
@@ -37,10 +50,54 @@
   display: flex;
   flex-direction: column;
   gap: 8px;
+  align-items: stretch;
+}
+
+.sidebar-menu {
+  border-right: none;
+  background: transparent;
+}
+
+.sidebar-menu .el-menu-item {
+  height: auto;
+  line-height: normal;
+  border-radius: 6px;
+  padding: 8px 12px;
+  color: var(--kanban-text-secondary);
+  font-size: 14px;
+  font-weight: 400;
+}
+
+.sidebar-menu .el-menu-item:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--kanban-text-primary);
+}
+
+.theme-light .sidebar-menu .el-menu-item:hover {
+  background: rgba(37, 99, 235, 0.08);
+  color: var(--kanban-text-primary);
+}
+
+.sidebar-menu .el-menu-item.is-active {
+  background: transparent;
+  border: 1px solid var(--kanban-primary);
+  color: var(--kanban-primary);
+}
+
+.sidebar-menu .el-menu-item.menu-subitem {
+  padding-left: 24px;
+  font-size: 12px;
+  color: var(--kanban-text-secondary);
+}
+
+.sidebar-menu .el-menu-item.menu-subitem.is-active {
+  color: var(--kanban-primary);
+  border: none;
 }
 
 .nav-item {
   justify-content: flex-start;
+  width: 100%;
   height: auto;
   border: 1px solid transparent;
   padding: 8px 12px;
@@ -49,9 +106,18 @@
   color: var(--kanban-text-secondary);
   font-size: 14px;
   font-weight: 400;
+  text-align: left;
 }
 
-.nav-item--active {
+.nav-item.el-button.is-text {
+  background: var(--kanban-surface);
+  border: 1px solid transparent;
+  width: 100%;
+  justify-content: flex-start;
+}
+
+.nav-item--active,
+.nav-item--active.el-button.is-text {
   background: transparent;
   border-color: var(--kanban-primary);
   color: var(--kanban-primary);
@@ -59,17 +125,29 @@
 
 .nav-subitem {
   text-align: left;
-  padding: 4px 12px 4px 24px;
+  padding: 4px 12px 4px 16px;
   background: transparent;
   border: none;
   color: var(--kanban-text-secondary);
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 400;
   justify-content: flex-start;
 }
 
-.nav-subitem--active {
+.nav-subitem.el-button.is-text {
+  padding-left: 24px;
+}
+
+.nav-subitem--active,
+.nav-subitem--active.el-button.is-text {
   color: var(--kanban-primary);
+}
+
+.nav-subitems {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-left: 12px;
 }
 
 .sidebar-spacer {

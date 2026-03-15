@@ -109,6 +109,8 @@ const goStateView = () => {
   gap: 24px;
   padding: 32px;
   box-sizing: border-box;
+  flex: 1;
+  min-height: 0;
 }
 
 .priority-header {
@@ -156,12 +158,14 @@ const goStateView = () => {
   display: flex;
   flex-direction: column;
   gap: 16px;
+  min-height: 0;
 }
 
 .priority-row {
   display: flex;
   gap: 16px;
   flex: 1;
+  min-height: 0;
 }
 
 .priority-quadrant {

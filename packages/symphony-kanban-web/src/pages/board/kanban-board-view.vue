@@ -1,24 +1,21 @@
 <template>
   <AppShell>
     <div class="main-content">
-      <section class="hint-banner">
-        <div class="hint-title">💡 用户旅程连线说明 (User Journey Map):</div>
-        <div class="hint-text">
-          1. 侧边栏导航：点击【工作区】去配置运行路径和全局参数，点击【标签】去设定工作流引擎。
-        </div>
-        <div class="hint-text">
-          2. 卡片流转：卡片拖入【待办(Todo)】后将自动触发执行，执行中可点击跳至【Web 会话监控视图】查看实时日志。
-        </div>
-        <div class="hint-text">
-          3. 标签跳转：直接点击卡片上的【P0 紧急】等标签，可跳转至【标签与工作流】管理视图。
-        </div>
-        <div class="hint-text">
-          4. 视图切换：点击右上角【优先级视图】可切换为四象限 Eisenhower 矩阵管理模式。
-        </div>
-      </section>
-
       <header class="board-header">
-        <div class="board-title">最近一周</div>
+        <div class="board-title">
+          最近一周
+          <el-tooltip placement="right" effect="dark">
+            <template #content>
+              <div class="hint-popover">
+                <div>1. 侧边栏导航：点击【工作区】去配置运行路径和全局参数，点击【标签】去设定工作流引擎。</div>
+                <div>2. 卡片流转：卡片拖入【待办(Todo)】后将自动触发执行，执行中可点击跳至【Web 会话监控视图】查看实时日志。</div>
+                <div>3. 标签跳转：直接点击卡片上的【P0 紧急】等标签，可跳转至【标签与工作流】管理视图。</div>
+                <div>4. 视图切换：点击右上角【优先级视图】可切换为四象限 Eisenhower 矩阵管理模式。</div>
+              </div>
+            </template>
+            <span class="hint-trigger">!</span>
+          </el-tooltip>
+        </div>
         <div class="view-modes">
           <el-button
             class="mode"
@@ -137,28 +134,6 @@ const goIssueDetail = () => {
   box-sizing: border-box;
 }
 
-.hint-banner {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  padding: 16px;
-  border-radius: 8px;
-  background: var(--kanban-hint-bg);
-  border: 1px solid var(--kanban-hint-border);
-}
-
-.hint-title {
-  font-size: 16px;
-  font-weight: 700;
-  color: var(--kanban-hint-border);
-}
-
-.hint-text {
-  font-size: 14px;
-  font-weight: 400;
-  color: var(--kanban-hint-text);
-}
-
 .board-header {
   display: flex;
   align-items: center;
@@ -169,6 +144,40 @@ const goIssueDetail = () => {
 .board-title {
   font-size: 28px;
   font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.hint-trigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 10px;
+  background: var(--kanban-primary);
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.theme-dark .hint-trigger {
+  box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.25);
+}
+
+.theme-light .hint-trigger {
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.25);
+}
+
+.hint-popover {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-width: 320px;
+  font-size: 12px;
+  line-height: 1.5;
 }
 
 .view-modes {

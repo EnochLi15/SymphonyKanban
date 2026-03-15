@@ -3,24 +3,21 @@
     <div class="sidebar-title">Symphony 看板</div>
     <div class="sidebar-space"></div>
     <nav class="nav-menu">
-      <el-button
-        v-for="item in navItems"
-        :key="item.key"
-        class="nav-item"
-        text
-        :class="{ 'nav-item--active': activeKey === item.key }"
-        @click="router.push(item.path)"
+      <el-menu
+        class="sidebar-menu"
+        :default-active="activeKey"
+        :collapse="false"
+        :unique-opened="true"
+        @select="handleSelect"
       >
-        {{ item.label }}
-      </el-button>
-      <el-button
-        class="nav-subitem"
-        text
-        :class="{ 'nav-subitem--active': isBoardRoute }"
-        @click="router.push(boardSubitem.path)"
-      >
-        {{ boardSubitem.label }}
-      </el-button>
+        <el-menu-item index="workspaces">工作区 (Workspaces)</el-menu-item>
+        <el-menu-item index="boards">看板 (Boards)</el-menu-item>
+        <el-menu-item index="boards-recent" class="menu-subitem">
+          ↳ 最近一周
+        </el-menu-item>
+        <el-menu-item index="tags">标签与工作流 (Tags)</el-menu-item>
+        <el-menu-item index="settings">设置 (Settings)</el-menu-item>
+      </el-menu>
     </nav>
     <div class="sidebar-spacer"></div>
     <div class="theme-toggle">
@@ -55,34 +52,6 @@ const router = useRouter();
 const route = useRoute();
 const { theme, setTheme } = useTheme();
 
-const navItems = [
-  {
-    key: "workspaces",
-    label: "工作区 (Workspaces)",
-    path: "/workspace/workspace-management-view",
-  },
-  {
-    key: "boards",
-    label: "看板 (Boards)",
-    path: "/board/kanban-board-view",
-  },
-  {
-    key: "tags",
-    label: "标签与工作流 (Tags)",
-    path: "/workflow/tag-workflow-view",
-  },
-  {
-    key: "settings",
-    label: "设置 (Settings)",
-    path: "/settings/global-settings-view",
-  },
-];
-
-const boardSubitem = {
-  label: "↳ 最近一周",
-  path: "/board/kanban-board-view",
-};
-
 const activeKey = computed(() => {
   if (route.path.startsWith("/workspace")) return "workspaces";
   if (route.path.startsWith("/board")) return "boards";
@@ -91,5 +60,23 @@ const activeKey = computed(() => {
   return "";
 });
 
-const isBoardRoute = computed(() => route.path.startsWith("/board"));
+const handleSelect = (index: string) => {
+  switch (index) {
+    case "workspaces":
+      router.push("/workspace/workspace-management-view");
+      break;
+    case "boards":
+    case "boards-recent":
+      router.push("/board/kanban-board-view");
+      break;
+    case "tags":
+      router.push("/workflow/tag-workflow-view");
+      break;
+    case "settings":
+      router.push("/settings/global-settings-view");
+      break;
+    default:
+      break;
+  }
+};
 </script>
