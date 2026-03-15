@@ -13,6 +13,8 @@ export interface IssueDTO {
   status: IssueStatus;
   priority?: number;
   workspaceId: string;
+  tags: string[];
   createdAt: string;
   updatedAt: string;
+  deletedAt?: string | null;
 }
