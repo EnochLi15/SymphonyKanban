@@ -3,37 +3,82 @@
     <div class="priority-content">
       <header class="priority-header">
         <div class="priority-title">最近一周</div>
-        <div class="view-modes">
-          <el-button
-            class="mode"
-            :class="{ 'mode--active': activeViewMode === 'state' }"
-            text
-            @click="goStateView"
-          >
-            状态视图
-          </el-button>
-          <el-button
-            class="mode"
-            :class="{ 'mode--active': activeViewMode === 'priority' }"
-            text
-            @click="goPriorityView"
-          >
-            优先级视图
-          </el-button>
-          <el-button class="mode mode--muted" text @click="createTask">
-            + 新建任务
-          </el-button>
+        <div class="priority-actions">
+          <div class="filters">
+            <el-select
+              v-model="filters.workspaceId"
+              class="filter-select"
+              size="small"
+              placeholder="工作区"
+            >
+              <el-option label="全部工作区" value="all" />
+              <el-option
+                v-for="workspace in workspaces"
+                :key="workspace.id"
+                :label="workspace.name"
+                :value="workspace.id"
+              />
+            </el-select>
+            <el-select
+              v-model="filters.tags"
+              class="filter-select"
+              size="small"
+              multiple
+              collapse-tags
+              placeholder="标签筛选"
+            >
+              <el-option v-for="tag in tags" :key="tag.name" :label="tag.name" :value="tag.name" />
+            </el-select>
+          </div>
+          <div class="view-modes">
+            <el-button
+              class="mode"
+              :class="{ 'mode--active': activeViewMode === 'state' }"
+              text
+              @click="goStateView"
+            >
+              状态视图
+            </el-button>
+            <el-button
+              class="mode"
+              :class="{ 'mode--active': activeViewMode === 'priority' }"
+              text
+              @click="goPriorityView"
+            >
+              优先级视图
+            </el-button>
+            <el-button class="mode mode--muted" text @click="createTask">
+              + 新建任务
+            </el-button>
+          </div>
         </div>
       </header>
 
-      <section class="priority-grid">
+      <section class="priority-grid" v-if="loading">
+        <div class="priority-loading">加载中...</div>
+      </section>
+
+      <section class="priority-grid" v-else>
         <div class="priority-row">
           <div class="priority-quadrant quadrant-p0">
             <div class="quadrant-title">P0 (重要且紧急) - 立即做</div>
-            <el-card class="priority-card">
-              <div class="card-title">数据库迁移错误</div>
+            <div v-if="buckets.P0.length === 0" class="empty-quadrant">暂无任务</div>
+            <el-card
+              v-for="issue in buckets.P0"
+              :key="issue.id"
+              class="priority-card"
+              @click="goIssueDetail(issue.id)"
+            >
+              <div class="card-title">{{ issue.title }}</div>
               <div class="tag-row">
-                <span class="tag tag--p0">已阻塞 (Blocked)</span>
+                <span class="tag tag--p0">{{ priorityLabel(issue.priority) }}</span>
+                <span class="tag tag--neutral">{{ statusLabel(issue.status) }}</span>
+                <span class="tag tag--neutral">
+                  {{ issue.workspaceName ?? issue.workspaceId }}
+                </span>
+                <span v-for="tag in issue.tags" :key="tag" class="tag tag--neutral">
+                  {{ tag }}
+                </span>
               </div>
             </el-card>
           </div>
@@ -41,10 +86,23 @@
             <div class="quadrant-title quadrant-title--warning">
               P1 (重要但不紧急) - 计划做
             </div>
-            <el-card class="priority-card">
-              <div class="card-title">issues 状态自动轮转</div>
+            <div v-if="buckets.P1.length === 0" class="empty-quadrant">暂无任务</div>
+            <el-card
+              v-for="issue in buckets.P1"
+              :key="issue.id"
+              class="priority-card"
+              @click="goIssueDetail(issue.id)"
+            >
+              <div class="card-title">{{ issue.title }}</div>
               <div class="tag-row">
-                <span class="tag tag--primary">进行中 (In Progress)</span>
+                <span class="tag tag--p1">{{ priorityLabel(issue.priority) }}</span>
+                <span class="tag tag--neutral">{{ statusLabel(issue.status) }}</span>
+                <span class="tag tag--neutral">
+                  {{ issue.workspaceName ?? issue.workspaceId }}
+                </span>
+                <span v-for="tag in issue.tags" :key="tag" class="tag tag--neutral">
+                  {{ tag }}
+                </span>
               </div>
             </el-card>
           </div>
@@ -55,10 +113,23 @@
             <div class="quadrant-title quadrant-title--primary">
               P2 (紧急但不重要) - 授权做
             </div>
-            <el-card class="priority-card">
-              <div class="card-title">支持从 opencode 获取工作区</div>
+            <div v-if="buckets.P2.length === 0" class="empty-quadrant">暂无任务</div>
+            <el-card
+              v-for="issue in buckets.P2"
+              :key="issue.id"
+              class="priority-card"
+              @click="goIssueDetail(issue.id)"
+            >
+              <div class="card-title">{{ issue.title }}</div>
               <div class="tag-row">
-                <span class="tag tag--neutral">待排期 (Backlog)</span>
+                <span class="tag tag--neutral">{{ priorityLabel(issue.priority) }}</span>
+                <span class="tag tag--neutral">{{ statusLabel(issue.status) }}</span>
+                <span class="tag tag--neutral">
+                  {{ issue.workspaceName ?? issue.workspaceId }}
+                </span>
+                <span v-for="tag in issue.tags" :key="tag" class="tag tag--neutral">
+                  {{ tag }}
+                </span>
               </div>
             </el-card>
           </div>
@@ -66,10 +137,23 @@
             <div class="quadrant-title quadrant-title--muted">
               P3 (不紧急不重要) - 稍后做
             </div>
-            <el-card class="priority-card priority-card--muted">
-              <div class="card-title card-title--muted">UI 细节调整</div>
+            <div v-if="buckets.P3.length === 0" class="empty-quadrant">暂无任务</div>
+            <el-card
+              v-for="issue in buckets.P3"
+              :key="issue.id"
+              class="priority-card priority-card--muted"
+              @click="goIssueDetail(issue.id)"
+            >
+              <div class="card-title card-title--muted">{{ issue.title }}</div>
               <div class="tag-row">
-                <span class="tag tag--neutral">待办 (Todo)</span>
+                <span class="tag tag--neutral">{{ priorityLabel(issue.priority) }}</span>
+                <span class="tag tag--neutral">{{ statusLabel(issue.status) }}</span>
+                <span class="tag tag--neutral">
+                  {{ issue.workspaceName ?? issue.workspaceId }}
+                </span>
+                <span v-for="tag in issue.tags" :key="tag" class="tag tag--neutral">
+                  {{ tag }}
+                </span>
               </div>
             </el-card>
           </div>
@@ -80,12 +164,90 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from "vue";
+import { computed, onMounted, ref } from "vue";
 import { useRouter } from "vue-router";
+import { ElMessage } from "element-plus";
 import AppShell from "../../components/AppShell.vue";
+import { buildApi } from "../../lib/api";
+import {
+  filterIssues,
+  groupByPriority,
+  priorityLabel,
+  sortIssues,
+  statusLabel,
+  type FilterState,
+  type IssueView,
+} from "./issue-board-utils";
+
+type IssueDTO = {
+  id: string;
+  title: string;
+  description?: string | null;
+  status: string;
+  priority?: number | null;
+  workspaceId: string;
+  tags: string[];
+  createdAt: string;
+  updatedAt: string;
+};
+
+type WorkspaceDTO = {
+  id: string;
+  name: string;
+};
+
+type TagDTO = {
+  id: string;
+  name: string;
+};
 
 const activeViewMode = ref<"state" | "priority">("priority");
 const router = useRouter();
+const apiBase = import.meta.env.VITE_API_BASE ?? "http://localhost:3001";
+const api = buildApi(apiBase);
+
+const loading = ref(true);
+const issues = ref<IssueView[]>([]);
+const workspaces = ref<WorkspaceDTO[]>([]);
+const tags = ref<TagDTO[]>([]);
+const filters = ref<FilterState>({ workspaceId: "all", tags: [] });
+
+const workspaceMap = computed(
+  () => new Map(workspaces.value.map((workspace) => [workspace.id, workspace.name])),
+);
+
+const filteredIssues = computed(() => filterIssues(issues.value, filters.value));
+const groupedBuckets = computed(() => groupByPriority(filteredIssues.value));
+const buckets = computed(() => ({
+  P0: sortIssues(groupedBuckets.value.P0),
+  P1: sortIssues(groupedBuckets.value.P1),
+  P2: sortIssues(groupedBuckets.value.P2),
+  P3: sortIssues(groupedBuckets.value.P3),
+}));
+
+const withWorkspaceName = (issue: IssueDTO): IssueView => ({
+  ...issue,
+  workspaceName: workspaceMap.value.get(issue.workspaceId),
+});
+
+const loadIssues = async () => {
+  loading.value = true;
+  try {
+    const [issuesResponse, workspacesResponse, tagsResponse] = await Promise.all([
+      api.listIssues(),
+      api.listWorkspaces(),
+      api.listTags(),
+    ]);
+    workspaces.value = workspacesResponse.data ?? [];
+    tags.value = tagsResponse.data ?? [];
+    const data = (issuesResponse.data ?? []) as IssueDTO[];
+    issues.value = data.map(withWorkspaceName);
+  } catch (error) {
+    ElMessage.error("加载任务失败");
+  } finally {
+    loading.value = false;
+  }
+};
 
 const createTask = () => {
   router.push("/tasks/new");
@@ -100,6 +262,12 @@ const goStateView = () => {
   activeViewMode.value = "state";
   router.push("/board");
 };
+
+const goIssueDetail = (id: string) => {
+  router.push(`/issues/${id}`);
+};
+
+onMounted(loadIssues);
 </script>
 
 <style scoped>
@@ -118,6 +286,27 @@ const goStateView = () => {
   align-items: center;
   justify-content: space-between;
   gap: 16px;
+}
+
+.priority-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.filters {
+  display: flex;
+  gap: 8px;
+  padding: 4px 8px;
+  border-radius: 6px;
+  background: var(--kanban-surface);
+  border: 1px solid var(--kanban-border);
+}
+
+.filter-select {
+  min-width: 150px;
 }
 
 .priority-title {
@@ -159,6 +348,14 @@ const goStateView = () => {
   flex-direction: column;
   gap: 16px;
   min-height: 0;
+}
+
+.priority-loading {
+  padding: 24px;
+  border-radius: 8px;
+  background: var(--kanban-surface);
+  border: 1px solid var(--kanban-border);
+  font-size: 14px;
 }
 
 .priority-row {
@@ -217,9 +414,15 @@ const goStateView = () => {
   color: var(--kanban-text-secondary);
 }
 
+.empty-quadrant {
+  font-size: 12px;
+  color: var(--kanban-text-secondary);
+}
+
 .priority-card {
   background: var(--kanban-surface);
   border: 1px solid var(--kanban-border);
+  cursor: pointer;
 }
 
 .priority-card :deep(.el-card__body) {
@@ -245,6 +448,7 @@ const goStateView = () => {
 .tag-row {
   display: flex;
   gap: 8px;
+  flex-wrap: wrap;
 }
 
 .tag {
@@ -262,10 +466,9 @@ const goStateView = () => {
   color: var(--kanban-text-primary);
 }
 
-.tag--primary {
-  background: var(--kanban-surface);
-  border-color: var(--kanban-primary);
-  color: var(--kanban-primary);
+.tag--p1 {
+  background: var(--kanban-warning);
+  color: var(--kanban-text-primary);
 }
 
 .tag--neutral {
