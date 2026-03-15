@@ -1,4 +1,10 @@
-export type IssueStatus = "Todo" | "InProgress" | "Review" | "Blocked" | "Done";
+export type IssueStatus =
+  | "Backlog"
+  | "Todo"
+  | "InProgress"
+  | "Review"
+  | "Blocked"
+  | "Done";
 
 export interface IssueDTO {
   id: string;

@@ -14,42 +14,82 @@
         </div>
       </template>
 
-      <div class="form-block">
-        <div class="field-label">工作区 (Workspace)</div>
-        <el-select class="field-select" model-value="Symphony-Kanban">
-          <el-option label="Symphony-Kanban" value="Symphony-Kanban" />
-        </el-select>
-      </div>
-
-      <div class="form-block">
-        <div class="field-label">标题 (Title)</div>
-        <el-input class="field-input" model-value="例如：实现登录页面" />
-      </div>
-
-      <div class="form-row">
+      <el-form ref="formRef" class="task-form" :model="form" :rules="rules">
         <div class="form-block">
-          <div class="field-label">优先级 (Priority)</div>
-          <el-select class="field-select" model-value="P2 (紧急但不重要)">
-            <el-option label="P2 (紧急但不重要)" value="P2 (紧急但不重要)" />
-          </el-select>
+          <el-form-item prop="workspaceId" label="工作区 (Workspace)">
+            <el-select
+              v-model="form.workspaceId"
+              class="field-select"
+              placeholder="选择工作区"
+              filterable
+            >
+              <el-option
+                v-for="workspace in workspaces"
+                :key="workspace.id"
+                :label="workspace.name"
+                :value="workspace.id"
+              />
+            </el-select>
+          </el-form-item>
         </div>
-        <div class="form-block">
-          <div class="field-label">标签 (Tags)</div>
-          <el-select class="field-select" model-value="feature, frontend">
-            <el-option label="feature, frontend" value="feature, frontend" />
-          </el-select>
-        </div>
-      </div>
 
-      <div class="form-block">
-        <div class="field-label">描述 (Description)</div>
-        <el-input
-          class="field-textarea"
-          type="textarea"
-          :rows="4"
-          model-value="任务详细描述，支持 Markdown"
-        />
-      </div>
+        <div class="form-block">
+          <el-form-item prop="title" label="标题 (Title)">
+            <el-input
+              v-model="form.title"
+              class="field-input"
+              placeholder="例如：实现登录页面"
+            />
+          </el-form-item>
+        </div>
+
+        <div class="form-row">
+          <div class="form-block">
+            <el-form-item prop="priority" label="优先级 (Priority)">
+              <el-select v-model="form.priority" class="field-select">
+                <el-option
+                  v-for="option in priorityOptions"
+                  :key="option.value"
+                  :label="option.label"
+                  :value="option.value"
+                />
+              </el-select>
+            </el-form-item>
+          </div>
+          <div class="form-block">
+            <el-form-item prop="tags" label="标签 (Tags)">
+              <el-select
+                v-model="form.tags"
+                class="field-select"
+                multiple
+                filterable
+                allow-create
+                default-first-option
+                placeholder="输入或选择标签"
+              >
+                <el-option
+                  v-for="tag in tagOptions"
+                  :key="tag.id"
+                  :label="tag.name"
+                  :value="tag.name"
+                />
+              </el-select>
+            </el-form-item>
+          </div>
+        </div>
+
+        <div class="form-block">
+          <el-form-item prop="description" label="描述 (Description)">
+            <el-input
+              v-model="form.description"
+              class="field-textarea"
+              type="textarea"
+              :rows="4"
+              placeholder="任务详细描述，支持 Markdown"
+            />
+          </el-form-item>
+        </div>
+      </el-form>
 
       <div class="schedule-row">
         <div class="schedule-label">启用定时触发 (Schedule Task)</div>
@@ -57,26 +97,134 @@
       </div>
 
       <div class="dialog-actions">
-        <el-button class="action-button action-cancel" text>取消</el-button>
-        <el-button class="action-button action-primary">创建并规划 (Create &amp; Plan)</el-button>
+        <el-button class="action-button action-cancel" text @click="handleCancel">
+          取消
+        </el-button>
+        <el-button
+          class="action-button action-primary"
+          :loading="submitting"
+          @click="submitForm"
+        >
+          创建并规划 (Create &amp; Plan)
+        </el-button>
       </div>
     </el-dialog>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from "vue";
+import type { FormInstance, FormRules } from "element-plus";
+import { ElMessage } from "element-plus";
+import { onMounted, reactive, ref, watch } from "vue";
 import { useRouter } from "vue-router";
 
 const visible = ref(true);
 const scheduleEnabled = ref(false);
 const router = useRouter();
+const submitting = ref(false);
+
+const formRef = ref<FormInstance>();
+const form = reactive({
+  workspaceId: "",
+  title: "",
+  priority: 2,
+  tags: [] as string[],
+  description: "",
+});
+
+const rules: FormRules = {
+  workspaceId: [
+    { required: true, message: "请选择工作区", trigger: "change" },
+  ],
+  title: [{ required: true, message: "请输入标题", trigger: "blur" }],
+  priority: [
+    { required: true, message: "请选择优先级", trigger: "change" },
+  ],
+};
+
+const priorityOptions = [
+  { value: 0, label: "P0 (紧急且重要)" },
+  { value: 1, label: "P1 (重要不紧急)" },
+  { value: 2, label: "P2 (紧急但不重要)" },
+  { value: 3, label: "P3 (可延后)" },
+];
+
+const workspaces = ref<Array<{ id: string; name: string }>>([]);
+const tagOptions = ref<Array<{ id: string; name: string }>>([]);
+const apiBase = import.meta.env.VITE_API_BASE ?? "http://localhost:3001";
 
 watch(visible, (value) => {
   if (!value) {
     router.back();
   }
 });
+
+const loadOptions = async () => {
+  try {
+    const [workspaceRes, tagRes] = await Promise.all([
+      fetch(`${apiBase}/workspaces`),
+      fetch(`${apiBase}/tags`),
+    ]);
+    if (workspaceRes.ok) {
+      const workspaceJson = await workspaceRes.json();
+      workspaces.value = workspaceJson.data ?? [];
+      if (!form.workspaceId && workspaces.value.length > 0) {
+        form.workspaceId = workspaces.value[0].id;
+      }
+    }
+    if (tagRes.ok) {
+      const tagJson = await tagRes.json();
+      tagOptions.value = tagJson.data ?? [];
+    }
+  } catch (error) {
+    // eslint-disable-next-line no-console
+    console.error("Failed to load options", error);
+  }
+};
+
+const handleCancel = () => {
+  visible.value = false;
+};
+
+const submitForm = async () => {
+  if (!formRef.value) return;
+  try {
+    await formRef.value.validate();
+  } catch {
+    return;
+  }
+
+  submitting.value = true;
+  try {
+    const response = await fetch(`${apiBase}/issues`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        title: form.title,
+        description: form.description,
+        priority: form.priority,
+        workspace_id: form.workspaceId,
+        tags: form.tags,
+      }),
+    });
+
+    if (!response.ok) {
+      const errorJson = await response.json().catch(() => ({}));
+      throw new Error(errorJson.error || "创建失败");
+    }
+
+    ElMessage.success("任务已创建并加入 Backlog");
+    visible.value = false;
+    router.push("/board");
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "创建失败";
+    ElMessage.error(message);
+  } finally {
+    submitting.value = false;
+  }
+};
+
+onMounted(loadOptions);
 </script>
 
 <style scoped>
@@ -133,7 +281,7 @@ watch(visible, (value) => {
   gap: 8px;
 }
 
-.field-label {
+.task-form :deep(.el-form-item__label) {
   font-size: 14px;
   font-weight: 400;
   color: var(--kanban-text-primary);
