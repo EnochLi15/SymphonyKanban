@@ -62,49 +62,53 @@
         <div class="priority-row">
           <div class="priority-quadrant quadrant-p0">
             <div class="quadrant-title">P0 (重要且紧急) - 立即做</div>
-            <div v-if="buckets.P0.length === 0" class="empty-quadrant">暂无任务</div>
-            <el-card
-              v-for="issue in buckets.P0"
-              :key="issue.id"
-              class="priority-card"
-              @click="goIssueDetail(issue.id)"
-            >
-              <div class="card-title">{{ issue.title }}</div>
-              <div class="tag-row">
-                <span class="tag tag--p0">{{ priorityLabel(issue.priority) }}</span>
-                <span class="tag tag--neutral">{{ statusLabel(issue.status) }}</span>
-                <span class="tag tag--neutral">
-                  {{ issue.workspaceName ?? issue.workspaceId }}
-                </span>
-                <span v-for="tag in issue.tags" :key="tag" class="tag tag--neutral">
-                  {{ tag }}
-                </span>
-              </div>
-            </el-card>
+            <div class="quadrant-scroll">
+              <div v-if="buckets.P0.length === 0" class="empty-quadrant">暂无任务</div>
+              <el-card
+                v-for="issue in buckets.P0"
+                :key="issue.id"
+                class="priority-card"
+                @click="goIssueDetail(issue.id)"
+              >
+                <div class="card-title">{{ issue.title }}</div>
+                <div class="tag-row">
+                  <span class="tag tag--p0">{{ priorityLabel(issue.priority) }}</span>
+                  <span class="tag tag--neutral">{{ statusLabel(issue.status) }}</span>
+                  <span class="tag tag--neutral">
+                    {{ issue.workspaceName ?? issue.workspaceId }}
+                  </span>
+                  <span v-for="tag in issue.tags" :key="tag" class="tag tag--neutral">
+                    {{ tag }}
+                  </span>
+                </div>
+              </el-card>
+            </div>
           </div>
           <div class="priority-quadrant quadrant-p1">
             <div class="quadrant-title quadrant-title--warning">
               P1 (重要但不紧急) - 计划做
             </div>
-            <div v-if="buckets.P1.length === 0" class="empty-quadrant">暂无任务</div>
-            <el-card
-              v-for="issue in buckets.P1"
-              :key="issue.id"
-              class="priority-card"
-              @click="goIssueDetail(issue.id)"
-            >
-              <div class="card-title">{{ issue.title }}</div>
-              <div class="tag-row">
-                <span class="tag tag--p1">{{ priorityLabel(issue.priority) }}</span>
-                <span class="tag tag--neutral">{{ statusLabel(issue.status) }}</span>
-                <span class="tag tag--neutral">
-                  {{ issue.workspaceName ?? issue.workspaceId }}
-                </span>
-                <span v-for="tag in issue.tags" :key="tag" class="tag tag--neutral">
-                  {{ tag }}
-                </span>
-              </div>
-            </el-card>
+            <div class="quadrant-scroll">
+              <div v-if="buckets.P1.length === 0" class="empty-quadrant">暂无任务</div>
+              <el-card
+                v-for="issue in buckets.P1"
+                :key="issue.id"
+                class="priority-card"
+                @click="goIssueDetail(issue.id)"
+              >
+                <div class="card-title">{{ issue.title }}</div>
+                <div class="tag-row">
+                  <span class="tag tag--p1">{{ priorityLabel(issue.priority) }}</span>
+                  <span class="tag tag--neutral">{{ statusLabel(issue.status) }}</span>
+                  <span class="tag tag--neutral">
+                    {{ issue.workspaceName ?? issue.workspaceId }}
+                  </span>
+                  <span v-for="tag in issue.tags" :key="tag" class="tag tag--neutral">
+                    {{ tag }}
+                  </span>
+                </div>
+              </el-card>
+            </div>
           </div>
         </div>
 
@@ -113,49 +117,53 @@
             <div class="quadrant-title quadrant-title--primary">
               P2 (紧急但不重要) - 授权做
             </div>
-            <div v-if="buckets.P2.length === 0" class="empty-quadrant">暂无任务</div>
-            <el-card
-              v-for="issue in buckets.P2"
-              :key="issue.id"
-              class="priority-card"
-              @click="goIssueDetail(issue.id)"
-            >
-              <div class="card-title">{{ issue.title }}</div>
-              <div class="tag-row">
-                <span class="tag tag--neutral">{{ priorityLabel(issue.priority) }}</span>
-                <span class="tag tag--neutral">{{ statusLabel(issue.status) }}</span>
-                <span class="tag tag--neutral">
-                  {{ issue.workspaceName ?? issue.workspaceId }}
-                </span>
-                <span v-for="tag in issue.tags" :key="tag" class="tag tag--neutral">
-                  {{ tag }}
-                </span>
-              </div>
-            </el-card>
+            <div class="quadrant-scroll">
+              <div v-if="buckets.P2.length === 0" class="empty-quadrant">暂无任务</div>
+              <el-card
+                v-for="issue in buckets.P2"
+                :key="issue.id"
+                class="priority-card"
+                @click="goIssueDetail(issue.id)"
+              >
+                <div class="card-title">{{ issue.title }}</div>
+                <div class="tag-row">
+                  <span class="tag tag--neutral">{{ priorityLabel(issue.priority) }}</span>
+                  <span class="tag tag--neutral">{{ statusLabel(issue.status) }}</span>
+                  <span class="tag tag--neutral">
+                    {{ issue.workspaceName ?? issue.workspaceId }}
+                  </span>
+                  <span v-for="tag in issue.tags" :key="tag" class="tag tag--neutral">
+                    {{ tag }}
+                  </span>
+                </div>
+              </el-card>
+            </div>
           </div>
           <div class="priority-quadrant quadrant-p3">
             <div class="quadrant-title quadrant-title--muted">
               P3 (不紧急不重要) - 稍后做
             </div>
-            <div v-if="buckets.P3.length === 0" class="empty-quadrant">暂无任务</div>
-            <el-card
-              v-for="issue in buckets.P3"
-              :key="issue.id"
-              class="priority-card priority-card--muted"
-              @click="goIssueDetail(issue.id)"
-            >
-              <div class="card-title card-title--muted">{{ issue.title }}</div>
-              <div class="tag-row">
-                <span class="tag tag--neutral">{{ priorityLabel(issue.priority) }}</span>
-                <span class="tag tag--neutral">{{ statusLabel(issue.status) }}</span>
-                <span class="tag tag--neutral">
-                  {{ issue.workspaceName ?? issue.workspaceId }}
-                </span>
-                <span v-for="tag in issue.tags" :key="tag" class="tag tag--neutral">
-                  {{ tag }}
-                </span>
-              </div>
-            </el-card>
+            <div class="quadrant-scroll">
+              <div v-if="buckets.P3.length === 0" class="empty-quadrant">暂无任务</div>
+              <el-card
+                v-for="issue in buckets.P3"
+                :key="issue.id"
+                class="priority-card priority-card--muted"
+                @click="goIssueDetail(issue.id)"
+              >
+                <div class="card-title card-title--muted">{{ issue.title }}</div>
+                <div class="tag-row">
+                  <span class="tag tag--neutral">{{ priorityLabel(issue.priority) }}</span>
+                  <span class="tag tag--neutral">{{ statusLabel(issue.status) }}</span>
+                  <span class="tag tag--neutral">
+                    {{ issue.workspaceName ?? issue.workspaceId }}
+                  </span>
+                  <span v-for="tag in issue.tags" :key="tag" class="tag tag--neutral">
+                    {{ tag }}
+                  </span>
+                </div>
+              </el-card>
+            </div>
           </div>
         </div>
       </section>
@@ -374,6 +382,7 @@ onMounted(loadIssues);
   border-radius: 8px;
   border: 2px solid transparent;
   box-sizing: border-box;
+  min-height: 0;
 }
 
 .quadrant-p0 {
@@ -417,6 +426,30 @@ onMounted(loadIssues);
 .empty-quadrant {
   font-size: 12px;
   color: var(--kanban-text-secondary);
+}
+
+.quadrant-scroll {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.quadrant-scroll::-webkit-scrollbar {
+  width: 6px;
+}
+
+.quadrant-scroll::-webkit-scrollbar-thumb {
+  background: var(--kanban-border);
+  border-radius: 999px;
+}
+
+.quadrant-scroll > .priority-card,
+.quadrant-scroll > .empty-quadrant {
+  flex-shrink: 0;
 }
 
 .priority-card {
