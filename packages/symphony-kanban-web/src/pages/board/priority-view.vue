@@ -72,7 +72,6 @@
               >
                 <div class="card-title">{{ issue.title }}</div>
                 <div class="tag-row">
-                  <span class="tag tag--p0">{{ priorityLabel(issue.priority) }}</span>
                   <span class="tag tag--neutral">{{ statusLabel(issue.status) }}</span>
                   <span class="tag tag--neutral">
                     {{ issue.workspaceName ?? issue.workspaceId }}
@@ -98,7 +97,6 @@
               >
                 <div class="card-title">{{ issue.title }}</div>
                 <div class="tag-row">
-                  <span class="tag tag--p1">{{ priorityLabel(issue.priority) }}</span>
                   <span class="tag tag--neutral">{{ statusLabel(issue.status) }}</span>
                   <span class="tag tag--neutral">
                     {{ issue.workspaceName ?? issue.workspaceId }}
@@ -127,7 +125,6 @@
               >
                 <div class="card-title">{{ issue.title }}</div>
                 <div class="tag-row">
-                  <span class="tag tag--neutral">{{ priorityLabel(issue.priority) }}</span>
                   <span class="tag tag--neutral">{{ statusLabel(issue.status) }}</span>
                   <span class="tag tag--neutral">
                     {{ issue.workspaceName ?? issue.workspaceId }}
@@ -153,7 +150,6 @@
               >
                 <div class="card-title card-title--muted">{{ issue.title }}</div>
                 <div class="tag-row">
-                  <span class="tag tag--neutral">{{ priorityLabel(issue.priority) }}</span>
                   <span class="tag tag--neutral">{{ statusLabel(issue.status) }}</span>
                   <span class="tag tag--neutral">
                     {{ issue.workspaceName ?? issue.workspaceId }}
@@ -429,8 +425,8 @@ onMounted(loadIssues);
 }
 
 .quadrant-scroll {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 12px;
   flex: 1;
   min-height: 0;
@@ -449,7 +445,11 @@ onMounted(loadIssues);
 
 .quadrant-scroll > .priority-card,
 .quadrant-scroll > .empty-quadrant {
-  flex-shrink: 0;
+  min-width: 0;
+}
+
+.quadrant-scroll > .empty-quadrant {
+  grid-column: 1 / -1;
 }
 
 .priority-card {
