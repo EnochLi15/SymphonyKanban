@@ -7,7 +7,9 @@
     "packages/*"
   ],
   "scripts": {
-    "dev": "pnpm -r run dev",
+    "dev": "node scripts/services.mjs start",
+    "stop": "node scripts/services.mjs stop",
+    "restart": "node scripts/services.mjs restart",
     "build": "pnpm -r run build",
     "test": "pnpm -r run test"
   }
