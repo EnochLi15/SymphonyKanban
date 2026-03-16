@@ -54,8 +54,13 @@ export const runOpencode = async (input: RunInput): Promise<RunResult> => {
     query: input.workspacePath ? { directory: input.workspacePath } : undefined,
   });
   const sessionId = (session as any).data?.id ?? (session as any).id;
+  const projectId =
+    (session as any).data?.projectID ?? (session as any).projectID ?? null;
   // Record session id for debugging/correlation.
   await input.onArtifact("session", sessionId, "opencode session id");
+  if (projectId) {
+    await input.onArtifact("opencode_project", projectId, "opencode project id");
+  }
   // eslint-disable-next-line no-console
   console.log(`[opencode:${sessionId}] session created`);
 
