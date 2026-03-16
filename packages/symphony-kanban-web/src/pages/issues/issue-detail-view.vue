@@ -127,11 +127,12 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, onUnmounted, reactive, ref } from "vue";
+import { computed, onMounted, onUnmounted, reactive, ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { ElMessage, ElMessageBox } from "element-plus";
 import AppShell from "../../components/AppShell.vue";
 import { buildApi } from "../../lib/api";
+import { routeForStatus } from "./issue-detail-routing";
 
 const router = useRouter();
 const route = useRoute();
@@ -145,6 +146,7 @@ const tagOptions = ref<Array<{ id: string; name: string }>>([]);
 const executionStatus = ref<string | null>(null);
 const executionId = ref<string | null>(null);
 let executionTimer: number | undefined;
+let issueStatusTimer: number | undefined;
 
 const statusOptions = [
   { label: "待排期 (Backlog)", value: "Backlog" },
@@ -174,6 +176,19 @@ const draft = reactive({
 
 const snapshot = ref({ ...draft });
 const debounceTimers: Record<string, number | undefined> = {};
+const isEditing = computed(
+  () =>
+    draft.title !== snapshot.value.title ||
+    draft.description !== snapshot.value.description,
+);
+
+const ensureRouteForStatus = (status: string) => {
+  const suffix = routeForStatus(status);
+  const target = `/issues/${draft.id}${suffix}`;
+  if (route.path !== target) {
+    router.replace(target);
+  }
+};
 
 const syncDraft = (data: typeof draft) => {
   draft.id = data.id;
@@ -205,6 +220,7 @@ const loadIssue = async () => {
   try {
     const response = await api.getIssue(String(route.params.id));
     syncDraft(response.data);
+    ensureRouteForStatus(response.data.status);
   } catch (error) {
     ElMessage.warning("任务已删除");
     router.push("/board");
@@ -234,6 +250,25 @@ const pollExecution = async () => {
   } catch (error) {
     // eslint-disable-next-line no-console
     console.error("Failed to poll execution", error);
+  }
+};
+
+const pollIssueStatus = async () => {
+  if (!draft.id) return;
+  try {
+    const response = await api.getIssue(draft.id);
+    const next = response.data;
+    if (!next) return;
+    if (!isEditing.value) {
+      syncDraft(next);
+    } else if (next.status !== draft.status) {
+      draft.status = next.status;
+      snapshot.value = { ...snapshot.value, status: next.status };
+    }
+    ensureRouteForStatus(next.status);
+  } catch (error) {
+    // eslint-disable-next-line no-console
+    console.error("Failed to poll issue status", error);
   }
 };
 
@@ -327,11 +362,17 @@ onMounted(async () => {
   executionTimer = window.setInterval(() => {
     pollExecution();
   }, 5000);
+  issueStatusTimer = window.setInterval(() => {
+    pollIssueStatus();
+  }, 5000);
 });
 
 onUnmounted(() => {
   if (executionTimer) {
     window.clearInterval(executionTimer);
+  }
+  if (issueStatusTimer) {
+    window.clearInterval(issueStatusTimer);
   }
 });
 </script>
