@@ -329,6 +329,8 @@ onUnmounted(() => {
   gap: 24px;
   padding: 32px;
   box-sizing: border-box;
+  flex: 1;
+  min-height: 0;
 }
 
 .board-header {
@@ -431,6 +433,8 @@ onUnmounted(() => {
   gap: 16px;
   overflow-x: auto;
   padding-bottom: 8px;
+  flex: 1;
+  min-height: 0;
 }
 
 .board-col {
@@ -438,9 +442,7 @@ onUnmounted(() => {
   flex-direction: column;
   gap: 12px;
   min-height: 120px;
-  max-height: calc(100vh - 260px);
-  overflow-y: auto;
-  padding-right: 4px;
+  min-height: 0;
 }
 
 .col-scroll {
@@ -449,13 +451,15 @@ onUnmounted(() => {
   gap: 12px;
   flex: 1;
   min-height: 0;
+  overflow-y: auto;
+  padding-right: 4px;
 }
 
-.board-col::-webkit-scrollbar {
+.col-scroll::-webkit-scrollbar {
   width: 6px;
 }
 
-.board-col::-webkit-scrollbar-thumb {
+.col-scroll::-webkit-scrollbar-thumb {
   background: var(--kanban-border);
   border-radius: 999px;
 }
