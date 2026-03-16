@@ -82,31 +82,33 @@
           <div class="col-title" :class="column.titleClass">
             {{ column.title }}
           </div>
-          <div v-if="column.items.length === 0" class="empty-col">暂无任务</div>
-          <el-card
-            v-for="issue in column.items"
-            :key="issue.id"
-            class="card card-clickable"
-            draggable="true"
-            @click="goIssueDetail(issue.id)"
-            @dragstart="onDragStart(issue)"
-          >
-            <div class="card-title">{{ issue.title }}</div>
-            <div class="tag-row">
-              <span class="tag" :class="priorityClass(issue.priority)">
-                {{ priorityLabel(issue.priority) }}
-              </span>
-              <span class="tag tag--neutral">
-                {{ statusLabel(issue.status) }}
-              </span>
-              <span class="tag tag--neutral">
-                {{ issue.workspaceName ?? issue.workspaceId }}
-              </span>
-              <span v-for="tag in issue.tags" :key="tag" class="tag tag--neutral">
-                {{ tag }}
-              </span>
-            </div>
-          </el-card>
+          <div class="col-scroll">
+            <div v-if="column.items.length === 0" class="empty-col">暂无任务</div>
+            <el-card
+              v-for="issue in column.items"
+              :key="issue.id"
+              class="card card-clickable"
+              draggable="true"
+              @click="goIssueDetail(issue.id)"
+              @dragstart="onDragStart(issue)"
+            >
+              <div class="card-title">{{ issue.title }}</div>
+              <div class="tag-row">
+                <span class="tag" :class="priorityClass(issue.priority)">
+                  {{ priorityLabel(issue.priority) }}
+                </span>
+                <span class="tag tag--neutral">
+                  {{ statusLabel(issue.status) }}
+                </span>
+                <span class="tag tag--neutral">
+                  {{ issue.workspaceName ?? issue.workspaceId }}
+                </span>
+                <span v-for="tag in issue.tags" :key="tag" class="tag tag--neutral">
+                  {{ tag }}
+                </span>
+              </div>
+            </el-card>
+          </div>
         </div>
       </section>
     </div>
@@ -410,6 +412,25 @@ onMounted(loadIssues);
   flex-direction: column;
   gap: 12px;
   min-height: 120px;
+  max-height: calc(100vh - 260px);
+  overflow: hidden;
+}
+
+.col-scroll {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.col-scroll::-webkit-scrollbar {
+  width: 6px;
+}
+
+.col-scroll::-webkit-scrollbar-thumb {
+  background: var(--kanban-border);
+  border-radius: 999px;
 }
 
 .board-loading {
