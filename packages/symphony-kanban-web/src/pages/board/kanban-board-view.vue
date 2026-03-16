@@ -439,22 +439,23 @@ onUnmounted(() => {
   gap: 12px;
   min-height: 120px;
   max-height: calc(100vh - 260px);
-  overflow: hidden;
+  overflow-y: auto;
+  padding-right: 4px;
 }
 
 .col-scroll {
   display: flex;
   flex-direction: column;
   gap: 12px;
-  overflow-y: auto;
-  padding-right: 4px;
+  flex: 1;
+  min-height: 0;
 }
 
-.col-scroll::-webkit-scrollbar {
+.board-col::-webkit-scrollbar {
   width: 6px;
 }
 
-.col-scroll::-webkit-scrollbar-thumb {
+.board-col::-webkit-scrollbar-thumb {
   background: var(--kanban-border);
   border-radius: 999px;
 }
