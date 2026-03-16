@@ -435,6 +435,8 @@ onUnmounted(() => {
   padding-bottom: 8px;
   flex: 1;
   min-height: 0;
+  align-items: stretch;
+  grid-auto-rows: minmax(0, 1fr);
 }
 
 .board-col {
@@ -443,6 +445,7 @@ onUnmounted(() => {
   gap: 12px;
   min-height: 120px;
   min-height: 0;
+  height: 100%;
 }
 
 .col-scroll {
