@@ -15,7 +15,29 @@ export const routes: RouteRecordRaw[] = [
   {
     path: "/issues/:id",
     name: "issues-detail",
-    component: () => import("../pages/issues/issue-detail-view.vue"),
+    component: () => import("../pages/issues/issue-detail-shell.vue"),
+    children: [
+      {
+        path: "",
+        name: "issues-detail-base",
+        component: () => import("../pages/issues/issue-detail-view.vue"),
+      },
+      {
+        path: "session",
+        name: "issues-detail-session",
+        component: () => import("../pages/sessions/web-session-run.vue"),
+      },
+      {
+        path: "review",
+        name: "issues-detail-review",
+        component: () => import("../pages/review/review-view.vue"),
+      },
+      {
+        path: "error",
+        name: "issues-detail-error",
+        component: () => import("../pages/errors/blocked-error-handling-view.vue"),
+      },
+    ],
   },
   {
     path: "/sessions/:id",
