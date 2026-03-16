@@ -437,6 +437,8 @@ onUnmounted(() => {
   min-height: 0;
   align-items: stretch;
   grid-auto-rows: minmax(0, 1fr);
+  width: 100%;
+  min-width: 1280px;
 }
 
 .board-col {
