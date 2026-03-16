@@ -529,7 +529,7 @@ app.post("/issues/:id/retry", (req, res) => {
     return;
   }
   db.prepare("UPDATE issues SET status = ?, updated_at = ? WHERE id = ?").run(
-    "InProgress",
+    "Todo",
     new Date().toISOString(),
     issue.id,
   );
@@ -554,7 +554,11 @@ app.get("/scheduler/claim", (_req, res) => {
       now,
       row.id,
     );
-    return getIssueById(row.id);
+    const claimed = getIssueById(row.id);
+    if (claimed) {
+      writeIssueEvent(row.id, "scheduler_claimed", claimed);
+    }
+    return claimed;
   });
   const claimed = tx();
   if (!claimed) {
