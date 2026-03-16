@@ -500,6 +500,7 @@ onUnmounted(() => {
 
 .card {
   border-radius: 10px;
+  min-width: 0;
 }
 
 .card-clickable {
@@ -509,6 +510,8 @@ onUnmounted(() => {
 .card-title {
   font-weight: 600;
   margin-bottom: 8px;
+  word-break: break-word;
+  overflow-wrap: anywhere;
 }
 
 .tag-row {
