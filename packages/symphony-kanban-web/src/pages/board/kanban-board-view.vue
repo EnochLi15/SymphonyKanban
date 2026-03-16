@@ -429,7 +429,7 @@ onUnmounted(() => {
 
 .board {
   display: grid;
-  grid-template-columns: repeat(6, minmax(220px, 1fr));
+  grid-template-columns: repeat(6, minmax(0, 1fr));
   gap: 16px;
   overflow-x: auto;
   padding-bottom: 8px;
@@ -437,8 +437,7 @@ onUnmounted(() => {
   min-height: 0;
   align-items: stretch;
   grid-auto-rows: minmax(0, 1fr);
-  width: 100%;
-  min-width: 1280px;
+  width: max(100%, 1280px);
 }
 
 .board-col {
@@ -448,6 +447,7 @@ onUnmounted(() => {
   min-height: 120px;
   min-height: 0;
   height: 100%;
+  min-width: 0;
 }
 
 .col-scroll {
