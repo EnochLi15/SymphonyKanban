@@ -1,89 +1,203 @@
 <template>
   <AppShell>
     <div class="tag-content">
-      <h1 class="page-title">
-        标签与工作流配置 (Tag &amp; Workflow Configuration)
-      </h1>
+      <h1 class="page-title">标签与工作流配置 (Tag &amp; Workflow Configuration)</h1>
 
       <section class="config-panel">
         <aside class="tag-col">
           <div class="tag-col-title">管理标签 (Tags)</div>
-          <el-button class="tag-item tag-item--active" text>bug</el-button>
-          <el-button class="tag-item" text>feature</el-button>
-          <el-button class="tag-item tag-item--add" text>+ 新建标签</el-button>
+          <el-button
+            v-for="tag in tags"
+            :key="tag.id"
+            class="tag-item"
+            :class="{ 'tag-item--active': tag.id === selectedTagId }"
+            text
+            @click="selectTag(tag.id)"
+          >
+            {{ tag.name }}
+          </el-button>
+          <el-button class="tag-item tag-item--add" text @click="createNewTag">
+            + 新建标签
+          </el-button>
         </aside>
 
         <div class="form-col">
           <div class="params-row">
             <div class="param-block">
               <div class="param-label">最大并发 (max_concurrent_agents)</div>
-              <el-input class="param-input" model-value="10"  />
+              <el-input-number
+                v-model="settings.maxConcurrency"
+                :min="1"
+                :max="20"
+                class="param-input"
+              />
             </div>
             <div class="param-block">
-              <div class="param-label">迭代上限 (max_turns)</div>
-              <el-input class="param-input" model-value="20"  />
+              <div class="param-label">轮询间隔 (ms)</div>
+              <el-input-number
+                v-model="settings.pollIntervalMs"
+                :min="1000"
+                :step="500"
+                class="param-input"
+              />
+            </div>
+          </div>
+          <div class="inline-actions">
+            <el-button class="action-primary" @click="saveSettings">保存调度配置</el-button>
+          </div>
+
+          <div class="form-label">标签属性 (Tag)</div>
+          <div class="tag-form">
+            <el-input v-model="tagForm.name" placeholder="标签名称" />
+            <el-input v-model="tagForm.type" placeholder="类型 (可选)" />
+            <el-input v-model="tagForm.color" placeholder="颜色 (可选)" />
+            <div class="inline-actions">
+              <el-button class="action-primary" @click="saveTag">保存标签</el-button>
+              <el-button class="action-muted" @click="deleteTag" :disabled="!selectedTagId">
+                删除标签
+              </el-button>
             </div>
           </div>
 
-          <div class="form-label">工作流定义 (Workflow Definition)</div>
-          <el-input
-            class="form-area"
-            type="textarea"
-            :rows="5"
-            model-value="- Todo: run agent\n- In Progress: code and test\n- Review: merge pr"
-            
-          />
-
-          <div class="form-label">规则 (Rules)</div>
-          <el-input
-            class="form-area"
-            type="textarea"
-            :rows="5"
-            model-value="1. 必须使用 TypeScript\n2. 禁止使用 any\n3. 函数必须包含 JSDoc"
-            
-          />
-
-          <div class="form-label">验收标准 (Acceptance Criteria)</div>
-          <el-input
-            class="form-area"
-            type="textarea"
-            :rows="5"
-            model-value="- 测试覆盖率 > 80%\n- CI 流程全绿\n- 完成代码自审"
-            
-          />
+          <div class="form-label">工作流行为 (Workflow Behavior)</div>
+          <div class="workflow-form">
+            <el-select v-model="workflowForm.state" placeholder="状态">
+              <el-option v-for="state in states" :key="state" :label="state" :value="state" />
+            </el-select>
+            <el-input v-model="workflowForm.behavior" placeholder="行为 (如 ci-required)" />
+            <el-input
+              v-model="workflowForm.configJson"
+              type="textarea"
+              :rows="4"
+              placeholder="行为配置 JSON (可选)"
+            />
+            <div class="inline-actions">
+              <el-button class="action-primary" @click="saveWorkflow">保存工作流规则</el-button>
+            </div>
+          </div>
         </div>
-
-        <aside class="hooks-col">
-          <div class="hooks-title">生命周期钩子 (Hooks)</div>
-          <div class="hook-block">
-            <div class="hook-label hook-label--success">after_create</div>
-            <div class="code-box code-box--success">
-              git clone --depth 1 ...<br />
-              if command -v mise ...<br />
-              &nbsp;&nbsp;cd elixir &amp;&amp; mix deps.get<br />
-              fi
-            </div>
-          </div>
-          <div class="hook-block">
-            <div class="hook-label hook-label--danger">before_remove</div>
-            <div class="code-box code-box--danger">
-              cd elixir &amp;&amp; mix workspace.before_remove
-            </div>
-          </div>
-          <div class="hooks-actions">
-            <el-button class="hook-action hook-action--delete">删除</el-button>
-            <el-button class="hook-action hook-action--apply">
-              应用并保存配置
-            </el-button>
-          </div>
-        </aside>
       </section>
     </div>
   </AppShell>
 </template>
 
 <script setup lang="ts">
+import { computed, onMounted, reactive, ref } from "vue";
 import AppShell from "../../components/AppShell.vue";
+import { buildApi } from "../../lib/api";
+import type { SchedulerSettingsDTO, TagDTO, WorkflowDefDTO } from "symphony-kanban-shared";
+
+const api = buildApi(import.meta.env.VITE_API_BASE ?? "http://localhost:3001");
+
+const tags = ref<TagDTO[]>([]);
+const workflows = ref<WorkflowDefDTO[]>([]);
+const selectedTagId = ref<string | null>(null);
+const states = ["Backlog", "Todo", "InProgress", "Review", "Blocked", "Done"];
+
+const settings = reactive<SchedulerSettingsDTO>({
+  id: "",
+  maxConcurrency: 3,
+  pollIntervalMs: 5000,
+  updatedAt: "",
+});
+
+const tagForm = reactive({
+  name: "",
+  type: "",
+  color: "",
+});
+
+const workflowForm = reactive({
+  state: "Todo",
+  behavior: "",
+  configJson: "",
+});
+
+const selectedWorkflow = computed(() =>
+  workflows.value.find((workflow) => workflow.tagId === selectedTagId.value),
+);
+
+const loadAll = async () => {
+  const [tagRes, workflowRes, settingsRes] = await Promise.all([
+    api.listTags(),
+    api.listWorkflows(),
+    api.getSchedulerSettings(),
+  ]);
+  tags.value = tagRes.data ?? [];
+  workflows.value = workflowRes.data ?? [];
+  if (settingsRes.data) {
+    settings.id = settingsRes.data.id;
+    settings.maxConcurrency = settingsRes.data.maxConcurrency;
+    settings.pollIntervalMs = settingsRes.data.pollIntervalMs;
+    settings.updatedAt = settingsRes.data.updatedAt;
+  }
+  if (!selectedTagId.value && tags.value.length > 0) {
+    selectTag(tags.value[0].id);
+  }
+};
+
+const selectTag = (id: string) => {
+  selectedTagId.value = id;
+  const tag = tags.value.find((row) => row.id === id);
+  tagForm.name = tag?.name ?? "";
+  tagForm.type = tag?.type ?? "";
+  tagForm.color = tag?.color ?? "";
+  const workflow = workflows.value.find((row) => row.tagId === id);
+  workflowForm.state = workflow?.state ?? "Todo";
+  workflowForm.behavior = workflow?.behavior ?? "";
+  workflowForm.configJson = workflow?.configJson ?? "";
+};
+
+const createNewTag = async () => {
+  const name = window.prompt("请输入标签名称");
+  if (!name) return;
+  await api.createTag({ name });
+  await loadAll();
+};
+
+const saveTag = async () => {
+  if (!selectedTagId.value) return;
+  await api.updateTag(selectedTagId.value, {
+    name: tagForm.name,
+    type: tagForm.type || null,
+    color: tagForm.color || null,
+  });
+  await loadAll();
+};
+
+const deleteTag = async () => {
+  if (!selectedTagId.value) return;
+  await api.deleteTag(selectedTagId.value);
+  selectedTagId.value = null;
+  await loadAll();
+};
+
+const saveWorkflow = async () => {
+  if (!selectedTagId.value) return;
+  const payload = {
+    tagId: selectedTagId.value,
+    state: workflowForm.state,
+    behavior: workflowForm.behavior,
+    configJson: workflowForm.configJson || null,
+  };
+  if (selectedWorkflow.value?.id) {
+    await api.updateWorkflow(selectedWorkflow.value.id, payload);
+  } else {
+    await api.createWorkflow(payload);
+  }
+  await loadAll();
+};
+
+const saveSettings = async () => {
+  await api.updateSchedulerSettings({
+    maxConcurrency: settings.maxConcurrency,
+    pollIntervalMs: settings.pollIntervalMs,
+  });
+};
+
+onMounted(() => {
+  loadAll();
+});
 </script>
 
 <style scoped>
@@ -180,110 +294,31 @@ import AppShell from "../../components/AppShell.vue";
   font-weight: 600;
 }
 
-.param-input :deep(.el-input__wrapper) {
-  background: var(--kanban-surface);
-  border: 1px solid var(--kanban-border);
-  box-shadow: none;
-}
-
-.param-input :deep(.el-input__inner) {
-  color: var(--kanban-text-primary);
-  font-size: 14px;
-}
-
 .form-label {
   font-size: 13px;
   font-weight: 600;
 }
 
-.form-area :deep(.el-textarea__inner) {
-  background: var(--kanban-surface);
-  border: 1px solid var(--kanban-border);
-  color: var(--kanban-text-secondary);
-  font-size: 14px;
-  font-family: "Space Grotesk", "Inter", "DM Sans", system-ui, -apple-system,
-    sans-serif;
-  line-height: 1.5;
-  box-shadow: none;
-}
-
-.hooks-col {
-  width: 340px;
+.tag-form,
+.workflow-form {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 12px;
 }
 
-.hooks-title {
-  font-size: 16px;
-  font-weight: 700;
-}
-
-.hook-block {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.hook-label {
-  font-size: 13px;
-  font-weight: 600;
-}
-
-.hook-label--success {
-  color: var(--kanban-success);
-}
-
-.hook-label--danger {
-  color: var(--kanban-error);
-}
-
-.code-box {
-  padding: 12px;
-  border-radius: 6px;
-  background: #0f1117;
-  font-size: 12px;
-  font-family: "Fira Code", "Space Grotesk", monospace;
-  line-height: 1.5;
-  opacity: 0.9;
-}
-
-.code-box--success {
-  border: 1px solid var(--kanban-success);
-  color: var(--kanban-success);
-  min-height: 200px;
-}
-
-.code-box--danger {
-  border: 1px solid var(--kanban-error);
-  color: var(--kanban-error);
-  min-height: 120px;
-}
-
-.hooks-actions {
+.inline-actions {
   display: flex;
   gap: 12px;
-  align-items: center;
 }
 
-.hook-action {
-  border-radius: 6px;
-  padding: 14px;
-  font-size: 14px;
-  font-weight: 700;
-}
-
-.hook-action--delete {
-  width: 100px;
-  border: 1px solid var(--kanban-error);
-  color: var(--kanban-error);
-  background: transparent;
-}
-
-.hook-action--apply {
-  flex: 1;
+.action-primary {
   background: var(--kanban-primary);
   color: var(--kanban-text-primary);
   border: none;
+}
+
+.action-muted {
+  background: var(--kanban-muted);
+  border: 1px solid var(--kanban-border);
 }
 </style>

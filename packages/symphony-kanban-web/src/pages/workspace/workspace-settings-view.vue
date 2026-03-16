@@ -1,25 +1,20 @@
 <template>
   <AppShell>
     <div class="settings-content">
-      <h1 class="page-title">工作区详情与配置: Symphony-Kanban</h1>
+      <h1 class="page-title">工作区详情与配置: {{ form.name || "" }}</h1>
 
       <section class="settings-form">
-        <div class="section-title">工作区路径 (Local Path)</div>
-        <el-input class="path-box" model-value="/Users/enoch/Workspace/SymphonyKanban" readonly />
+        <div class="section-title">工作区名称</div>
+        <el-input class="path-box" v-model="form.name" />
 
-        <div class="section-title">
-          全局规则注入 (Global Context &amp; Code Conventions)
-        </div>
-        <el-input
-          class="context-box"
-          type="textarea"
-          :rows="8"
-          model-value="项目说明：Symphony Kanban 是一个 AI 驱动的研发管理工具。\n编码规范：\n1. 强制使用 TypeScript，禁用 any。\n2. React 组件使用 Functional Component 和 Hooks。\n3. CSS 使用 Tailwind V4 或标准 CSS Modules。\n4. 数据库使用 Prisma，修改 schema 后必须生成 migration。"
-          readonly
-        />
+        <div class="section-title">工作区路径 (Local Path)</div>
+        <el-input class="path-box" v-model="form.localPath" />
+
+        <div class="section-title">全局规则注入 (Global Context &amp; Code Conventions)</div>
+        <el-input class="context-box" type="textarea" :rows="8" v-model="form.context" />
 
         <div class="button-row">
-          <el-button class="save-button">保存配置</el-button>
+          <el-button class="save-button" @click="save">保存配置</el-button>
         </div>
       </section>
     </div>
@@ -27,7 +22,41 @@
 </template>
 
 <script setup lang="ts">
+import { onMounted, reactive } from "vue";
+import { useRoute } from "vue-router";
 import AppShell from "../../components/AppShell.vue";
+import { buildApi } from "../../lib/api";
+
+const route = useRoute();
+const api = buildApi(import.meta.env.VITE_API_BASE ?? "http://localhost:3001");
+
+const form = reactive({
+  name: "",
+  localPath: "",
+  context: "",
+});
+
+const load = async () => {
+  const res = await api.listWorkspaces();
+  const list = res.data ?? [];
+  const workspace = list.find((row: any) => row.id === route.params.id);
+  if (!workspace) return;
+  form.name = workspace.name ?? "";
+  form.localPath = workspace.localPath ?? "";
+  form.context = workspace.context ?? "";
+};
+
+const save = async () => {
+  await api.updateWorkspace(route.params.id as string, {
+    name: form.name,
+    localPath: form.localPath || null,
+    context: form.context || null,
+  });
+};
+
+onMounted(() => {
+  load();
+});
 </script>
 
 <style scoped>

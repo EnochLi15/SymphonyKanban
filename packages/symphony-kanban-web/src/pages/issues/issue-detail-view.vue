@@ -48,6 +48,12 @@
 
         <aside class="side-col">
           <div class="field-card">
+            <div class="field-label">执行状态</div>
+            <div class="status-text">
+              {{ executionStatus || "暂无执行" }}
+            </div>
+          </div>
+          <div class="field-card">
             <div class="field-label">状态</div>
             <el-select
               v-model="draft.status"
@@ -121,7 +127,7 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, reactive, ref } from "vue";
+import { onMounted, onUnmounted, reactive, ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { ElMessage, ElMessageBox } from "element-plus";
 import AppShell from "../../components/AppShell.vue";
@@ -136,6 +142,9 @@ const loading = ref(true);
 const deleting = ref(false);
 const workspaces = ref<Array<{ id: string; name: string }>>([]);
 const tagOptions = ref<Array<{ id: string; name: string }>>([]);
+const executionStatus = ref<string | null>(null);
+const executionId = ref<string | null>(null);
+let executionTimer: number | undefined;
 
 const statusOptions = [
   { label: "待排期 (Backlog)", value: "Backlog" },
@@ -201,6 +210,30 @@ const loadIssue = async () => {
     router.push("/board");
   } finally {
     loading.value = false;
+  }
+};
+
+const loadExecution = async () => {
+  try {
+    const res = await api.listExecutions(String(route.params.id));
+    const executions = res.data ?? [];
+    if (executions.length === 0) return;
+    executionId.value = executions[0].id;
+    await pollExecution();
+  } catch (error) {
+    // eslint-disable-next-line no-console
+    console.error("Failed to load execution", error);
+  }
+};
+
+const pollExecution = async () => {
+  if (!executionId.value) return;
+  try {
+    const res = await api.getExecutionStatus(executionId.value);
+    executionStatus.value = res.data?.status ?? null;
+  } catch (error) {
+    // eslint-disable-next-line no-console
+    console.error("Failed to poll execution", error);
   }
 };
 
@@ -290,7 +323,16 @@ const goBack = () => {
 };
 
 onMounted(async () => {
-  await Promise.all([loadOptions(), loadIssue()]);
+  await Promise.all([loadOptions(), loadIssue(), loadExecution()]);
+  executionTimer = window.setInterval(() => {
+    pollExecution();
+  }, 5000);
+});
+
+onUnmounted(() => {
+  if (executionTimer) {
+    window.clearInterval(executionTimer);
+  }
 });
 </script>
 
@@ -368,6 +410,11 @@ onMounted(async () => {
 .field-label {
   font-size: 13px;
   font-weight: 600;
+  color: var(--kanban-text-secondary);
+}
+
+.status-text {
+  font-size: 14px;
   color: var(--kanban-text-secondary);
 }
 

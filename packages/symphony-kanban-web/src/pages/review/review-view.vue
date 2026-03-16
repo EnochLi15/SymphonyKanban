@@ -1,21 +1,17 @@
-
-
 <template>
   <AppShell>
     <div class="review-content">
       <header class="review-header">
         <div class="header-left">
           <el-button class="app-back-button" text @click="goBack">← 返回</el-button>
-          <h1 class="review-title">审核任务: User Profile UI</h1>
+          <h1 class="review-title">审核任务: {{ review?.issue.title || "" }}</h1>
         </div>
         <div class="header-actions">
-          <el-button class="action-button action-reject" @click="goBack">
-            驳回 (回到进行中)
+          <el-button class="action-button action-reject" @click="reject">驳回 (回到进行中)</el-button>
+          <el-button class="action-button action-more" @click="requestEvidence">
+            要求补充证据
           </el-button>
-          <el-button class="action-button action-more" @click="goSessionView">
-            要求工作量证明
-          </el-button>
-          <el-button class="action-button action-accept" @click="goBoardView">
+          <el-button class="action-button action-accept" @click="approve">
             通过并标记完成
           </el-button>
         </div>
@@ -25,26 +21,25 @@
         <div class="panel-left">
           <div class="panel-title">工作量证明 (测试 / CI)</div>
           <div class="ci-box">
-            <div class="ci-line ci-line--success">24个前端测试全部通过。</div>
-            <div class="ci-line ci-line--success">包大小在限制内 (+12KB)。</div>
+            <div v-if="testArtifact" class="ci-line ci-line--success">
+              {{ testArtifact.content || testArtifact.summary || "测试记录" }}
+            </div>
+            <div v-else class="ci-line">暂无测试证据</div>
           </div>
 
           <div class="panel-title">Agent 总结</div>
           <div class="summary-box">
-            <p class="summary-text">
-              我已根据设计规范实现了 Profile UI，支持暗黑模式和响应式布局。
-            </p>
+            <p class="summary-text">{{ summaryArtifact?.content || summaryArtifact?.summary || "" }}</p>
           </div>
         </div>
 
         <div class="panel-right">
           <div class="panel-title">Diff 概览</div>
           <div class="diff-box">
-            <div class="diff-line">export const UserProfile = () =&gt; {</div>
-            <div class="diff-line diff-line--success">
-              + return &lt;div className=&quot;profile-card&quot;&gt;...&lt;/div&gt;;
+            <div v-if="diffArtifact" class="diff-line">
+              {{ diffArtifact.content || diffArtifact.summary || "" }}
             </div>
-            <div class="diff-line">}</div>
+            <div v-else class="diff-line">暂无 diff</div>
           </div>
         </div>
       </section>
@@ -53,22 +48,58 @@
 </template>
 
 <script setup lang="ts">
-import { useRouter } from "vue-router";
+import { computed, onMounted, ref } from "vue";
+import { useRoute, useRouter } from "vue-router";
 import AppShell from "../../components/AppShell.vue";
+import { buildApi } from "../../lib/api";
+import type { ExecutionArtifactDTO, ReviewDTO } from "symphony-kanban-shared";
+
+const route = useRoute();
+const router = useRouter();
+const api = buildApi(import.meta.env.VITE_API_BASE ?? "http://localhost:3001");
+
+const review = ref<ReviewDTO | null>(null);
+
+const load = async () => {
+  const res = await api.getReview(route.params.id as string);
+  review.value = res.data ?? null;
+};
+
+const summaryArtifact = computed(() =>
+  review.value?.artifacts.find((artifact) => artifact.type === "summary"),
+);
+const diffArtifact = computed(() =>
+  review.value?.artifacts.find((artifact) => artifact.type === "diff"),
+);
+const testArtifact = computed(() =>
+  review.value?.artifacts.find((artifact) => artifact.type === "test"),
+);
+
+const approve = async () => {
+  if (!review.value) return;
+  await api.transitionIssue(review.value.issue.id, "Done");
+  router.push("/board");
+};
+
+const reject = async () => {
+  if (!review.value) return;
+  await api.transitionIssue(review.value.issue.id, "InProgress");
+  router.push("/board");
+};
+
+const requestEvidence = async () => {
+  if (!review.value) return;
+  await api.transitionIssue(review.value.issue.id, "Blocked");
+  router.push(`/errors/${review.value.issue.id}`);
+};
 
 const goBack = () => {
   router.back();
 };
 
-const router = useRouter();
-
-const goBoardView = () => {
-  router.push("/board");
-};
-
-const goSessionView = () => {
-  router.push("/sessions/AUTH-102");
-};
+onMounted(() => {
+  load();
+});
 </script>
 
 <style scoped>
@@ -194,7 +225,7 @@ const goSessionView = () => {
   color: var(--kanban-text-primary);
 }
 
-.diff-line--success {
-  color: var(--kanban-success);
+.diff-line {
+  white-space: pre-wrap;
 }
 </style>

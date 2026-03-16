@@ -4,17 +4,23 @@
       <header class="workspace-header">
         <h1 class="workspace-title">工作区管理</h1>
         <div class="header-actions">
-          <el-button class="action-button action-muted">从 OpenCode 获取</el-button>
-          <el-button class="action-button action-primary">+ 添加工作区</el-button>
+          <el-button class="action-button action-primary" @click="createWorkspace">
+            + 添加工作区
+          </el-button>
         </div>
       </header>
 
       <section class="workspace-list">
-        <el-card class="workspace-card" @click="goWorkspaceSettings">
+        <el-card
+          v-for="workspace in workspaces"
+          :key="workspace.id"
+          class="workspace-card"
+          @click="goWorkspaceSettings(workspace.id)"
+        >
           <div class="workspace-info">
-            <div class="workspace-name">Symphony-Kanban</div>
+            <div class="workspace-name">{{ workspace.name }}</div>
             <div class="workspace-path">
-              /Users/enoch/Workspace/SymphonyKanban
+              {{ workspace.localPath || "(未设置路径)" }}
             </div>
           </div>
         </el-card>
@@ -24,14 +30,42 @@
 </template>
 
 <script setup lang="ts">
+import { onMounted, ref } from "vue";
 import { useRouter } from "vue-router";
 import AppShell from "../../components/AppShell.vue";
+import { buildApi } from "../../lib/api";
+import type { WorkspaceDTO } from "symphony-kanban-shared";
 
 const router = useRouter();
+const api = buildApi(import.meta.env.VITE_API_BASE ?? "http://localhost:3001");
 
-const goWorkspaceSettings = () => {
-  router.push("/workspaces/Symphony-Kanban");
+const workspaces = ref<WorkspaceDTO[]>([]);
+
+const load = async () => {
+  const res = await api.listWorkspaces();
+  workspaces.value = res.data ?? [];
 };
+
+const createWorkspace = async () => {
+  const name = window.prompt("工作区名称");
+  if (!name) return;
+  const localPath = window.prompt("本地路径 (可选)") ?? "";
+  const context = window.prompt("上下文说明 (可选)") ?? "";
+  await api.createWorkspace({
+    name,
+    localPath: localPath || null,
+    context: context || null,
+  });
+  await load();
+};
+
+const goWorkspaceSettings = (id: string) => {
+  router.push(`/workspaces/${id}`);
+};
+
+onMounted(() => {
+  load();
+});
 </script>
 
 <style scoped>
@@ -67,11 +101,6 @@ const goWorkspaceSettings = () => {
   font-size: 14px;
   font-weight: 400;
   color: var(--kanban-text-primary);
-}
-
-.action-muted {
-  background: var(--kanban-muted);
-  border: none;
 }
 
 .action-primary {

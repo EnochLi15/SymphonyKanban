@@ -4,33 +4,31 @@
       <header class="blocked-header">
         <div class="header-left">
           <el-button class="app-back-button" text @click="goBack">← 返回</el-button>
-          <h1 class="blocked-title">任务阻塞: 数据库迁移错误</h1>
+          <h1 class="blocked-title">任务阻塞: {{ review?.issue.title || "" }}</h1>
         </div>
       </header>
 
       <section class="blocked-panels">
         <div class="alert-box">
-          <div class="alert-title">执行中断: Prisma 迁移应用失败。</div>
-          <div class="alert-text">错误: 当前数据库模式中不存在关联 'User'。</div>
+          <div class="alert-title">执行中断</div>
+          <div class="alert-text">
+            {{ review?.execution.errorSummary || "暂无错误摘要" }}
+          </div>
         </div>
 
         <div class="context-box">
           <div class="context-title">Agent 上下文快照</div>
           <div class="context-text">
-            Agent 尝试应用 `npx prisma db push`，但遇到模式验证错误。前一个迁移
-            `20260315_init` 被部分应用。
+            {{ summaryArtifact?.content || summaryArtifact?.summary || "暂无上下文" }}
           </div>
         </div>
 
         <div class="blocked-actions">
-          <el-button class="action-button action-retry" @click="goSessionView">
+          <el-button class="action-button action-retry" @click="retry">
             重试执行
           </el-button>
           <el-button class="action-button action-context" @click="goIssueView">
             修改上下文并恢复
-          </el-button>
-          <el-button class="action-button action-takeover" @click="goSessionView">
-            手动接管 (打开终端)
           </el-button>
         </div>
       </section>
@@ -39,22 +37,43 @@
 </template>
 
 <script setup lang="ts">
-import { useRouter } from "vue-router";
+import { computed, onMounted, ref } from "vue";
+import { useRoute, useRouter } from "vue-router";
 import AppShell from "../../components/AppShell.vue";
+import { buildApi } from "../../lib/api";
+import type { ReviewDTO } from "symphony-kanban-shared";
+
+const route = useRoute();
+const router = useRouter();
+const api = buildApi(import.meta.env.VITE_API_BASE ?? "http://localhost:3001");
+
+const review = ref<ReviewDTO | null>(null);
+
+const load = async () => {
+  const res = await api.getReview(route.params.id as string);
+  review.value = res.data ?? null;
+};
+
+const summaryArtifact = computed(() =>
+  review.value?.artifacts.find((artifact) => artifact.type === "summary"),
+);
+
+const retry = async () => {
+  await api.retryIssue(route.params.id as string);
+  router.push("/board");
+};
+
+const goIssueView = () => {
+  router.push(`/issues/${route.params.id}`);
+};
 
 const goBack = () => {
   router.back();
 };
 
-const router = useRouter();
-
-const goSessionView = () => {
-  router.push("/sessions/AUTH-102");
-};
-
-const goIssueView = () => {
-  router.push("/issues/AUTH-102");
-};
+onMounted(() => {
+  load();
+});
 </script>
 
 <style scoped>
@@ -135,6 +154,7 @@ const goIssueView = () => {
   font-weight: 400;
   color: var(--kanban-text-secondary);
   line-height: 1.5;
+  white-space: pre-wrap;
 }
 
 .blocked-actions {
@@ -158,9 +178,5 @@ const goIssueView = () => {
 .action-context {
   background: var(--kanban-surface);
   border: 1px solid var(--kanban-border);
-}
-
-.action-takeover {
-  background: var(--kanban-muted);
 }
 </style>
