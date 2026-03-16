@@ -428,15 +428,12 @@ onUnmounted(() => {
 }
 
 .board {
-  display: grid;
-  grid-template-columns: repeat(6, minmax(0, 1fr));
+  display: flex;
   gap: 16px;
   overflow-x: auto;
   padding-bottom: 8px;
   flex: 1;
   min-height: 0;
-  align-items: stretch;
-  grid-auto-rows: minmax(0, 1fr);
   width: max(100%, 1280px);
 }
 
@@ -446,7 +443,7 @@ onUnmounted(() => {
   gap: 12px;
   min-height: 120px;
   min-height: 0;
-  height: 100%;
+  flex: 1 1 0;
   min-width: 0;
 }
 
