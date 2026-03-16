@@ -97,6 +97,18 @@ export const groupByStatus = (issues: IssueView[]) => {
   };
 };
 
+export const mergeIssueUpdates = (base: IssueView[], incoming: IssueView[]) => {
+  const byId = new Map(base.map((issue) => [issue.id, issue]));
+  const order = base.map((issue) => issue.id);
+  incoming.forEach((issue) => {
+    if (!byId.has(issue.id)) {
+      order.push(issue.id);
+    }
+    byId.set(issue.id, { ...byId.get(issue.id), ...issue });
+  });
+  return order.map((id) => byId.get(id)!).filter(Boolean);
+};
+
 export const groupByPriority = (issues: IssueView[]) => {
   const buckets = {
     P0: [] as IssueView[],

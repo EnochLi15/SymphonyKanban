@@ -8,6 +8,7 @@ import {
   filterIssues,
   groupByStatus,
   groupByPriority,
+  mergeIssueUpdates,
 } from "./issue-board-utils";
 
 const baseIssue = (overrides: Partial<any> = {}) => ({
@@ -86,5 +87,19 @@ describe("issue-board-utils", () => {
   it("returns priority meta for styling", () => {
     const meta = priorityMeta(2);
     expect(meta.code).toBe("P2");
+  });
+
+  it("merges by id and preserves order", () => {
+    const base = [
+      baseIssue({ id: "a", status: "Todo" }),
+      baseIssue({ id: "b", status: "Review" }),
+    ];
+    const next = [
+      baseIssue({ id: "b", status: "Done" }),
+      baseIssue({ id: "c", status: "Todo" }),
+    ];
+    const merged = mergeIssueUpdates(base, next);
+    expect(merged.map((issue) => issue.id)).toEqual(["a", "b", "c"]);
+    expect(merged.find((issue) => issue.id === "b")?.status).toBe("Done");
   });
 });
