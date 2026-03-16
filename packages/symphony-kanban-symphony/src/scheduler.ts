@@ -52,6 +52,9 @@ export const startScheduler = async ({
       } else {
         await api.transitionIssue(issue.id, "Blocked");
       }
+    } catch (error) {
+      // eslint-disable-next-line no-console
+      console.error("Scheduler transition failed", error);
     } finally {
       running -= 1;
     }

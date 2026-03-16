@@ -30,11 +30,15 @@ export const buildApi = (base: string) => ({
     return res.json();
   },
   async transitionIssue(id: string, toStatus: string) {
-    await fetch(`${base}/issues/${id}/transition`, {
+    const res = await fetch(`${base}/issues/${id}/transition`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ toStatus }),
     });
+    if (!res.ok) {
+      const detail = await res.text().catch(() => "");
+      throw new Error(`transition failed: ${res.status} ${detail}`);
+    }
   },
   async listWorkspaces() {
     const res = await fetch(`${base}/workspaces`);

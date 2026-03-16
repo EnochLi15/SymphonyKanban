@@ -24,14 +24,25 @@ const buildPrompt = (input: RunInput) => {
 };
 
 const extractSummary = (messages: Array<any>) => {
-  const assistant = [...messages].reverse().find((msg) => msg.role === "assistant");
-  if (!assistant) return null;
-  const parts = assistant.parts ?? [];
+  const lastTextMessage =
+    [...messages].reverse().find((msg) => {
+      const parts = msg?.parts ?? [];
+      return parts.some((part: any) => part.type === "text" && part.text);
+    }) ?? null;
+  if (!lastTextMessage) return null;
+  const parts = lastTextMessage.parts ?? [];
   const textParts = parts
     .filter((part: any) => part.type === "text")
     .map((part: any) => part.text)
     .filter(Boolean);
   return textParts.length ? textParts.join("\n") : null;
+};
+
+const isQuestionLike = (text: string) => {
+  const trimmed = text.trim();
+  if (!trimmed) return false;
+  if (/[?？]\s*$/.test(trimmed)) return true;
+  return /请问|能否|是否|需要你|请提供|请补充|还需要|麻烦提供/.test(trimmed);
 };
 
 export const runOpencode = async (input: RunInput): Promise<RunResult> => {
@@ -43,6 +54,16 @@ export const runOpencode = async (input: RunInput): Promise<RunResult> => {
     query: input.workspacePath ? { directory: input.workspacePath } : undefined,
   });
   const sessionId = (session as any).data?.id ?? (session as any).id;
+  // Record session id for debugging/correlation.
+  await input.onArtifact("session", sessionId, "opencode session id");
+  // eslint-disable-next-line no-console
+  console.log(`[opencode:${sessionId}] session created`);
+
+  const getSessionId = (event: any) =>
+    event?.properties?.sessionID ??
+    event?.properties?.sessionId ??
+    event?.sessionID ??
+    event?.sessionId;
 
   await client.session.promptAsync({
     path: { id: sessionId },
@@ -60,13 +81,32 @@ export const runOpencode = async (input: RunInput): Promise<RunResult> => {
   let diffPayload: string | null = null;
   let errorSummary: string | null = null;
   let done = false;
+  let lastQuestionCheck = 0;
 
   for await (const event of events.stream as AsyncGenerator<any>) {
+    const eventSessionId = getSessionId(event);
+    const isTargetSession = !eventSessionId || eventSessionId === sessionId;
     if (event?.type) {
       logLines.push(JSON.stringify(event));
+      if (isTargetSession) {
+        // eslint-disable-next-line no-console
+        console.log(`[opencode:${sessionId}] event ${event.type}`);
+      }
     }
+    if (!isTargetSession) continue;
+
     if (event?.type === "session.diff") {
       diffPayload = JSON.stringify(event.properties?.diff ?? event.properties ?? event);
+    }
+    if (event?.type === "permission.updated") {
+      errorSummary = "permission_required";
+      done = true;
+      break;
+    }
+    if (event?.type === "question.asked") {
+      errorSummary = "needs_user_input";
+      done = true;
+      break;
     }
     if (event?.type === "session.error") {
       errorSummary = JSON.stringify(event.properties?.error ?? "unknown error");
@@ -76,6 +116,44 @@ export const runOpencode = async (input: RunInput): Promise<RunResult> => {
     if (event?.type === "session.idle") {
       done = true;
       break;
+    }
+    if (event?.type === "session.status") {
+      const status = event.properties?.status;
+      if (status?.type === "idle") {
+        done = true;
+        break;
+      }
+    }
+    if (
+      event?.type?.startsWith("message.part") ||
+      event?.type === "message.updated"
+    ) {
+      const now = Date.now();
+      if (now - lastQuestionCheck > 1000) {
+        lastQuestionCheck = now;
+        const messagesRes = await client.session.messages({
+          path: { id: sessionId },
+          query: input.workspacePath ? { directory: input.workspacePath } : undefined,
+        });
+        const messages = (messagesRes as any).data ?? messagesRes ?? [];
+        const latestTextMessage = [...messages]
+          .reverse()
+          .find((msg: any) => {
+            const parts = msg?.parts ?? [];
+            return parts.some((part: any) => part.type === "text" && part.text);
+          });
+        const parts = latestTextMessage?.parts ?? [];
+        const textParts = parts
+          .filter((part: any) => part.type === "text")
+          .map((part: any) => part.text)
+          .filter(Boolean);
+        const text = textParts.join("\n");
+        if (text && isQuestionLike(text)) {
+          errorSummary = "needs_user_input";
+          done = true;
+          break;
+        }
+      }
     }
     if (event?.type === "session.compacted") {
       done = true;
@@ -111,6 +189,9 @@ export const runOpencode = async (input: RunInput): Promise<RunResult> => {
     summaryText = errorSummary
       ? `Execution failed: ${errorSummary}`
       : "Execution completed.";
+  }
+  if (!errorSummary && summaryText && isQuestionLike(summaryText)) {
+    errorSummary = "needs_user_input";
   }
   await input.onArtifact("summary", summaryText);
 
