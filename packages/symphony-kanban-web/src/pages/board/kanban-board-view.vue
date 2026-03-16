@@ -116,7 +116,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref } from "vue";
+import { computed, onMounted, onUnmounted, ref } from "vue";
 import { useRouter } from "vue-router";
 import { ElMessage } from "element-plus";
 import AppShell from "../../components/AppShell.vue";
@@ -124,6 +124,7 @@ import { buildApi } from "../../lib/api";
 import {
   filterIssues,
   groupByStatus,
+  mergeIssueUpdates,
   priorityLabel,
   priorityMeta,
   sortIssues,
@@ -165,6 +166,7 @@ const dragging = ref<IssueView | null>(null);
 const workspaces = ref<WorkspaceDTO[]>([]);
 const tags = ref<TagDTO[]>([]);
 const filters = ref<FilterState>({ workspaceId: "all", tags: [] });
+let refreshTimer: number | undefined;
 
 const workspaceMap = computed(
   () => new Map(workspaces.value.map((workspace) => [workspace.id, workspace.name])),
@@ -237,6 +239,19 @@ const loadIssues = async () => {
   }
 };
 
+const refreshIssues = async () => {
+  if (dragging.value) return;
+  try {
+    const issuesResponse = await api.listIssues();
+    const data = (issuesResponse.data ?? []) as IssueDTO[];
+    const next = data.map(withWorkspaceName);
+    issues.value = mergeIssueUpdates(issues.value, next);
+  } catch (error) {
+    // eslint-disable-next-line no-console
+    console.error("Failed to refresh issues", error);
+  }
+};
+
 const updateIssueInList = (updated: IssueDTO) => {
   const next = withWorkspaceName(updated);
   const index = issues.value.findIndex((issue) => issue.id === updated.id);
@@ -293,7 +308,18 @@ const goIssueDetail = (id: string) => {
   router.push(`/issues/${id}`);
 };
 
-onMounted(loadIssues);
+onMounted(async () => {
+  await loadIssues();
+  refreshTimer = window.setInterval(() => {
+    refreshIssues();
+  }, 5000);
+});
+
+onUnmounted(() => {
+  if (refreshTimer) {
+    window.clearInterval(refreshTimer);
+  }
+});
 </script>
 
 <style scoped>
