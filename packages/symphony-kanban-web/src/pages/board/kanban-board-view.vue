@@ -458,6 +458,11 @@ onUnmounted(() => {
   padding-right: 4px;
 }
 
+.col-scroll > .card,
+.col-scroll > .empty-col {
+  flex-shrink: 0;
+}
+
 .col-scroll::-webkit-scrollbar {
   width: 6px;
 }
