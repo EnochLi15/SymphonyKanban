@@ -8,6 +8,25 @@ describe("schema", () => {
     const names = cols.map((c) => c.name);
     expect(names).toContain("deleted_at");
   });
+
+  it("includes execution tables", () => {
+    const tables = db
+      .prepare("SELECT name FROM sqlite_master WHERE type='table'")
+      .all() as Array<{ name: string }>;
+    const names = tables.map((t) => t.name);
+    expect(names).toContain("executions");
+    expect(names).toContain("execution_artifacts");
+    expect(names).toContain("workflow_defs");
+    expect(names).toContain("scheduler_settings");
+  });
+
+  it("adds workspace context columns", () => {
+    const cols = db.prepare("PRAGMA table_info(workspaces)").all() as Array<{ name: string }>;
+    const names = cols.map((c) => c.name);
+    expect(names).toContain("local_path");
+    expect(names).toContain("context");
+    expect(names).toContain("updated_at");
+  });
 });
 
 describe("app", () => {
