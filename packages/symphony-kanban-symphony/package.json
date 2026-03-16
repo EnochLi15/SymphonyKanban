@@ -9,7 +9,10 @@
     "start": "node dist/index.js",
     "test": "vitest run --passWithNoTests --config vitest.config.ts"
   },
-  "dependencies": {},
+  "dependencies": {
+    "@opencode-ai/sdk": "^1.2.26",
+    "fizzy-popper": "file:./fizzy-popper"
+  },
   "devDependencies": {
     "tsx": "^4.7.0",
     "typescript": "^5.4.0",
