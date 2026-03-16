@@ -432,6 +432,8 @@ onMounted(loadIssues);
   min-height: 0;
   overflow-y: auto;
   padding-right: 4px;
+  align-content: start;
+  grid-auto-rows: max-content;
 }
 
 .quadrant-scroll::-webkit-scrollbar {
