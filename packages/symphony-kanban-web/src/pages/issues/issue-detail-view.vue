@@ -132,7 +132,7 @@ import { useRoute, useRouter } from "vue-router";
 import { ElMessage, ElMessageBox } from "element-plus";
 import AppShell from "../../components/AppShell.vue";
 import { buildApi } from "../../lib/api";
-import { routeForStatus } from "./issue-detail-routing";
+import { resolveIssueDetailRoute } from "./issue-detail-routing";
 
 const router = useRouter();
 const route = useRoute();
@@ -183,11 +183,13 @@ const isEditing = computed(
 );
 
 const ensureRouteForStatus = (status: string) => {
-  const suffix = routeForStatus(status);
-  const target = `/issues/${draft.id}${suffix}`;
-  if (route.path !== target) {
-    router.replace(target);
-  }
+  const target = resolveIssueDetailRoute({
+    issueId: draft.id,
+    status,
+    currentPath: route.path,
+    isEditing: isEditing.value,
+  });
+  if (target) router.replace(target);
 };
 
 const syncDraft = (data: typeof draft) => {

@@ -544,7 +544,7 @@ app.get("/scheduler/claim", (_req, res) => {
   const tx = db.transaction(() => {
     const row = db
       .prepare(
-        "SELECT id FROM issues WHERE status = 'Todo' ORDER BY priority DESC, created_at ASC LIMIT 1",
+        "SELECT id FROM issues WHERE status = 'Todo' ORDER BY COALESCE(priority, 1) ASC, created_at ASC LIMIT 1",
       )
       .get() as { id: string } | undefined;
     if (!row) return null;

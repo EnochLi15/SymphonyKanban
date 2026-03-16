@@ -434,7 +434,6 @@ onUnmounted(() => {
   padding-bottom: 8px;
   flex: 1;
   min-height: 0;
-  width: max(100%, 1280px);
 }
 
 .board-col {

@@ -58,9 +58,9 @@ import { buildOpencodeSessionUrl } from "./opencode-session";
 const route = useRoute();
 const router = useRouter();
 const api = buildApi(import.meta.env.VITE_API_BASE ?? "http://localhost:3001");
-const opencodeWebBase = import.meta.env.VITE_OPENCODE_WEB_BASE ?? "http://localhost:4096";
 
 const review = ref<ReviewDTO | null>(null);
+const opencodeWebBase = import.meta.env.VITE_OPENCODE_WEB_BASE ?? "http://localhost:4096";
 
 const load = async () => {
   const res = await api.getReview(route.params.id as string);
