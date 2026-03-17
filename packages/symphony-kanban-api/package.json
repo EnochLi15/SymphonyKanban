@@ -10,6 +10,7 @@
     "test": "vitest run --passWithNoTests"
   },
   "dependencies": {
+    "@opencode-ai/sdk": "^1.2.26",
     "better-sqlite3": "^9.4.5",
     "express": "^4.19.2"
   },

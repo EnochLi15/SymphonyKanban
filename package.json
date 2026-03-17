@@ -12,5 +12,8 @@
     "restart": "node scripts/services.mjs restart",
     "build": "pnpm -r run build",
     "test": "pnpm -r run test"
+  },
+  "dependencies": {
+    "@opencode-ai/sdk": "^1.2.26"
   }
 }
