@@ -24,7 +24,10 @@ Align `tag-workflow-view.vue` back to the visual structure, spacing, and copy of
   - `规则` textarea: editable, bound to `tagForm.rules`.
   - `验收标准` textarea: editable, bound to `tagForm.acceptanceCriteria`.
 - Right column:
-  - Preserve legacy “hooks” visual blocks; map to workflow behavior editor controls and save action.
+  - Preserve legacy “hooks” visual blocks; each block is a single plain text input.
+  - `after_create` input maps to `workflowForm.configJson.after_create`.
+  - `before_remove` input maps to `workflowForm.configJson.before_remove`.
+  - Saving writes a normalized JSON payload with those two keys into `configJson` (no legacy compatibility logic).
 - Buttons:
   - Keep `保存标签` to persist `name/type/color/rules/acceptanceCriteria`.
   - Keep `保存工作流规则` to persist workflow behavior.
