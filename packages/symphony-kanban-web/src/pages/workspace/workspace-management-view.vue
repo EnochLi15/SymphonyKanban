@@ -275,6 +275,7 @@ onMounted(() => {
   flex: 1;
   min-height: 0;
   height: 100%;
+  overflow: hidden;
 }
 
 .workspace-header {
