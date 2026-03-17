@@ -3,6 +3,7 @@ import {
   normalizePriority,
   priorityLabel,
   priorityMeta,
+  shouldShowStatusTag,
   statusLabel,
   sortIssues,
   filterIssues,
@@ -101,5 +102,17 @@ describe("issue-board-utils", () => {
     const merged = mergeIssueUpdates(base, next);
     expect(merged.map((issue) => issue.id)).toEqual(["a", "b", "c"]);
     expect(merged.find((issue) => issue.id === "b")?.status).toBe("Done");
+  });
+
+  it("hides status tag in state view", () => {
+    expect(shouldShowStatusTag("state")).toBe(false);
+  });
+
+  it("shows status tag in priority view", () => {
+    expect(shouldShowStatusTag("priority")).toBe(true);
+  });
+
+  it("defaults to show when view mode is missing", () => {
+    expect(shouldShowStatusTag(undefined)).toBe(true);
   });
 });

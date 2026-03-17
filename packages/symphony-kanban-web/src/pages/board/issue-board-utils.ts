@@ -16,6 +16,8 @@ export type FilterState = {
   tags: string[];
 };
 
+export type ViewMode = "state" | "priority";
+
 export type PriorityBucket = "P0" | "P1" | "P2" | "P3";
 
 const priorityLabels = {
@@ -67,6 +69,8 @@ export const statusLabel = (status: string): string => {
       return status;
   }
 };
+
+export const shouldShowStatusTag = (viewMode?: ViewMode): boolean => viewMode !== "state";
 
 export const sortIssues = (issues: IssueView[]): IssueView[] =>
   [...issues].sort((a, b) => {
