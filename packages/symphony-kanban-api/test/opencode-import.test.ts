@@ -28,4 +28,24 @@ describe("opencode import api", () => {
       { name: "Beta", localPath: "/repo/beta" },
     ]);
   });
+
+  it("imports workspaces and skips existing local paths", async () => {
+    await request(app)
+      .post("/workspaces")
+      .send({ name: "Existing", localPath: "/repo/exist" });
+
+    const res = await request(app)
+      .post("/workspaces/import/opencode")
+      .send({
+        projects: [
+          { name: "Existing", localPath: "/repo/exist" },
+          { name: "New", localPath: "/repo/new" },
+        ],
+      });
+
+    expect(res.status).toBe(200);
+    expect(res.body.imported).toEqual(["/repo/new"]);
+    expect(res.body.skipped).toEqual(["/repo/exist"]);
+    expect(res.body.failed).toEqual([]);
+  });
 });

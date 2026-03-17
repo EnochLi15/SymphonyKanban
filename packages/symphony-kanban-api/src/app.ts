@@ -26,6 +26,7 @@ import {
 } from "./workflow-store.js";
 import {
   createWorkspace,
+  findWorkspaceIdByLocalPath,
   listWorkspaces,
   updateWorkspace,
 } from "./workspace-store.js";
@@ -90,6 +91,52 @@ app.post("/workspaces", (req, res) => {
   const id = randomUUID();
   createWorkspace(id, name.trim(), localPath ?? null, context ?? null, now);
   res.status(201).json({ data: { id } });
+});
+
+app.post("/workspaces/import/opencode", (req, res) => {
+  const { projects } = req.body ?? {};
+  if (!Array.isArray(projects)) {
+    res.status(400).json({ error: "projects_required" });
+    return;
+  }
+
+  const imported: string[] = [];
+  const skipped: string[] = [];
+  const failed: Array<{ localPath: string; reason: string }> = [];
+  const now = new Date().toISOString();
+
+  const tx = db.transaction(() => {
+    for (const item of projects) {
+      const name = typeof item?.name === "string" ? item.name.trim() : "";
+      const localPath = typeof item?.localPath === "string" ? item.localPath.trim() : "";
+
+      if (!name || !localPath) {
+        failed.push({ localPath: localPath || "(missing)", reason: "invalid" });
+        continue;
+      }
+
+      const existing = findWorkspaceIdByLocalPath(localPath);
+      if (existing) {
+        skipped.push(localPath);
+        continue;
+      }
+
+      const id = randomUUID();
+      createWorkspace(id, name, localPath, null, now);
+      imported.push(localPath);
+    }
+  });
+
+  try {
+    tx();
+  } catch (error) {
+    // eslint-disable-next-line no-console
+    console.error("Failed to import opencode workspaces", error);
+    res.status(500).json({ error: "import_failed" });
+    return;
+  }
+
+  res.json({ imported, skipped, failed });
 });
 
 app.patch("/workspaces/:id", (req, res) => {

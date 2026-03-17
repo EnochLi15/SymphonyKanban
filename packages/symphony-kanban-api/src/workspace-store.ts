@@ -19,6 +19,13 @@ export const createWorkspace = (
   ).run(id, name, localPath, context, now, now);
 };
 
+export const findWorkspaceIdByLocalPath = (localPath: string) => {
+  const row = db
+    .prepare("SELECT id FROM workspaces WHERE local_path = ?")
+    .get(localPath) as { id: string } | undefined;
+  return row?.id ?? null;
+};
+
 export const updateWorkspace = (
   id: string,
   name: string,
