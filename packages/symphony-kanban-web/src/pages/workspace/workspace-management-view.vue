@@ -26,6 +26,18 @@
               {{ workspace.localPath || "(未设置路径)" }}
             </div>
           </div>
+          <div class="workspace-actions">
+            <el-button
+              class="delete-button"
+              text
+              type="danger"
+              :loading="deletingId === workspace.id"
+              :disabled="deletingId !== null && deletingId !== workspace.id"
+              @click.stop="handleDelete(workspace)"
+            >
+              删除
+            </el-button>
+          </div>
         </el-card>
       </section>
     </div>
@@ -135,7 +147,7 @@
 
 <script setup lang="ts">
 import type { FormInstance, FormRules } from "element-plus";
-import { ElMessage } from "element-plus";
+import { ElMessage, ElMessageBox } from "element-plus";
 import { onMounted, reactive, ref } from "vue";
 import { useRouter } from "vue-router";
 import AppShell from "../../components/AppShell.vue";
@@ -150,6 +162,7 @@ const workspaces = ref<WorkspaceDTO[]>([]);
 const dialogVisible = ref(false);
 const importDialogVisible = ref(false);
 const submitting = ref(false);
+const deletingId = ref<string | null>(null);
 const importLoading = ref(false);
 const importSubmitting = ref(false);
 const formRef = ref<FormInstance>();
@@ -256,6 +269,53 @@ const submitImport = async () => {
   }
 };
 
+const handleDelete = async (workspace: WorkspaceDTO) => {
+  if (deletingId.value) return;
+  deletingId.value = workspace.id;
+
+  try {
+    const check = await api.checkWorkspaceDeletion(workspace.id);
+    const issueCount = check?.data?.issueCount ?? 0;
+
+    if (issueCount > 0) {
+      await ElMessageBox.alert(
+        `该工作区下还有 ${issueCount} 个任务未清理，请先处理后再删除。`,
+        "无法删除工作区",
+        { confirmButtonText: "知道了" },
+      );
+      return;
+    }
+
+    await ElMessageBox.confirm("删除后将无法恢复。", "确认删除工作区？", {
+      confirmButtonText: "删除",
+      cancelButtonText: "取消",
+      type: "warning",
+    });
+
+    await api.deleteWorkspace(workspace.id);
+    ElMessage.success("工作区已删除");
+    await load();
+  } catch (error) {
+    if (error === "cancel" || error === "close") {
+      return;
+    }
+    if (error instanceof Error) {
+      const issueCount = (error as Error & { issueCount?: number }).issueCount;
+      if (error.message === "workspace_not_empty" && issueCount !== undefined) {
+        ElMessage.warning(
+          `该工作区下还有 ${issueCount} 个任务未清理，请先处理后再删除。`,
+        );
+        return;
+      }
+      ElMessage.error(error.message || "删除失败");
+      return;
+    }
+    ElMessage.error("删除失败");
+  } finally {
+    deletingId.value = null;
+  }
+};
+
 const goWorkspaceSettings = (id: string) => {
   router.push(`/workspaces/${id}`);
 };
@@ -342,6 +402,15 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
   gap: 8px;
+}
+
+.workspace-actions {
+  display: flex;
+  align-items: center;
+}
+
+.delete-button {
+  font-weight: 600;
 }
 
 .workspace-name {
