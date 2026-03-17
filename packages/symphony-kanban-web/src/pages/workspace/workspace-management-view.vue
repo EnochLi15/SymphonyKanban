@@ -272,6 +272,8 @@ onMounted(() => {
   gap: 24px;
   padding: 32px;
   box-sizing: border-box;
+  flex: 1;
+  min-height: 0;
 }
 
 .workspace-header {
@@ -309,6 +311,10 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
   gap: 16px;
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding-right: 4px;
 }
 
 .workspace-card {
