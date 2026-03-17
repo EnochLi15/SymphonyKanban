@@ -29,6 +29,11 @@ export const buildApi = (base: string) => ({
     if (!res.ok) throw new Error("workspaces_failed");
     return res.json();
   },
+  async listOpencodeProjects() {
+    const res = await fetch(`${base}/workspaces/import/opencode/list`);
+    if (!res.ok) throw new Error("opencode_list_failed");
+    return res.json();
+  },
   async listTags() {
     const res = await fetch(`${base}/tags`);
     if (!res.ok) throw new Error("tags_failed");
@@ -87,6 +92,17 @@ export const buildApi = (base: string) => ({
       body: JSON.stringify(payload),
     });
     if (!res.ok) throw new Error("workspace_create_failed");
+    return res.json();
+  },
+  async importOpencodeProjects(payload: {
+    projects: Array<{ name: string; localPath: string }>;
+  }) {
+    const res = await fetch(`${base}/workspaces/import/opencode`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    if (!res.ok) throw new Error("opencode_import_failed");
     return res.json();
   },
   async updateWorkspace(id: string, payload: Record<string, unknown>) {
