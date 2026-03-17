@@ -4,6 +4,9 @@
       <header class="workspace-header">
         <h1 class="workspace-title">工作区管理</h1>
         <div class="header-actions">
+          <el-button class="action-button" @click="openImportDialog">
+            导入 OpenCode
+          </el-button>
           <el-button class="action-button action-primary" @click="createWorkspace">
             + 添加工作区
           </el-button>
@@ -26,6 +29,45 @@
         </el-card>
       </section>
     </div>
+
+    <el-dialog
+      v-model="importDialogVisible"
+      class="workspace-dialog"
+      :show-close="false"
+      align-center
+      append-to-body="false"
+    >
+      <template #header>
+        <div class="dialog-header">
+          <div class="dialog-title">导入 OpenCode 项目</div>
+          <el-button class="dialog-close" text @click="closeImportDialog">✕</el-button>
+        </div>
+      </template>
+
+      <el-table
+        v-loading="importLoading"
+        :data="opencodeProjects"
+        @selection-change="handleSelectionChange"
+      >
+        <el-table-column type="selection" width="48" />
+        <el-table-column prop="name" label="名称" />
+        <el-table-column prop="localPath" label="本地路径" />
+      </el-table>
+
+      <div class="dialog-actions">
+        <el-button class="action-button action-cancel" text @click="closeImportDialog">
+          取消
+        </el-button>
+        <el-button
+          class="action-button action-primary"
+          :loading="importSubmitting"
+          :disabled="selectedProjects.length === 0"
+          @click="submitImport"
+        >
+          导入
+        </el-button>
+      </div>
+    </el-dialog>
 
     <el-dialog
       v-model="dialogVisible"
@@ -106,13 +148,18 @@ const api = buildApi(import.meta.env.VITE_API_BASE ?? "http://localhost:3001");
 
 const workspaces = ref<WorkspaceDTO[]>([]);
 const dialogVisible = ref(false);
+const importDialogVisible = ref(false);
 const submitting = ref(false);
+const importLoading = ref(false);
+const importSubmitting = ref(false);
 const formRef = ref<FormInstance>();
 const form = reactive({
   name: "",
   localPath: "",
   context: "",
 });
+const opencodeProjects = ref<Array<{ name: string; localPath: string }>>([]);
+const selectedProjects = ref<Array<{ name: string; localPath: string }>>([]);
 
 const rules: FormRules = {
   name: [{ required: true, message: "请输入工作区名称", trigger: "blur" }],
@@ -135,9 +182,31 @@ const createWorkspace = () => {
   dialogVisible.value = true;
 };
 
+const handleSelectionChange = (rows: Array<{ name: string; localPath: string }>) => {
+  selectedProjects.value = rows;
+};
+
+const openImportDialog = async () => {
+  importDialogVisible.value = true;
+  importLoading.value = true;
+  try {
+    const res = await api.listOpencodeProjects();
+    opencodeProjects.value = res.data ?? [];
+  } catch (error) {
+    ElMessage.error("获取 OpenCode 项目失败");
+  } finally {
+    importLoading.value = false;
+  }
+};
+
 const handleCancel = () => {
   dialogVisible.value = false;
   resetForm();
+};
+
+const closeImportDialog = () => {
+  importDialogVisible.value = false;
+  selectedProjects.value = [];
 };
 
 const submitForm = async () => {
@@ -165,6 +234,25 @@ const submitForm = async () => {
     ElMessage.error(message);
   } finally {
     submitting.value = false;
+  }
+};
+
+const submitImport = async () => {
+  importSubmitting.value = true;
+  try {
+    const res = await api.importOpencodeProjects({
+      projects: selectedProjects.value,
+    });
+    const imported = res.imported?.length ?? 0;
+    const skipped = res.skipped?.length ?? 0;
+    const failed = res.failed?.length ?? 0;
+    ElMessage.success(`导入完成：成功 ${imported}，跳过 ${skipped}，失败 ${failed}`);
+    closeImportDialog();
+    await load();
+  } catch (error) {
+    ElMessage.error("导入失败");
+  } finally {
+    importSubmitting.value = false;
   }
 };
 
