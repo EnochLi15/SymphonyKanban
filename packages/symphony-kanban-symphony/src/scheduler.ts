@@ -121,17 +121,32 @@ export const startScheduler = async ({
     }
   };
 
+  let stopped = false;
+  let timeout: ReturnType<typeof setTimeout> | null = null;
+
   const loop = async () => {
+    if (stopped) return;
     try {
       await tick();
     } catch (error) {
       // eslint-disable-next-line no-console
       console.error("Scheduler tick failed", error);
     }
+    if (stopped) return;
     const settingsRes = await api.getSettings();
     const settings = settingsRes.data ?? { pollIntervalMs: 5000 };
-    setTimeout(loop, settings.pollIntervalMs);
+    timeout = setTimeout(loop, settings.pollIntervalMs);
   };
 
   loop();
+
+  return {
+    stop: () => {
+      stopped = true;
+      if (timeout) {
+        clearTimeout(timeout);
+        timeout = null;
+      }
+    },
+  };
 };

@@ -48,12 +48,16 @@ describe("scheduler", () => {
     }));
     vi.stubGlobal("fetch", fetchMock as unknown as typeof fetch);
 
-    startScheduler({ apiBase: "http://api", opencodeBase: "http://opencode" });
+    const scheduler = await startScheduler({
+      apiBase: "http://api",
+      opencodeBase: "http://opencode",
+    });
     await new Promise((resolve) => setImmediate(resolve));
 
     const calledUrls = fetchMock.mock.calls.map((call) => call[0]);
     expect(calledUrls.some((url) => String(url).includes("/settings/scheduler"))).toBe(true);
     expect(calledUrls.some((url) => String(url).includes("/scheduler/claim"))).toBe(true);
+    scheduler.stop();
 
   });
 
@@ -139,7 +143,10 @@ describe("scheduler", () => {
       })(),
     });
 
-    await startScheduler({ apiBase: "http://api", opencodeBase: "http://opencode" });
+    const scheduler = await startScheduler({
+      apiBase: "http://api",
+      opencodeBase: "http://opencode",
+    });
     const waitFor = async (predicate: () => boolean, timeoutMs = 200) => {
       const start = Date.now();
       while (Date.now() - start < timeoutMs) {
@@ -151,5 +158,6 @@ describe("scheduler", () => {
 
     const hasProjectArtifact = addArtifactBody.some((artifact) => artifact.type === "opencode_project");
     expect(hasProjectArtifact).toBe(true);
+    scheduler.stop();
   });
 });
