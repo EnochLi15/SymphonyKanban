@@ -97,7 +97,7 @@
                 <span class="tag" :class="priorityClass(issue.priority)">
                   {{ priorityLabel(issue.priority) }}
                 </span>
-                <span class="tag tag--neutral">
+                <span v-if="shouldShowStatusTag(activeViewMode)" class="tag tag--neutral">
                   {{ statusLabel(issue.status) }}
                 </span>
                 <span class="tag tag--neutral">
@@ -129,6 +129,8 @@ import {
   priorityMeta,
   sortIssues,
   statusLabel,
+  shouldShowStatusTag,
+  type ViewMode,
   type FilterState,
   type IssueView,
 } from "./issue-board-utils";
@@ -155,7 +157,7 @@ type TagDTO = {
   name: string;
 };
 
-const activeViewMode = ref<"state" | "priority">("state");
+const activeViewMode = ref<ViewMode>("state");
 const router = useRouter();
 const apiBase = import.meta.env.VITE_API_BASE ?? "http://localhost:3001";
 const api = buildApi(apiBase);
