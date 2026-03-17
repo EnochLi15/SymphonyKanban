@@ -1,13 +1,74 @@
 import { buildApi } from "./api-client.js";
 import { runOpencode } from "./opencode-runner.js";
 
+const DEFAULT_RETRY_INTERVAL_MS = 4000;
+const DEFAULT_RETRY_LOG_EVERY = 5;
+
+const toNumberOrDefault = (value: string | undefined, fallback: number) => {
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed)) return fallback;
+  if (parsed <= 0) return fallback;
+  return parsed;
+};
+
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+export const waitForApiReady = async ({
+  apiBase,
+  retryIntervalMs,
+  logEvery,
+}: {
+  apiBase: string;
+  retryIntervalMs: number;
+  logEvery: number;
+}) => {
+  let attempt = 0;
+  const logCadence = Math.max(1, logEvery);
+
+  while (true) {
+    attempt += 1;
+    try {
+      const res = await fetch(`${apiBase}/settings/scheduler`);
+      if (!res.ok) {
+        throw new Error(`API not ready: ${res.status}`);
+      }
+      await res.json().catch(() => null);
+      // eslint-disable-next-line no-console
+      console.log(`API ready after ${attempt} attempts, starting scheduler`);
+      return;
+    } catch (error) {
+      if (attempt % logCadence === 0) {
+        // eslint-disable-next-line no-console
+        console.warn(
+          `API not ready, retrying in ${retryIntervalMs}ms (attempt ${attempt})`,
+          error,
+        );
+      }
+      await sleep(retryIntervalMs);
+    }
+  }
+};
+
 export const startScheduler = async ({
   apiBase,
   opencodeBase,
+  retryIntervalMs,
+  retryLogEvery,
 }: {
   apiBase: string;
   opencodeBase: string;
+  retryIntervalMs?: number;
+  retryLogEvery?: number;
 }) => {
+  const retryInterval =
+    retryIntervalMs ??
+    toNumberOrDefault(process.env.API_RETRY_INTERVAL_MS, DEFAULT_RETRY_INTERVAL_MS);
+  const logEvery =
+    retryLogEvery ??
+    toNumberOrDefault(process.env.API_RETRY_LOG_EVERY, DEFAULT_RETRY_LOG_EVERY);
+
+  await waitForApiReady({ apiBase, retryIntervalMs: retryInterval, logEvery });
+
   const api = buildApi(apiBase);
   let running = 0;
 

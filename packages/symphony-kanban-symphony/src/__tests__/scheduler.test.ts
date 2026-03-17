@@ -1,5 +1,5 @@
 import { describe, expect, it, vi, beforeEach, afterEach } from "vitest";
-import { startScheduler } from "../scheduler.js";
+import { startScheduler, waitForApiReady } from "../scheduler.js";
 
 const sessionCreate = vi.fn();
 const sessionPromptAsync = vi.fn();
@@ -35,6 +35,7 @@ describe("scheduler", () => {
   it("claims todo when under concurrency", async () => {
     vi.stubGlobal("setTimeout", ((fn: (...args: unknown[]) => void) => 0) as typeof setTimeout);
     const fetchMock = vi.fn(async (url: string) => ({
+      ok: true,
       json: async () => {
         if (String(url).includes("/settings/scheduler")) {
           return { data: { maxConcurrency: 1, pollIntervalMs: 10 } };
@@ -54,6 +55,34 @@ describe("scheduler", () => {
     expect(calledUrls.some((url) => String(url).includes("/settings/scheduler"))).toBe(true);
     expect(calledUrls.some((url) => String(url).includes("/scheduler/claim"))).toBe(true);
 
+  });
+
+  it("waits for API readiness and logs on cadence", async () => {
+    const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+    const logSpy = vi.spyOn(console, "log").mockImplementation(() => undefined);
+    vi.stubGlobal("setTimeout", ((fn: (...args: unknown[]) => void) => {
+      fn();
+      return 0;
+    }) as typeof setTimeout);
+
+    let attempt = 0;
+    const fetchMock = vi.fn(async () => {
+      attempt += 1;
+      if (attempt < 3) {
+        throw new Error("not ready");
+      }
+      return { ok: true, json: async () => ({ data: {} }) };
+    });
+    vi.stubGlobal("fetch", fetchMock as unknown as typeof fetch);
+
+    await waitForApiReady({ apiBase: "http://api", retryIntervalMs: 1, logEvery: 2 });
+
+    expect(warnSpy).toHaveBeenCalledTimes(1);
+    expect(String(warnSpy.mock.calls[0][0])).toContain("attempt 2");
+    expect(logSpy).toHaveBeenCalledTimes(1);
+
+    warnSpy.mockRestore();
+    logSpy.mockRestore();
   });
 
   it("records opencode project id as artifact", async () => {
