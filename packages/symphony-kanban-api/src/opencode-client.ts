@@ -23,6 +23,9 @@ export const listOpenCodeProjects = async () => {
       cachedClient = createOpencodeClient({ baseUrl });
     }
   }
-  const projects = await cachedClient.project.list();
+  const response = await cachedClient.project.list({ responseStyle: "data" });
+  const projects = Array.isArray(response)
+    ? response
+    : (response as { data?: OpenCodeProject[] }).data ?? [];
   return projects as OpenCodeProject[];
 };
