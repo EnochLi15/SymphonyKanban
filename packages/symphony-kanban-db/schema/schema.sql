@@ -30,6 +30,8 @@ CREATE TABLE IF NOT EXISTS tags (
   name TEXT NOT NULL UNIQUE,
   type TEXT,
   color TEXT,
+  rules TEXT,
+  acceptance_criteria TEXT,
   created_at TEXT NOT NULL,
   updated_at TEXT NOT NULL
 );

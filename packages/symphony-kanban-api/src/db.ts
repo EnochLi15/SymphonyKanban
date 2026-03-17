@@ -48,6 +48,12 @@ ensureColumn("workspaces", "updated_at", "ALTER TABLE workspaces ADD COLUMN upda
 
 ensureColumn("tags", "type", "ALTER TABLE tags ADD COLUMN type TEXT");
 ensureColumn("tags", "color", "ALTER TABLE tags ADD COLUMN color TEXT");
+ensureColumn("tags", "rules", "ALTER TABLE tags ADD COLUMN rules TEXT");
+ensureColumn(
+  "tags",
+  "acceptance_criteria",
+  "ALTER TABLE tags ADD COLUMN acceptance_criteria TEXT",
+);
 ensureColumn("tags", "updated_at", "ALTER TABLE tags ADD COLUMN updated_at TEXT");
 
 const DEFAULT_WORKSPACE_ID = "wksp-default";
