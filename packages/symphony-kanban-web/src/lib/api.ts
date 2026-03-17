@@ -98,6 +98,22 @@ export const buildApi = (base: string) => ({
     if (!res.ok) throw new Error("workspace_update_failed");
     return res.json();
   },
+  async checkWorkspaceDeletion(id: string) {
+    const res = await fetch(`${base}/workspaces/${id}/deletion-check`);
+    if (!res.ok) throw new Error("workspace_delete_check_failed");
+    return res.json();
+  },
+  async deleteWorkspace(id: string) {
+    const res = await fetch(`${base}/workspaces/${id}`, { method: "DELETE" });
+    if (!res.ok) {
+      const errorJson = await res.json().catch(() => ({}));
+      const message = errorJson.error || "workspace_delete_failed";
+      const error = new Error(message) as Error & { issueCount?: number };
+      error.issueCount = errorJson.issueCount;
+      throw error;
+    }
+    return res.json();
+  },
   async getReview(issueId: string) {
     const res = await fetch(`${base}/review/${issueId}`);
     if (!res.ok) throw new Error("review_failed");
