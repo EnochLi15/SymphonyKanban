@@ -24,6 +24,8 @@ export interface TagDTO {
   name: string;
   type?: string | null;
   color?: string | null;
+  rules?: string | null;
+  acceptanceCriteria?: string | null;
   createdAt: string;
   updatedAt?: string | null;
 }

@@ -91,20 +91,30 @@ app.get("/tags", (_req, res) => {
 });
 
 app.post("/tags", (req, res) => {
-  const { name, type, color } = req.body ?? {};
+  const { name, type, color, rules, acceptanceCriteria } = req.body ?? {};
   if (!name || typeof name !== "string") {
     res.status(400).json({ error: "name required" });
     return;
   }
   const now = new Date().toISOString();
   const id = randomUUID();
-  createTag(id, name.trim(), type ?? null, color ?? null, now);
+  createTag(
+    id,
+    name.trim(),
+    type ?? null,
+    color ?? null,
+    rules ?? null,
+    acceptanceCriteria ?? null,
+    now,
+  );
   res.status(201).json({
     data: {
       id,
       name: name.trim(),
       type: type ?? null,
       color: color ?? null,
+      rules: rules ?? null,
+      acceptanceCriteria: acceptanceCriteria ?? null,
       createdAt: now,
       updatedAt: now,
     },
@@ -112,13 +122,21 @@ app.post("/tags", (req, res) => {
 });
 
 app.patch("/tags/:id", (req, res) => {
-  const { name, type, color } = req.body ?? {};
+  const { name, type, color, rules, acceptanceCriteria } = req.body ?? {};
   if (!name || typeof name !== "string") {
     res.status(400).json({ error: "name required" });
     return;
   }
   const now = new Date().toISOString();
-  updateTag(req.params.id, name.trim(), type ?? null, color ?? null, now);
+  updateTag(
+    req.params.id,
+    name.trim(),
+    type ?? null,
+    color ?? null,
+    rules ?? null,
+    acceptanceCriteria ?? null,
+    now,
+  );
   res.json({ ok: true });
 });
 
