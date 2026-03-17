@@ -274,6 +274,7 @@ onMounted(() => {
   box-sizing: border-box;
   flex: 1;
   min-height: 0;
+  height: 100%;
 }
 
 .workspace-header {
