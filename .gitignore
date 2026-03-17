@@ -2,3 +2,4 @@
 .runtime/
 node_modules/
 **/node_modules/
+packages/symphony-kanban-api/db/kanban.sqlite
