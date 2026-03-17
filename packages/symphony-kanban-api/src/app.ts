@@ -1,4 +1,5 @@
 import { randomUUID } from "node:crypto";
+import path from "node:path";
 import express from "express";
 import { db } from "./db.js";
 import {
@@ -69,10 +70,23 @@ app.get("/workspaces/import/opencode/list", async (_req, res) => {
   try {
     const rows = await listOpenCodeProjects();
     res.json({
-      data: rows.map((row) => ({
-        name: row.name,
-        localPath: row.local_path,
-      })),
+      data: rows
+        .map((row) => {
+          if (!row || typeof row !== "object") return null;
+          const record = row as Record<string, unknown>;
+          const localPath =
+            (typeof record.local_path === "string" && record.local_path) ||
+            (typeof record.worktree === "string" && record.worktree) ||
+            (typeof record.path === "string" && record.path) ||
+            "";
+          if (!localPath) return null;
+          let name =
+            (typeof record.name === "string" && record.name) ||
+            (localPath === "/" ? "Global" : path.basename(localPath));
+          if (!name) name = localPath;
+          return { name, localPath };
+        })
+        .filter(Boolean),
     });
   } catch (error) {
     // eslint-disable-next-line no-console
