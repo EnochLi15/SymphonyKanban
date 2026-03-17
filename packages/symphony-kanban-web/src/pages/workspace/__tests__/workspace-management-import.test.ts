@@ -2,6 +2,10 @@ import { describe, expect, it, vi } from "vitest";
 import { mount } from "@vue/test-utils";
 import WorkspaceManagementView from "../workspace-management-view.vue";
 
+vi.mock("../../../components/AppShell.vue", () => ({
+  default: { template: "<div><slot /></div>" },
+}));
+
 vi.mock("vue-router", () => ({
   useRouter: () => ({
     push: vi.fn(),
@@ -34,7 +38,6 @@ describe("workspace management view", () => {
           },
         },
         stubs: {
-          AppShell: { template: "<div><slot /></div>" },
           "el-button": { template: "<button><slot /></button>" },
           "el-card": { template: "<div><slot /></div>" },
           "el-dialog": { template: "<div><slot /></div>" },
