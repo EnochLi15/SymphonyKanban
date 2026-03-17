@@ -28,6 +28,7 @@ Align `tag-workflow-view.vue` back to the visual structure, spacing, and copy of
   - `after_create` input maps to `workflowForm.configJson.after_create`.
   - `before_remove` input maps to `workflowForm.configJson.before_remove`.
   - Saving writes a normalized JSON payload with those two keys into `configJson` (no legacy compatibility logic).
+  - Hooks use a single large textarea per field (no nested input border), styled to match the prior hook box color scheme.
 - Buttons:
   - Keep `保存标签` to persist `name/type/color/rules/acceptanceCriteria`.
   - Keep `保存工作流规则` to persist workflow behavior.
