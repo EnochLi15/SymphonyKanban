@@ -70,18 +70,13 @@
           <div class="hook-block">
             <div class="hook-label hook-label--success">after_create</div>
             <div class="code-box code-box--success">
-              <el-input v-model="tagForm.name" placeholder="标签名称" />
-              <el-input v-model="tagForm.type" placeholder="类型 (可选)" />
-              <el-input v-model="tagForm.color" placeholder="颜色 (可选)" />
+              <el-input v-model="hookForm.afterCreate" placeholder="输入 after_create" />
             </div>
           </div>
           <div class="hook-block">
             <div class="hook-label hook-label--danger">before_remove</div>
             <div class="code-box code-box--danger">
-              <el-select v-model="workflowForm.state" placeholder="状态">
-                <el-option v-for="state in states" :key="state" :label="state" :value="state" />
-              </el-select>
-              <el-input v-model="workflowForm.behavior" placeholder="行为 (如 ci-required)" />
+              <el-input v-model="hookForm.beforeRemove" placeholder="输入 before_remove" />
             </div>
           </div>
           <div class="hooks-actions">
@@ -113,7 +108,6 @@ const api = buildApi(import.meta.env.VITE_API_BASE ?? "http://localhost:3001");
 const tags = ref<TagDTO[]>([]);
 const workflows = ref<WorkflowDefDTO[]>([]);
 const selectedTagId = ref<string | null>(null);
-const states = ["Backlog", "Todo", "InProgress", "Review", "Blocked", "Done"];
 
 const settings = reactive<SchedulerSettingsDTO>({
   id: "",
@@ -136,9 +130,26 @@ const workflowForm = reactive({
   configJson: "",
 });
 
+const hookForm = reactive({
+  afterCreate: "",
+  beforeRemove: "",
+});
+
 const selectedWorkflow = computed(() =>
   workflows.value.find((workflow) => workflow.tagId === selectedTagId.value),
 );
+
+const syncHookFormFromConfig = () => {
+  hookForm.afterCreate = "";
+  hookForm.beforeRemove = "";
+};
+
+const syncConfigFromHookForm = () => {
+  workflowForm.configJson = JSON.stringify({
+    after_create: hookForm.afterCreate,
+    before_remove: hookForm.beforeRemove,
+  });
+};
 
 const loadAll = async () => {
   const [tagRes, workflowRes, settingsRes] = await Promise.all([
@@ -171,6 +182,7 @@ const selectTag = (id: string) => {
   workflowForm.state = workflow?.state ?? "Todo";
   workflowForm.behavior = workflow?.behavior ?? "";
   workflowForm.configJson = workflow?.configJson ?? "";
+  syncHookFormFromConfig();
 };
 
 const createNewTag = async () => {
@@ -219,6 +231,7 @@ const deleteTag = async () => {
 };
 
 const saveWorkflow = async () => {
+  syncConfigFromHookForm();
   await persistWorkflow();
   await loadAll();
 };
@@ -232,6 +245,7 @@ const saveSettings = async () => {
 
 const applyAll = async () => {
   if (!selectedTagId.value) return;
+  syncConfigFromHookForm();
   await Promise.all([
     persistTag(),
     persistWorkflow(),
