@@ -318,6 +318,7 @@ onMounted(() => {
   min-height: 0;
   height: 100%;
   overflow: auto;
+  max-height: calc(100vh - 220px);
   padding-right: 4px;
 }
 
