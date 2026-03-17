@@ -318,7 +318,7 @@ onMounted(() => {
   min-height: 0;
   height: 100%;
   overflow: auto;
-  max-height: calc(100vh - 220px);
+  max-height: calc(100vh - 120px);
   padding-right: 4px;
 }
 
@@ -327,12 +327,15 @@ onMounted(() => {
   background: var(--kanban-surface);
   border: 1px solid var(--kanban-border);
   cursor: pointer;
+  min-height: 88px;
 }
 
 .workspace-card :deep(.el-card__body) {
-  padding: 24px;
+  padding: 0 12px;
   display: flex;
   justify-content: space-between;
+  align-items: center;
+  min-height: 88px;
 }
 
 .workspace-info {
@@ -352,6 +355,7 @@ onMounted(() => {
   color: var(--kanban-text-secondary);
   font-family: "Space Grotesk", "Inter", "DM Sans", system-ui, -apple-system,
     sans-serif;
+  min-height: 18px;
 }
 
 .workspace-dialog :deep(.el-dialog) {
