@@ -30,3 +30,14 @@ export const updateWorkspace = (
     "UPDATE workspaces SET name = ?, local_path = ?, context = ?, updated_at = ? WHERE id = ?",
   ).run(name, localPath, context, now, id);
 };
+
+export const countIssuesByWorkspace = (workspaceId: string) => {
+  const row = db
+    .prepare("SELECT COUNT(*) as count FROM issues WHERE workspace_id = ?")
+    .get(workspaceId) as { count: number } | undefined;
+  return row?.count ?? 0;
+};
+
+export const deleteWorkspace = (workspaceId: string) => {
+  db.prepare("DELETE FROM workspaces WHERE id = ?").run(workspaceId);
+};
