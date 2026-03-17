@@ -4,6 +4,9 @@
       <header class="workspace-header">
         <h1 class="workspace-title">工作区管理</h1>
         <div class="header-actions">
+          <el-button class="action-button" @click="openImportDialog">
+            导入 OpenCode
+          </el-button>
           <el-button class="action-button action-primary" @click="createWorkspace">
             + 添加工作区
           </el-button>
@@ -23,21 +26,48 @@
               {{ workspace.localPath || "(未设置路径)" }}
             </div>
           </div>
-          <div class="workspace-actions">
-            <el-button
-              class="delete-button"
-              text
-              type="danger"
-              :loading="deletingId === workspace.id"
-              :disabled="deletingId !== null && deletingId !== workspace.id"
-              @click.stop="handleDelete(workspace)"
-            >
-              删除
-            </el-button>
-          </div>
         </el-card>
       </section>
     </div>
+
+    <el-dialog
+      v-model="importDialogVisible"
+      class="workspace-dialog"
+      :show-close="false"
+      align-center
+      append-to-body="false"
+    >
+      <template #header>
+        <div class="dialog-header">
+          <div class="dialog-title">导入 OpenCode 项目</div>
+          <el-button class="dialog-close" text @click="closeImportDialog">✕</el-button>
+        </div>
+      </template>
+
+      <el-table
+        v-loading="importLoading"
+        :data="opencodeProjects"
+        @selection-change="handleSelectionChange"
+      >
+        <el-table-column type="selection" width="48" />
+        <el-table-column prop="name" label="名称" />
+        <el-table-column prop="localPath" label="本地路径" />
+      </el-table>
+
+      <div class="dialog-actions">
+        <el-button class="action-button action-cancel" text @click="closeImportDialog">
+          取消
+        </el-button>
+        <el-button
+          class="action-button action-primary"
+          :loading="importSubmitting"
+          :disabled="selectedProjects.length === 0"
+          @click="submitImport"
+        >
+          导入
+        </el-button>
+      </div>
+    </el-dialog>
 
     <el-dialog
       v-model="dialogVisible"
@@ -105,7 +135,7 @@
 
 <script setup lang="ts">
 import type { FormInstance, FormRules } from "element-plus";
-import { ElMessage, ElMessageBox } from "element-plus";
+import { ElMessage } from "element-plus";
 import { onMounted, reactive, ref } from "vue";
 import { useRouter } from "vue-router";
 import AppShell from "../../components/AppShell.vue";
@@ -118,14 +148,18 @@ const api = buildApi(import.meta.env.VITE_API_BASE ?? "http://localhost:3001");
 
 const workspaces = ref<WorkspaceDTO[]>([]);
 const dialogVisible = ref(false);
+const importDialogVisible = ref(false);
 const submitting = ref(false);
-const deletingId = ref<string | null>(null);
+const importLoading = ref(false);
+const importSubmitting = ref(false);
 const formRef = ref<FormInstance>();
 const form = reactive({
   name: "",
   localPath: "",
   context: "",
 });
+const opencodeProjects = ref<Array<{ name: string; localPath: string }>>([]);
+const selectedProjects = ref<Array<{ name: string; localPath: string }>>([]);
 
 const rules: FormRules = {
   name: [{ required: true, message: "请输入工作区名称", trigger: "blur" }],
@@ -148,9 +182,31 @@ const createWorkspace = () => {
   dialogVisible.value = true;
 };
 
+const handleSelectionChange = (rows: Array<{ name: string; localPath: string }>) => {
+  selectedProjects.value = rows;
+};
+
+const openImportDialog = async () => {
+  importDialogVisible.value = true;
+  importLoading.value = true;
+  try {
+    const res = await api.listOpencodeProjects();
+    opencodeProjects.value = res.data ?? [];
+  } catch (error) {
+    ElMessage.error("获取 OpenCode 项目失败");
+  } finally {
+    importLoading.value = false;
+  }
+};
+
 const handleCancel = () => {
   dialogVisible.value = false;
   resetForm();
+};
+
+const closeImportDialog = () => {
+  importDialogVisible.value = false;
+  selectedProjects.value = [];
 };
 
 const submitForm = async () => {
@@ -181,50 +237,22 @@ const submitForm = async () => {
   }
 };
 
-const handleDelete = async (workspace: WorkspaceDTO) => {
-  if (deletingId.value) return;
-  deletingId.value = workspace.id;
-
+const submitImport = async () => {
+  importSubmitting.value = true;
   try {
-    const check = await api.checkWorkspaceDeletion(workspace.id);
-    const issueCount = check?.data?.issueCount ?? 0;
-
-    if (issueCount > 0) {
-      await ElMessageBox.alert(
-        `该工作区下还有 ${issueCount} 个任务未清理，请先处理后再删除。`,
-        "无法删除工作区",
-        { confirmButtonText: "知道了" },
-      );
-      return;
-    }
-
-    await ElMessageBox.confirm("删除后将无法恢复。", "确认删除工作区？", {
-      confirmButtonText: "删除",
-      cancelButtonText: "取消",
-      type: "warning",
+    const res = await api.importOpencodeProjects({
+      projects: selectedProjects.value,
     });
-
-    await api.deleteWorkspace(workspace.id);
-    ElMessage.success("工作区已删除");
+    const imported = res.imported?.length ?? 0;
+    const skipped = res.skipped?.length ?? 0;
+    const failed = res.failed?.length ?? 0;
+    ElMessage.success(`导入完成：成功 ${imported}，跳过 ${skipped}，失败 ${failed}`);
+    closeImportDialog();
     await load();
   } catch (error) {
-    if (error === "cancel" || error === "close") {
-      return;
-    }
-    if (error instanceof Error) {
-      const issueCount = (error as Error & { issueCount?: number }).issueCount;
-      if (error.message === "workspace_not_empty" && issueCount !== undefined) {
-        ElMessage.warning(
-          `该工作区下还有 ${issueCount} 个任务未清理，请先处理后再删除。`,
-        );
-        return;
-      }
-      ElMessage.error(error.message || "删除失败");
-      return;
-    }
-    ElMessage.error("删除失败");
+    ElMessage.error("导入失败");
   } finally {
-    deletingId.value = null;
+    importSubmitting.value = false;
   }
 };
 
@@ -244,6 +272,11 @@ onMounted(() => {
   gap: 24px;
   padding: 32px;
   box-sizing: border-box;
+  flex: 1;
+  min-height: 0;
+  height: 100%;
+  overflow: hidden;
+  max-height: 100%;
 }
 
 .workspace-header {
@@ -281,6 +314,12 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
   gap: 16px;
+  flex: 1;
+  min-height: 0;
+  height: 100%;
+  overflow: auto;
+  max-height: calc(100vh - 220px);
+  padding-right: 4px;
 }
 
 .workspace-card {
@@ -300,15 +339,6 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
   gap: 8px;
-}
-
-.workspace-actions {
-  display: flex;
-  align-items: center;
-}
-
-.delete-button {
-  font-weight: 600;
 }
 
 .workspace-name {

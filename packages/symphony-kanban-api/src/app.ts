@@ -1,4 +1,5 @@
 import { randomUUID } from "node:crypto";
+import path from "node:path";
 import express from "express";
 import { db } from "./db.js";
 import {
@@ -25,12 +26,12 @@ import {
   updateWorkflowDef,
 } from "./workflow-store.js";
 import {
-  countIssuesByWorkspace,
   createWorkspace,
-  deleteWorkspace,
+  findWorkspaceIdByLocalPath,
   listWorkspaces,
   updateWorkspace,
 } from "./workspace-store.js";
+import { listOpenCodeProjects } from "./opencode-client.js";
 
 export const app = express();
 app.use(express.json({ limit: "5mb" }));
@@ -65,6 +66,35 @@ app.get("/workspaces", (_req, res) => {
   res.json({ data: listWorkspaces() });
 });
 
+app.get("/workspaces/import/opencode/list", async (_req, res) => {
+  try {
+    const rows = await listOpenCodeProjects();
+    res.json({
+      data: rows
+        .map((row) => {
+          if (!row || typeof row !== "object") return null;
+          const record = row as Record<string, unknown>;
+          const localPath =
+            (typeof record.local_path === "string" && record.local_path) ||
+            (typeof record.worktree === "string" && record.worktree) ||
+            (typeof record.path === "string" && record.path) ||
+            "";
+          if (!localPath) return null;
+          let name =
+            (typeof record.name === "string" && record.name) ||
+            (localPath === "/" ? "Global" : path.basename(localPath));
+          if (!name) name = localPath;
+          return { name, localPath };
+        })
+        .filter(Boolean),
+    });
+  } catch (error) {
+    // eslint-disable-next-line no-console
+    console.error("Failed to list opencode projects", error);
+    res.status(502).json({ error: "opencode_list_failed" });
+  }
+});
+
 app.post("/workspaces", (req, res) => {
   const { name, localPath, context } = req.body ?? {};
   if (!name || typeof name !== "string") {
@@ -77,6 +107,52 @@ app.post("/workspaces", (req, res) => {
   res.status(201).json({ data: { id } });
 });
 
+app.post("/workspaces/import/opencode", (req, res) => {
+  const { projects } = req.body ?? {};
+  if (!Array.isArray(projects)) {
+    res.status(400).json({ error: "projects_required" });
+    return;
+  }
+
+  const imported: string[] = [];
+  const skipped: string[] = [];
+  const failed: Array<{ localPath: string; reason: string }> = [];
+  const now = new Date().toISOString();
+
+  const tx = db.transaction(() => {
+    for (const item of projects) {
+      const name = typeof item?.name === "string" ? item.name.trim() : "";
+      const localPath = typeof item?.localPath === "string" ? item.localPath.trim() : "";
+
+      if (!name || !localPath) {
+        failed.push({ localPath: localPath || "(missing)", reason: "invalid" });
+        continue;
+      }
+
+      const existing = findWorkspaceIdByLocalPath(localPath);
+      if (existing) {
+        skipped.push(localPath);
+        continue;
+      }
+
+      const id = randomUUID();
+      createWorkspace(id, name, localPath, null, now);
+      imported.push(localPath);
+    }
+  });
+
+  try {
+    tx();
+  } catch (error) {
+    // eslint-disable-next-line no-console
+    console.error("Failed to import opencode workspaces", error);
+    res.status(500).json({ error: "import_failed" });
+    return;
+  }
+
+  res.json({ imported, skipped, failed });
+});
+
 app.patch("/workspaces/:id", (req, res) => {
   const { name, localPath, context } = req.body ?? {};
   if (!name || typeof name !== "string") {
@@ -85,26 +161,6 @@ app.patch("/workspaces/:id", (req, res) => {
   }
   const now = new Date().toISOString();
   updateWorkspace(req.params.id, name.trim(), localPath ?? null, context ?? null, now);
-  res.json({ ok: true });
-});
-
-app.get("/workspaces/:id/deletion-check", (req, res) => {
-  const issueCount = countIssuesByWorkspace(req.params.id);
-  res.json({
-    data: {
-      deletable: issueCount === 0,
-      issueCount,
-    },
-  });
-});
-
-app.delete("/workspaces/:id", (req, res) => {
-  const issueCount = countIssuesByWorkspace(req.params.id);
-  if (issueCount > 0) {
-    res.status(409).json({ error: "workspace_not_empty", issueCount });
-    return;
-  }
-  deleteWorkspace(req.params.id);
   res.json({ ok: true });
 });
 
