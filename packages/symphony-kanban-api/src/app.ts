@@ -25,7 +25,9 @@ import {
   updateWorkflowDef,
 } from "./workflow-store.js";
 import {
+  countIssuesByWorkspace,
   createWorkspace,
+  deleteWorkspace,
   listWorkspaces,
   updateWorkspace,
 } from "./workspace-store.js";
@@ -83,6 +85,26 @@ app.patch("/workspaces/:id", (req, res) => {
   }
   const now = new Date().toISOString();
   updateWorkspace(req.params.id, name.trim(), localPath ?? null, context ?? null, now);
+  res.json({ ok: true });
+});
+
+app.get("/workspaces/:id/deletion-check", (req, res) => {
+  const issueCount = countIssuesByWorkspace(req.params.id);
+  res.json({
+    data: {
+      deletable: issueCount === 0,
+      issueCount,
+    },
+  });
+});
+
+app.delete("/workspaces/:id", (req, res) => {
+  const issueCount = countIssuesByWorkspace(req.params.id);
+  if (issueCount > 0) {
+    res.status(409).json({ error: "workspace_not_empty", issueCount });
+    return;
+  }
+  deleteWorkspace(req.params.id);
   res.json({ ok: true });
 });
 
