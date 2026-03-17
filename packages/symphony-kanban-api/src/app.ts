@@ -107,6 +107,50 @@ app.post("/workspaces", (req, res) => {
   res.status(201).json({ data: { id } });
 });
 
+app.get("/workspaces/:id/deletion-check", (req, res) => {
+  const { id } = req.params;
+  const workspace = db
+    .prepare("SELECT id FROM workspaces WHERE id = ?")
+    .get(id) as { id: string } | undefined;
+  if (!workspace) {
+    res.status(404).json({ error: "workspace_not_found" });
+    return;
+  }
+
+  const row = db
+    .prepare(
+      "SELECT COUNT(*) as count FROM issues WHERE workspace_id = ? AND deleted_at IS NULL",
+    )
+    .get(id) as { count: number };
+  const issueCount = Number(row?.count ?? 0);
+  res.json({ data: { deletable: issueCount === 0, issueCount } });
+});
+
+app.delete("/workspaces/:id", (req, res) => {
+  const { id } = req.params;
+  const workspace = db
+    .prepare("SELECT id FROM workspaces WHERE id = ?")
+    .get(id) as { id: string } | undefined;
+  if (!workspace) {
+    res.status(404).json({ error: "workspace_not_found" });
+    return;
+  }
+
+  const row = db
+    .prepare(
+      "SELECT COUNT(*) as count FROM issues WHERE workspace_id = ? AND deleted_at IS NULL",
+    )
+    .get(id) as { count: number };
+  const issueCount = Number(row?.count ?? 0);
+  if (issueCount > 0) {
+    res.status(409).json({ error: "workspace_not_empty", issueCount });
+    return;
+  }
+
+  db.prepare("DELETE FROM workspaces WHERE id = ?").run(id);
+  res.json({ ok: true });
+});
+
 app.post("/workspaces/import/opencode", (req, res) => {
   const { projects } = req.body ?? {};
   if (!Array.isArray(projects)) {
