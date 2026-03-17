@@ -4,25 +4,24 @@
       <h1 class="page-title">全局系统设置 (Global Settings)</h1>
 
       <section class="settings-form">
-        <div class="section-title">MCP 服务集成 (MCP Integrations)</div>
+        <div class="section-title">技能中心 (Skills)</div>
 
-        <el-card class="mcp-box">
-          <div class="box-title">MCP 服务 JSON 配置 (mcp_config.json)</div>
-          <pre class="code-editor">
-{
-  "mcp": {
-    "kanban": {
-      "command": "npx",
-      "args": ["-y", "@modelcontextprotocol/server-github"],
-      "env": {
-        "GITHUB_TOKEN": "ghp_***"
-      }
-    }
-  }
-}
-          </pre>
+        <el-card class="skills-box">
+          <div class="box-title">Symphony Board CRUD</div>
+          <p class="box-copy">
+            Symphony Board CRUD 技能用于在看板中新增、查看、更新与删除任务（Issue），并通过现有 API/CLI 快速管理。
+          </p>
+          <ul class="skills-list">
+            <li>新建任务（Issue）并自动记录事件</li>
+            <li>查看所有任务与状态概览</li>
+            <li>更新任务信息与流转状态</li>
+            <li>删除/归档任务（遵循系统安全规则）</li>
+          </ul>
+          <a class="download-link" href="/skills/symphony-board-crud.zip" download>
+            <el-button class="download-button" type="primary">下载技能包</el-button>
+          </a>
           <div class="box-hint">
-            💡 全局定义的 MCP 服务将在所有工作区中可用，系统将根据工具定义自动映射任务操作。
+            已移除 MCP 相关内容，技能专注于看板任务管理。
           </div>
         </el-card>
 
@@ -65,12 +64,12 @@ import AppShell from "../../components/AppShell.vue";
   font-weight: 600;
 }
 
-.mcp-box {
+.skills-box {
   background: var(--kanban-surface);
   border: 1px solid var(--kanban-border);
 }
 
-.mcp-box :deep(.el-card__body) {
+.skills-box :deep(.el-card__body) {
   padding: 24px;
   display: flex;
   flex-direction: column;
@@ -83,23 +82,38 @@ import AppShell from "../../components/AppShell.vue";
   color: var(--kanban-text-primary);
 }
 
-.code-editor {
+.box-copy {
   margin: 0;
-  padding: 16px;
-  border-radius: 6px;
-  background: #0f1117;
-  border: 1px solid var(--kanban-primary);
-  color: var(--kanban-primary);
+  color: var(--kanban-text-secondary);
   font-size: 13px;
-  font-family: "Fira Code", "DM Sans", monospace;
   line-height: 1.6;
-  min-height: 240px;
-  white-space: pre-wrap;
+}
+
+.skills-list {
+  margin: 0;
+  padding-left: 18px;
+  color: var(--kanban-text-primary);
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.download-link {
+  text-decoration: none;
 }
 
 .box-hint {
   font-size: 12px;
   color: var(--kanban-text-secondary);
+}
+
+.download-button {
+  border-radius: 6px;
+  padding: 12px 32px;
+  background: var(--kanban-primary);
+  color: var(--kanban-text-primary);
+  font-size: 14px;
+  font-weight: 600;
+  border: none;
 }
 
 .button-row {
