@@ -29,6 +29,7 @@ import {
   listWorkspaces,
   updateWorkspace,
 } from "./workspace-store.js";
+import { listOpenCodeProjects } from "./opencode-client.js";
 
 export const app = express();
 app.use(express.json({ limit: "5mb" }));
@@ -61,6 +62,22 @@ app.get("/health", (_req, res) => {
 
 app.get("/workspaces", (_req, res) => {
   res.json({ data: listWorkspaces() });
+});
+
+app.get("/workspaces/import/opencode/list", async (_req, res) => {
+  try {
+    const rows = await listOpenCodeProjects();
+    res.json({
+      data: rows.map((row) => ({
+        name: row.name,
+        localPath: row.local_path,
+      })),
+    });
+  } catch (error) {
+    // eslint-disable-next-line no-console
+    console.error("Failed to list opencode projects", error);
+    res.status(502).json({ error: "opencode_list_failed" });
+  }
 });
 
 app.post("/workspaces", (req, res) => {
