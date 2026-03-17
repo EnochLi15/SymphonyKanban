@@ -69,15 +69,23 @@
           <div class="hooks-title">生命周期钩子 (Hooks)</div>
           <div class="hook-block">
             <div class="hook-label hook-label--success">after_create</div>
-            <div class="code-box code-box--success">
-              <el-input v-model="hookForm.afterCreate" placeholder="输入 after_create" />
-            </div>
+            <el-input
+              v-model="hookForm.afterCreate"
+              class="hook-area hook-area--success"
+              type="textarea"
+              :rows="6"
+              placeholder="输入 after_create"
+            />
           </div>
           <div class="hook-block">
             <div class="hook-label hook-label--danger">before_remove</div>
-            <div class="code-box code-box--danger">
-              <el-input v-model="hookForm.beforeRemove" placeholder="输入 before_remove" />
-            </div>
+            <el-input
+              v-model="hookForm.beforeRemove"
+              class="hook-area hook-area--danger"
+              type="textarea"
+              :rows="6"
+              placeholder="输入 before_remove"
+            />
           </div>
           <div class="hooks-actions">
             <el-button
@@ -414,39 +422,26 @@ onMounted(() => {
   color: var(--kanban-error);
 }
 
-.code-box {
-  padding: 12px;
-  border-radius: 6px;
+.hook-area :deep(.el-textarea__inner) {
   background: #0f1117;
+  border-radius: 6px;
   font-size: 12px;
   font-family: "Fira Code", "Space Grotesk", monospace;
   line-height: 1.5;
   opacity: 0.9;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.code-box :deep(.el-input__wrapper),
-.code-box :deep(.el-select__wrapper),
-.code-box :deep(.el-select .el-input__wrapper) {
-  background: transparent;
-  border: 1px solid currentColor;
+  border: 1px solid transparent;
   box-shadow: none;
-}
-
-.code-box :deep(.el-input__inner) {
-  color: inherit;
-}
-
-.code-box--success {
-  border: 1px solid var(--kanban-success);
-  color: var(--kanban-success);
+  padding: 12px;
   min-height: 200px;
 }
 
-.code-box--danger {
-  border: 1px solid var(--kanban-error);
+.hook-area--success :deep(.el-textarea__inner) {
+  border-color: var(--kanban-success);
+  color: var(--kanban-success);
+}
+
+.hook-area--danger :deep(.el-textarea__inner) {
+  border-color: var(--kanban-error);
   color: var(--kanban-error);
   min-height: 120px;
 }
