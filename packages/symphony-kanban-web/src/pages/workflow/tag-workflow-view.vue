@@ -1,7 +1,9 @@
 <template>
   <AppShell>
     <div class="tag-content">
-      <h1 class="page-title">标签与工作流配置 (Tag &amp; Workflow Configuration)</h1>
+      <h1 class="page-title">
+        标签与工作流配置 (Tag &amp; Workflow Configuration)
+      </h1>
 
       <section class="config-panel">
         <aside class="tag-col">
@@ -33,7 +35,7 @@
               />
             </div>
             <div class="param-block">
-              <div class="param-label">轮询间隔 (ms)</div>
+              <div class="param-label">迭代上限 (max_turns)</div>
               <el-input-number
                 v-model="settings.pollIntervalMs"
                 :min="1000"
@@ -42,40 +44,59 @@
               />
             </div>
           </div>
-          <div class="inline-actions">
-            <el-button class="action-primary" @click="saveSettings">保存调度配置</el-button>
-          </div>
 
-          <div class="form-label">标签属性 (Tag)</div>
-          <div class="tag-form">
-            <el-input v-model="tagForm.name" placeholder="标签名称" />
-            <el-input v-model="tagForm.type" placeholder="类型 (可选)" />
-            <el-input v-model="tagForm.color" placeholder="颜色 (可选)" />
-            <div class="inline-actions">
-              <el-button class="action-primary" @click="saveTag">保存标签</el-button>
-              <el-button class="action-muted" @click="deleteTag" :disabled="!selectedTagId">
-                删除标签
-              </el-button>
-            </div>
-          </div>
+          <div class="form-label">工作流定义 (Workflow Definition)</div>
+          <el-input
+            v-model="workflowForm.configJson"
+            class="form-area"
+            type="textarea"
+            :rows="5"
+          />
 
-          <div class="form-label">工作流行为 (Workflow Behavior)</div>
-          <div class="workflow-form">
-            <el-select v-model="workflowForm.state" placeholder="状态">
-              <el-option v-for="state in states" :key="state" :label="state" :value="state" />
-            </el-select>
-            <el-input v-model="workflowForm.behavior" placeholder="行为 (如 ci-required)" />
-            <el-input
-              v-model="workflowForm.configJson"
-              type="textarea"
-              :rows="4"
-              placeholder="行为配置 JSON (可选)"
-            />
-            <div class="inline-actions">
-              <el-button class="action-primary" @click="saveWorkflow">保存工作流规则</el-button>
-            </div>
-          </div>
+          <div class="form-label">规则 (Rules)</div>
+          <el-input v-model="tagForm.rules" class="form-area" type="textarea" :rows="5" />
+
+          <div class="form-label">验收标准 (Acceptance Criteria)</div>
+          <el-input
+            v-model="tagForm.acceptanceCriteria"
+            class="form-area"
+            type="textarea"
+            :rows="5"
+          />
         </div>
+
+        <aside class="hooks-col">
+          <div class="hooks-title">生命周期钩子 (Hooks)</div>
+          <div class="hook-block">
+            <div class="hook-label hook-label--success">after_create</div>
+            <div class="code-box code-box--success">
+              <el-input v-model="tagForm.name" placeholder="标签名称" />
+              <el-input v-model="tagForm.type" placeholder="类型 (可选)" />
+              <el-input v-model="tagForm.color" placeholder="颜色 (可选)" />
+            </div>
+          </div>
+          <div class="hook-block">
+            <div class="hook-label hook-label--danger">before_remove</div>
+            <div class="code-box code-box--danger">
+              <el-select v-model="workflowForm.state" placeholder="状态">
+                <el-option v-for="state in states" :key="state" :label="state" :value="state" />
+              </el-select>
+              <el-input v-model="workflowForm.behavior" placeholder="行为 (如 ci-required)" />
+            </div>
+          </div>
+          <div class="hooks-actions">
+            <el-button
+              class="hook-action hook-action--delete"
+              @click="deleteTag"
+              :disabled="!selectedTagId"
+            >
+              删除
+            </el-button>
+            <el-button class="hook-action hook-action--apply" @click="applyAll">
+              应用并保存配置
+            </el-button>
+          </div>
+        </aside>
       </section>
     </div>
   </AppShell>
@@ -105,6 +126,8 @@ const tagForm = reactive({
   name: "",
   type: "",
   color: "",
+  rules: "",
+  acceptanceCriteria: "",
 });
 
 const workflowForm = reactive({
@@ -142,6 +165,8 @@ const selectTag = (id: string) => {
   tagForm.name = tag?.name ?? "";
   tagForm.type = tag?.type ?? "";
   tagForm.color = tag?.color ?? "";
+  tagForm.rules = tag?.rules ?? "";
+  tagForm.acceptanceCriteria = tag?.acceptanceCriteria ?? "";
   const workflow = workflows.value.find((row) => row.tagId === id);
   workflowForm.state = workflow?.state ?? "Todo";
   workflowForm.behavior = workflow?.behavior ?? "";
@@ -155,24 +180,18 @@ const createNewTag = async () => {
   await loadAll();
 };
 
-const saveTag = async () => {
+const persistTag = async () => {
   if (!selectedTagId.value) return;
   await api.updateTag(selectedTagId.value, {
     name: tagForm.name,
     type: tagForm.type || null,
     color: tagForm.color || null,
+    rules: tagForm.rules || null,
+    acceptanceCriteria: tagForm.acceptanceCriteria || null,
   });
-  await loadAll();
 };
 
-const deleteTag = async () => {
-  if (!selectedTagId.value) return;
-  await api.deleteTag(selectedTagId.value);
-  selectedTagId.value = null;
-  await loadAll();
-};
-
-const saveWorkflow = async () => {
+const persistWorkflow = async () => {
   if (!selectedTagId.value) return;
   const payload = {
     tagId: selectedTagId.value,
@@ -185,6 +204,22 @@ const saveWorkflow = async () => {
   } else {
     await api.createWorkflow(payload);
   }
+};
+
+const saveTag = async () => {
+  await persistTag();
+  await loadAll();
+};
+
+const deleteTag = async () => {
+  if (!selectedTagId.value) return;
+  await api.deleteTag(selectedTagId.value);
+  selectedTagId.value = null;
+  await loadAll();
+};
+
+const saveWorkflow = async () => {
+  await persistWorkflow();
   await loadAll();
 };
 
@@ -193,6 +228,19 @@ const saveSettings = async () => {
     maxConcurrency: settings.maxConcurrency,
     pollIntervalMs: settings.pollIntervalMs,
   });
+};
+
+const applyAll = async () => {
+  if (!selectedTagId.value) return;
+  await Promise.all([
+    persistTag(),
+    persistWorkflow(),
+    api.updateSchedulerSettings({
+      maxConcurrency: settings.maxConcurrency,
+      pollIntervalMs: settings.pollIntervalMs,
+    }),
+  ]);
+  await loadAll();
 };
 
 onMounted(() => {
@@ -294,31 +342,125 @@ onMounted(() => {
   font-weight: 600;
 }
 
+.param-input :deep(.el-input__wrapper) {
+  background: var(--kanban-surface);
+  border: 1px solid var(--kanban-border);
+  box-shadow: none;
+}
+
+.param-input :deep(.el-input__inner) {
+  color: var(--kanban-text-primary);
+  font-size: 14px;
+}
+
 .form-label {
   font-size: 13px;
   font-weight: 600;
 }
 
-.tag-form,
-.workflow-form {
+.form-area :deep(.el-textarea__inner) {
+  background: var(--kanban-surface);
+  border: 1px solid var(--kanban-border);
+  color: var(--kanban-text-secondary);
+  font-size: 14px;
+  font-family: "Space Grotesk", "Inter", "DM Sans", system-ui, -apple-system,
+    sans-serif;
+  line-height: 1.5;
+  box-shadow: none;
+}
+
+.hooks-col {
+  width: 340px;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 20px;
 }
 
-.inline-actions {
+.hooks-title {
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.hook-block {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.hook-label {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.hook-label--success {
+  color: var(--kanban-success);
+}
+
+.hook-label--danger {
+  color: var(--kanban-error);
+}
+
+.code-box {
+  padding: 12px;
+  border-radius: 6px;
+  background: #0f1117;
+  font-size: 12px;
+  font-family: "Fira Code", "Space Grotesk", monospace;
+  line-height: 1.5;
+  opacity: 0.9;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.code-box :deep(.el-input__wrapper),
+.code-box :deep(.el-select__wrapper),
+.code-box :deep(.el-select .el-input__wrapper) {
+  background: transparent;
+  border: 1px solid currentColor;
+  box-shadow: none;
+}
+
+.code-box :deep(.el-input__inner) {
+  color: inherit;
+}
+
+.code-box--success {
+  border: 1px solid var(--kanban-success);
+  color: var(--kanban-success);
+  min-height: 200px;
+}
+
+.code-box--danger {
+  border: 1px solid var(--kanban-error);
+  color: var(--kanban-error);
+  min-height: 120px;
+}
+
+.hooks-actions {
   display: flex;
   gap: 12px;
+  align-items: center;
 }
 
-.action-primary {
+.hook-action {
+  border-radius: 6px;
+  padding: 14px;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.hook-action--delete {
+  width: 100px;
+  border: 1px solid var(--kanban-error);
+  color: var(--kanban-error);
+  background: transparent;
+}
+
+.hook-action--apply {
+  flex: 1;
   background: var(--kanban-primary);
   color: var(--kanban-text-primary);
   border: none;
-}
-
-.action-muted {
-  background: var(--kanban-muted);
-  border: 1px solid var(--kanban-border);
 }
 </style>
