@@ -276,6 +276,7 @@ onMounted(() => {
   min-height: 0;
   height: 100%;
   overflow: hidden;
+  max-height: 100%;
 }
 
 .workspace-header {
@@ -315,6 +316,7 @@ onMounted(() => {
   gap: 16px;
   flex: 1;
   min-height: 0;
+  height: 100%;
   overflow: auto;
   padding-right: 4px;
 }
