@@ -38,4 +38,14 @@ describe("issue-detail-routing", () => {
     });
     expect(target).toBeNull();
   });
+
+  it("skips navigation when current route is outside issues", () => {
+    const target = resolveIssueDetailRoute({
+      issueId: "issue-1",
+      status: "InProgress",
+      currentPath: "/board",
+      isEditing: false,
+    });
+    expect(target).toBeNull();
+  });
 });

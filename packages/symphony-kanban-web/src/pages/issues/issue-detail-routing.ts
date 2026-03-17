@@ -25,6 +25,7 @@ export const resolveIssueDetailRoute = ({
   isEditing,
 }: ResolveRouteInput): string | null => {
   if (!issueId || isEditing) return null;
+  if (!currentPath.startsWith(`/issues/${issueId}`)) return null;
   const suffix = routeForStatus(status);
   const target = `/issues/${issueId}${suffix}`;
   if (currentPath === target) return null;
