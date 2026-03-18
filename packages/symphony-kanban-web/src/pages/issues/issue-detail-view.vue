@@ -17,6 +17,8 @@
         </el-button>
       </header>
 
+      <OpencodeSessionPanel v-if="draft.status === 'Done'" :session-url="sessionUrl" />
+
       <section class="issue-details" v-if="loading">
         <div class="loading">加载中...</div>
       </section>
@@ -127,17 +129,21 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, reactive, ref } from "vue";
+import { computed, onMounted, onUnmounted, reactive, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { ElMessage, ElMessageBox } from "element-plus";
 import AppShell from "../../components/AppShell.vue";
 import { buildApi } from "../../lib/api";
 import { resolveIssueDetailRoute } from "./issue-detail-routing";
+import OpencodeSessionPanel from "../../components/opencode-session-panel.vue";
+import { resolveOpencodeSessionUrl } from "../sessions/opencode-session";
+import type { ReviewDTO } from "symphony-kanban-shared";
 
 const router = useRouter();
 const route = useRoute();
 const apiBase = import.meta.env.VITE_API_BASE ?? "http://localhost:3001";
 const api = buildApi(apiBase);
+const opencodeWebBase = import.meta.env.VITE_OPENCODE_WEB_BASE ?? "http://localhost:4096";
 
 const loading = ref(true);
 const deleting = ref(false);
@@ -145,6 +151,7 @@ const workspaces = ref<Array<{ id: string; name: string }>>([]);
 const tagOptions = ref<Array<{ id: string; name: string }>>([]);
 const executionStatus = ref<string | null>(null);
 const executionId = ref<string | null>(null);
+const review = ref<ReviewDTO | null>(null);
 let executionTimer: number | undefined;
 let issueStatusTimer: number | undefined;
 
@@ -244,6 +251,19 @@ const loadExecution = async () => {
   }
 };
 
+const loadReview = async () => {
+  if (draft.status !== "Done") {
+    review.value = null;
+    return;
+  }
+  try {
+    const res = await api.getReview(draft.id);
+    review.value = res.data ?? null;
+  } catch {
+    review.value = null;
+  }
+};
+
 const pollExecution = async () => {
   if (!executionId.value) return;
   try {
@@ -273,6 +293,13 @@ const pollIssueStatus = async () => {
     console.error("Failed to poll issue status", error);
   }
 };
+
+watch(
+  () => draft.status,
+  () => {
+    loadReview();
+  },
+);
 
 const savePatch = async (patch: Record<string, unknown>) => {
   try {
@@ -361,6 +388,7 @@ const goBack = () => {
 
 onMounted(async () => {
   await Promise.all([loadOptions(), loadIssue(), loadExecution()]);
+  await loadReview();
   executionTimer = window.setInterval(() => {
     pollExecution();
   }, 5000);
@@ -377,6 +405,10 @@ onUnmounted(() => {
     window.clearInterval(issueStatusTimer);
   }
 });
+
+const sessionUrl = computed(() =>
+  resolveOpencodeSessionUrl(opencodeWebBase, review.value?.artifacts),
+);
 </script>
 
 <style scoped>
