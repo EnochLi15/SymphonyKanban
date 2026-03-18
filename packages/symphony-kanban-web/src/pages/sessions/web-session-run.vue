@@ -7,20 +7,7 @@
       </header>
 
       <section class="session-panels">
-        <div class="panel">
-          <div class="panel-title">Opencode 会话</div>
-          <div class="panel-body">
-            <div v-if="sessionUrl" class="iframe-wrap">
-              <iframe
-                class="session-iframe"
-                :src="sessionUrl"
-                title="opencode-session"
-                loading="lazy"
-              />
-            </div>
-            <div v-else class="panel-empty">暂无会话</div>
-          </div>
-        </div>
+        <OpencodeSessionPanel :session-url="sessionUrl" />
 
         <div class="panel">
           <div class="panel-title">日志 (Log)</div>
@@ -53,7 +40,8 @@ import { useRoute, useRouter } from "vue-router";
 import AppShell from "../../components/AppShell.vue";
 import { buildApi } from "../../lib/api";
 import type { ReviewDTO } from "symphony-kanban-shared";
-import { buildOpencodeSessionUrl } from "./opencode-session";
+import OpencodeSessionPanel from "../../components/opencode-session-panel.vue";
+import { resolveOpencodeSessionUrl } from "./opencode-session";
 
 const route = useRoute();
 const router = useRouter();
@@ -70,18 +58,8 @@ const load = async () => {
 const logArtifact = computed(() =>
   review.value?.artifacts.find((artifact) => artifact.type === "log"),
 );
-const sessionArtifact = computed(() =>
-  review.value?.artifacts.find((artifact) => artifact.type === "session"),
-);
-const projectArtifact = computed(() =>
-  review.value?.artifacts.find((artifact) => artifact.type === "opencode_project"),
-);
-const sessionId = computed(() => sessionArtifact.value?.content ?? "");
-const projectId = computed(() => projectArtifact.value?.content ?? "");
 const sessionUrl = computed(() =>
-  sessionId.value && projectId.value
-    ? buildOpencodeSessionUrl(opencodeWebBase, projectId.value, sessionId.value)
-    : "",
+  resolveOpencodeSessionUrl(opencodeWebBase, review.value?.artifacts),
 );
 const diffArtifact = computed(() =>
   review.value?.artifacts.find((artifact) => artifact.type === "diff"),
@@ -146,21 +124,4 @@ onMounted(() => {
   color: var(--kanban-text-secondary);
 }
 
-.iframe-wrap {
-  border-radius: 8px;
-  border: 1px solid var(--kanban-border);
-  overflow: hidden;
-  background: var(--kanban-muted);
-}
-
-.session-iframe {
-  width: 100%;
-  height: 520px;
-  border: none;
-}
-
-.panel-empty {
-  font-size: 13px;
-  color: var(--kanban-text-secondary);
-}
 </style>
