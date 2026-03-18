@@ -90,8 +90,7 @@
           <div class="field-card">
             <div class="field-label">标签</div>
             <el-select
-              v-model="draft.tags"
-              multiple
+              v-model="draft.tag"
               filterable
               allow-create
               default-first-option
@@ -178,7 +177,7 @@ const draft = reactive({
   status: "Backlog",
   priority: 2,
   workspaceId: "",
-  tags: [] as string[],
+  tag: "",
 });
 
 const snapshot = ref({ ...draft });
@@ -206,7 +205,7 @@ const syncDraft = (data: typeof draft) => {
   draft.status = data.status;
   draft.priority = data.priority ?? 2;
   draft.workspaceId = data.workspaceId;
-  draft.tags = Array.isArray(data.tags) ? [...data.tags] : [];
+  draft.tag = Array.isArray(data.tags) ? data.tags[0] ?? "" : "";
   snapshot.value = { ...draft };
 };
 
@@ -358,7 +357,7 @@ const saveWorkspace = () => {
 };
 
 const saveTags = () => {
-  savePatch({ tags: draft.tags });
+  savePatch({ tags: draft.tag ? [draft.tag] : [] });
 };
 
 const confirmDelete = async () => {
