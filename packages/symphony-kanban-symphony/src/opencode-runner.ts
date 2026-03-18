@@ -13,6 +13,23 @@ type RunResult = {
   errorSummary?: string;
 };
 
+export const resolveOpencodeProjectId = (
+  rawProjectId: string | null | undefined,
+  workspacePath: string | null | undefined,
+  sessionDirectory: string | null | undefined,
+): string | null => {
+  if (workspacePath) {
+    return Buffer.from(workspacePath, "utf8").toString("base64");
+  }
+  if (sessionDirectory) {
+    return Buffer.from(sessionDirectory, "utf8").toString("base64");
+  }
+  if (typeof rawProjectId === "string" && rawProjectId.trim().length > 0) {
+    return rawProjectId;
+  }
+  return null;
+};
+
 const buildPrompt = (input: RunInput) => {
   const lines = [
     `任务: ${input.issue.title}`,
@@ -54,8 +71,15 @@ export const runOpencode = async (input: RunInput): Promise<RunResult> => {
     query: input.workspacePath ? { directory: input.workspacePath } : undefined,
   });
   const sessionId = (session as any).data?.id ?? (session as any).id;
-  const projectId =
+  const rawProjectId =
     (session as any).data?.projectID ?? (session as any).projectID ?? null;
+  const sessionDirectory =
+    (session as any).data?.directory ?? (session as any).directory ?? null;
+  const projectId = resolveOpencodeProjectId(
+    rawProjectId,
+    input.workspacePath,
+    sessionDirectory,
+  );
   // Record session id for debugging/correlation.
   await input.onArtifact("session", sessionId, "opencode session id");
   if (projectId) {

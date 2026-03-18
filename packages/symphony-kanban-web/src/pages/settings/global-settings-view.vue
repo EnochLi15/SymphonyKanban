@@ -24,10 +24,10 @@
             已移除 MCP 相关内容，技能专注于看板任务管理。
           </div>
         </el-card>
-
-        <div class="button-row">
+        <!-- TODO: 保存全局设置 -->
+        <!-- <div class="button-row">
           <el-button class="save-button">保存全局设置</el-button>
-        </div>
+        </div> -->
       </section>
     </div>
   </AppShell>
