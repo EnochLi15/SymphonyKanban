@@ -26,6 +26,11 @@ export interface TagDTO {
   color?: string | null;
   rules?: string | null;
   acceptanceCriteria?: string | null;
+  state?: string | null;
+  behavior?: string | null;
+  workflowDefinition?: string | null;
+  afterCreate?: string | null;
+  beforeRemove?: string | null;
   createdAt: string;
   updatedAt?: string | null;
 }
