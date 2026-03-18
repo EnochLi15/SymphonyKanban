@@ -6,11 +6,11 @@
       "color": null,
       "rules": "明确用户画像与目标（Who/What/Why）。\n每个 story 聚焦一个主价值，避免混杂多个需求。\n需要可验证的验收标准与边界条件。",
       "acceptanceCriteria": "Given/When/Then 格式列出 3-5 条关键场景。\n覆盖正向路径、至少 1 条边界或异常路径。\n明确业务文案与关键交互。",
-      "workflow": {
-        "state": "Todo",
-        "behavior": "story-spec",
-        "configJson": { "checklist": ["用户目标清晰", "范围明确", "验收标准完整"] }
-      }
+      "state": "Todo",
+      "behavior": "story-spec",
+      "workflowDefinition": "描述用户故事需要完成的分析与方案输出，包括目标、边界与交互细节。",
+      "afterCreate": "",
+      "beforeRemove": ""
     },
     {
       "name": "Bugfix",
@@ -18,11 +18,11 @@
       "color": null,
       "rules": "明确复现步骤、预期 vs 实际结果。\n判断影响面与优先级（是否回归、是否阻塞）。\n修复需最小化副作用，避免改动过大。",
       "acceptanceCriteria": "至少 1 个可重复的复现步骤。\n提供修复前后的对比说明或证据。\n若影响测试，需要补充或更新测试。",
-      "workflow": {
-        "state": "Todo",
-        "behavior": "bugfix",
-        "configJson": { "checklist": ["复现清晰", "根因分析", "验证修复"] }
-      }
+      "state": "Todo",
+      "behavior": "bugfix",
+      "workflowDefinition": "复现问题、定位根因、给出最小修复并验证结果。",
+      "afterCreate": "",
+      "beforeRemove": ""
     },
     {
       "name": "CodeReview",
@@ -30,11 +30,11 @@
       "color": null,
       "rules": "关注正确性、边界条件、性能与可维护性。\n明确风险点与潜在回归。\n如需修改，提出具体建议而非笼统评价。",
       "acceptanceCriteria": "列出至少 3 条具体 review 发现或明确说明“无明显问题”。\n对每个发现给出建议或修复方案。\n标记优先级（P0/P1/P2）与风险等级。",
-      "workflow": {
-        "state": "Todo",
-        "behavior": "code-review",
-        "configJson": { "checklist": ["正确性", "边界条件", "可维护性"] }
-      }
+      "state": "Todo",
+      "behavior": "code-review",
+      "workflowDefinition": "对目标改动进行审查，输出问题清单、风险与改进建议。",
+      "afterCreate": "",
+      "beforeRemove": ""
     },
     {
       "name": "Refactor",
@@ -42,11 +42,11 @@
       "color": null,
       "rules": "不改变外部行为（除非明确说明）。\n保持可读性提升为核心目标。\n小步改动，避免大范围重写。",
       "acceptanceCriteria": "说明重构前后的可读性/结构改善点。\n保持现有测试通过（或补充测试）。\n明确说明未改变业务行为。",
-      "workflow": {
-        "state": "Todo",
-        "behavior": "refactor",
-        "configJson": { "checklist": ["行为保持", "结构改进", "测试验证"] }
-      }
+      "state": "Todo",
+      "behavior": "refactor",
+      "workflowDefinition": "在不改变业务行为的前提下进行结构优化与可读性提升。",
+      "afterCreate": "",
+      "beforeRemove": ""
     }
   ]
 }

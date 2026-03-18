@@ -4,19 +4,17 @@ import { fileURLToPath } from "node:url";
 import path from "node:path";
 import { db } from "./db.js";
 
-type BuiltinWorkflow = {
-  state: string;
-  behavior: string;
-  configJson: unknown;
-};
-
 export type BuiltinTag = {
   name: string;
   type: string | null;
   color: string | null;
   rules: string | null;
   acceptanceCriteria: string | null;
-  workflow: BuiltinWorkflow;
+  state: string | null;
+  behavior: string | null;
+  workflowDefinition: string | null;
+  afterCreate: string | null;
+  beforeRemove: string | null;
 };
 
 type BuiltinPayload = { tags: BuiltinTag[] };
@@ -51,7 +49,7 @@ export const ensureBuiltinTags = () => {
 
       if (!existing) {
         db.prepare(
-          "INSERT INTO tags (id, name, type, color, rules, acceptance_criteria, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+          "INSERT INTO tags (id, name, type, color, rules, acceptance_criteria, state, behavior, workflow_definition, after_create, before_remove, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
         ).run(
           tagId,
           tag.name,
@@ -59,28 +57,11 @@ export const ensureBuiltinTags = () => {
           tag.color ?? null,
           tag.rules ?? null,
           tag.acceptanceCriteria ?? null,
-          now,
-          now,
-        );
-      }
-
-      const workflowExisting = db
-        .prepare("SELECT id FROM workflow_defs WHERE tag_id = ? LIMIT 1")
-        .get(tagId) as { id: string } | undefined;
-
-      if (!workflowExisting) {
-        const configJson =
-          tag.workflow?.configJson === undefined || tag.workflow?.configJson === null
-            ? null
-            : JSON.stringify(tag.workflow.configJson);
-        db.prepare(
-          "INSERT INTO workflow_defs (id, tag_id, state, behavior, config_json, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)",
-        ).run(
-          randomUUID(),
-          tagId,
-          tag.workflow.state,
-          tag.workflow.behavior,
-          configJson,
+          tag.state ?? null,
+          tag.behavior ?? null,
+          tag.workflowDefinition ?? null,
+          tag.afterCreate ?? null,
+          tag.beforeRemove ?? null,
           now,
           now,
         );
