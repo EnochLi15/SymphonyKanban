@@ -49,6 +49,23 @@ ensureColumn("workspaces", "updated_at", "ALTER TABLE workspaces ADD COLUMN upda
 ensureColumn("tags", "type", "ALTER TABLE tags ADD COLUMN type TEXT");
 ensureColumn("tags", "color", "ALTER TABLE tags ADD COLUMN color TEXT");
 ensureColumn("tags", "rules", "ALTER TABLE tags ADD COLUMN rules TEXT");
+ensureColumn("tags", "state", "ALTER TABLE tags ADD COLUMN state TEXT");
+ensureColumn("tags", "behavior", "ALTER TABLE tags ADD COLUMN behavior TEXT");
+ensureColumn(
+  "tags",
+  "workflow_definition",
+  "ALTER TABLE tags ADD COLUMN workflow_definition TEXT",
+);
+ensureColumn(
+  "tags",
+  "after_create",
+  "ALTER TABLE tags ADD COLUMN after_create TEXT",
+);
+ensureColumn(
+  "tags",
+  "before_remove",
+  "ALTER TABLE tags ADD COLUMN before_remove TEXT",
+);
 ensureColumn(
   "tags",
   "acceptance_criteria",

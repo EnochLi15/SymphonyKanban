@@ -32,6 +32,11 @@ CREATE TABLE IF NOT EXISTS tags (
   color TEXT,
   rules TEXT,
   acceptance_criteria TEXT,
+  state TEXT,
+  behavior TEXT,
+  workflow_definition TEXT,
+  after_create TEXT,
+  before_remove TEXT,
   created_at TEXT NOT NULL,
   updated_at TEXT NOT NULL
 );
