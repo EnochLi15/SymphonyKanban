@@ -6,7 +6,7 @@ This repository is a monorepo managing the Symphony Kanban system, which include
 
 - **Package Manager**: `pnpm` (v9+)
 - **Workspace**: Managed via `pnpm-workspace.yaml` in the root.
-- **Node.js**: Version 22+ recommended.
+- **Node.js**: Version 20.19.0
 
 ### Quick Start
 ```bash
