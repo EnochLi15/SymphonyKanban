@@ -44,4 +44,12 @@ export const buildApi = (base: string) => ({
     const res = await fetch(`${base}/workspaces`);
     return res.json();
   },
+  async listTags() {
+    const res = await fetch(`${base}/tags`);
+    return res.json();
+  },
+  async listWorkflows() {
+    const res = await fetch(`${base}/workflows`);
+    return res.json();
+  },
 });
