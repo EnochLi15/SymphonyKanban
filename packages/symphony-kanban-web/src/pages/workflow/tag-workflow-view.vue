@@ -47,7 +47,7 @@
 
           <div class="form-label">工作流定义 (Workflow Definition)</div>
           <el-input
-            v-model="workflowForm.configJson"
+            v-model="tagForm.workflowDefinition"
             class="form-area"
             type="textarea"
             :rows="5"
@@ -70,7 +70,7 @@
           <div class="hook-block">
             <div class="hook-label hook-label--success">after_create</div>
             <el-input
-              v-model="hookForm.afterCreate"
+              v-model="tagForm.afterCreate"
               class="hook-area hook-area--success"
               type="textarea"
               :rows="6"
@@ -80,7 +80,7 @@
           <div class="hook-block">
             <div class="hook-label hook-label--danger">before_remove</div>
             <el-input
-              v-model="hookForm.beforeRemove"
+              v-model="tagForm.beforeRemove"
               class="hook-area hook-area--danger"
               type="textarea"
               :rows="6"
@@ -106,15 +106,14 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, reactive, ref } from "vue";
+import { onMounted, reactive, ref } from "vue";
 import AppShell from "../../components/AppShell.vue";
 import { buildApi } from "../../lib/api";
-import type { SchedulerSettingsDTO, TagDTO, WorkflowDefDTO } from "symphony-kanban-shared";
+import type { SchedulerSettingsDTO, TagDTO } from "symphony-kanban-shared";
 
 const api = buildApi(import.meta.env.VITE_API_BASE ?? "http://localhost:3001");
 
 const tags = ref<TagDTO[]>([]);
-const workflows = ref<WorkflowDefDTO[]>([]);
 const selectedTagId = ref<string | null>(null);
 
 const settings = reactive<SchedulerSettingsDTO>({
@@ -130,43 +129,19 @@ const tagForm = reactive({
   color: "",
   rules: "",
   acceptanceCriteria: "",
-});
-
-const workflowForm = reactive({
-  state: "Todo",
+  state: "",
   behavior: "",
-  configJson: "",
-});
-
-const hookForm = reactive({
+  workflowDefinition: "",
   afterCreate: "",
   beforeRemove: "",
 });
 
-const selectedWorkflow = computed(() =>
-  workflows.value.find((workflow) => workflow.tagId === selectedTagId.value),
-);
-
-const syncHookFormFromConfig = () => {
-  hookForm.afterCreate = "";
-  hookForm.beforeRemove = "";
-};
-
-const syncConfigFromHookForm = () => {
-  workflowForm.configJson = JSON.stringify({
-    after_create: hookForm.afterCreate,
-    before_remove: hookForm.beforeRemove,
-  });
-};
-
 const loadAll = async () => {
-  const [tagRes, workflowRes, settingsRes] = await Promise.all([
+  const [tagRes, settingsRes] = await Promise.all([
     api.listTags(),
-    api.listWorkflows(),
     api.getSchedulerSettings(),
   ]);
   tags.value = tagRes.data ?? [];
-  workflows.value = workflowRes.data ?? [];
   if (settingsRes.data) {
     settings.id = settingsRes.data.id;
     settings.maxConcurrency = settingsRes.data.maxConcurrency;
@@ -186,11 +161,11 @@ const selectTag = (id: string) => {
   tagForm.color = tag?.color ?? "";
   tagForm.rules = tag?.rules ?? "";
   tagForm.acceptanceCriteria = tag?.acceptanceCriteria ?? "";
-  const workflow = workflows.value.find((row) => row.tagId === id);
-  workflowForm.state = workflow?.state ?? "Todo";
-  workflowForm.behavior = workflow?.behavior ?? "";
-  workflowForm.configJson = workflow?.configJson ?? "";
-  syncHookFormFromConfig();
+  tagForm.state = tag?.state ?? "";
+  tagForm.behavior = tag?.behavior ?? "";
+  tagForm.workflowDefinition = tag?.workflowDefinition ?? "";
+  tagForm.afterCreate = tag?.afterCreate ?? "";
+  tagForm.beforeRemove = tag?.beforeRemove ?? "";
 };
 
 const createNewTag = async () => {
@@ -208,22 +183,12 @@ const persistTag = async () => {
     color: tagForm.color || null,
     rules: tagForm.rules || null,
     acceptanceCriteria: tagForm.acceptanceCriteria || null,
+    state: tagForm.state || null,
+    behavior: tagForm.behavior || null,
+    workflowDefinition: tagForm.workflowDefinition || null,
+    afterCreate: tagForm.afterCreate || null,
+    beforeRemove: tagForm.beforeRemove || null,
   });
-};
-
-const persistWorkflow = async () => {
-  if (!selectedTagId.value) return;
-  const payload = {
-    tagId: selectedTagId.value,
-    state: workflowForm.state,
-    behavior: workflowForm.behavior,
-    configJson: workflowForm.configJson || null,
-  };
-  if (selectedWorkflow.value?.id) {
-    await api.updateWorkflow(selectedWorkflow.value.id, payload);
-  } else {
-    await api.createWorkflow(payload);
-  }
 };
 
 const saveTag = async () => {
@@ -238,12 +203,6 @@ const deleteTag = async () => {
   await loadAll();
 };
 
-const saveWorkflow = async () => {
-  syncConfigFromHookForm();
-  await persistWorkflow();
-  await loadAll();
-};
-
 const saveSettings = async () => {
   await api.updateSchedulerSettings({
     maxConcurrency: settings.maxConcurrency,
@@ -253,10 +212,8 @@ const saveSettings = async () => {
 
 const applyAll = async () => {
   if (!selectedTagId.value) return;
-  syncConfigFromHookForm();
   await Promise.all([
     persistTag(),
-    persistWorkflow(),
     api.updateSchedulerSettings({
       maxConcurrency: settings.maxConcurrency,
       pollIntervalMs: settings.pollIntervalMs,
