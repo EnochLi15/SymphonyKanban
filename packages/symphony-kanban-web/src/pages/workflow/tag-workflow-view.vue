@@ -8,19 +8,19 @@
       <section class="config-panel">
         <aside class="tag-col">
           <div class="tag-col-title">管理标签 (Tags)</div>
-          <el-button
-            v-for="tag in tags"
-            :key="tag.id"
-            class="tag-item"
-            :class="{ 'tag-item--active': tag.id === selectedTagId }"
-            text
-            @click="selectTag(tag.id)"
-          >
-            {{ tag.name }}
-          </el-button>
           <el-button class="tag-item tag-item--add" text @click="createNewTag">
             + 新建标签
           </el-button>
+          <div v-for="tag in tags" :key="tag.id">
+            <el-button
+              class="tag-item"
+              :class="{ 'tag-item--active': tag.id === selectedTagId }"
+              text
+              @click="selectTag(tag.id)"
+            >
+              {{ tag.name }}
+            </el-button>
+          </div>
         </aside>
 
         <div class="form-col">
