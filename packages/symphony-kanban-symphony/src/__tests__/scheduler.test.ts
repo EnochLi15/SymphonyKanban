@@ -160,4 +160,108 @@ describe("scheduler", () => {
     expect(hasProjectArtifact).toBe(true);
     scheduler.stop();
   });
+
+  it("injects workflow context into opencode prompt", async () => {
+    const promptBodies: Array<{ text: string }> = [];
+    const fetchMock = vi.fn(async (url: string, init?: RequestInit) => {
+      if (String(url).includes("/settings/scheduler")) {
+        return { ok: true, json: async () => ({ data: { maxConcurrency: 1, pollIntervalMs: 10 } }) };
+      }
+      if (String(url).includes("/scheduler/claim")) {
+        return {
+          ok: true,
+          json: async () => ({
+            data: {
+              id: "issue-1",
+              title: "Test",
+              description: "",
+              tags: ["UserStory"],
+              workspaceId: "wksp-default",
+            },
+          }),
+        };
+      }
+      if (String(url).includes("/workspaces")) {
+        return { ok: true, json: async () => ({ data: [] }) };
+      }
+      if (String(url).includes("/tags")) {
+        return {
+          ok: true,
+          json: async () => ({
+            data: [
+              {
+                id: "tag-1",
+                name: "UserStory",
+                rules: "rule-1",
+                acceptanceCriteria: "acc-1",
+              },
+            ],
+          }),
+        };
+      }
+      if (String(url).includes("/workflows")) {
+        return {
+          ok: true,
+          json: async () => ({
+            data: [
+              {
+                id: "wf-1",
+                tagId: "tag-1",
+                state: "Todo",
+                behavior: "story-spec",
+                configJson: "{\"checklist\":[\"A\",\"B\"]}",
+              },
+            ],
+          }),
+        };
+      }
+      if (String(url).includes("/executions/") && String(url).includes("/artifacts")) {
+        return { ok: true, json: async () => ({ data: { id: "artifact-1" } }) };
+      }
+      if (String(url).includes("/executions") && init?.method === "POST") {
+        return { ok: true, json: async () => ({ data: { id: "exec-1" } }) };
+      }
+      if (String(url).includes("/executions/") && init?.method === "PATCH") {
+        return { ok: true, json: async () => ({ ok: true }) };
+      }
+      if (String(url).includes("/issues/") && String(url).includes("/transition")) {
+        return { ok: true, json: async () => ({ ok: true }) };
+      }
+      return { ok: true, json: async () => ({ data: null }) };
+    });
+
+    vi.stubGlobal("fetch", fetchMock as unknown as typeof fetch);
+
+    sessionCreate.mockResolvedValue({ data: { id: "sess-1", projectID: "proj-1" } });
+    sessionPromptAsync.mockImplementation(async (payload: any) => {
+      const text = payload?.body?.parts?.[0]?.text ?? "";
+      promptBodies.push({ text });
+      return {};
+    });
+    sessionMessages.mockResolvedValue({ data: [] });
+    sessionDiff.mockResolvedValue({ data: [] });
+    eventSubscribe.mockResolvedValue({
+      stream: (async function* () {
+        yield { type: "session.idle", properties: {} };
+      })(),
+    });
+
+    const scheduler = await startScheduler({
+      apiBase: "http://api",
+      opencodeBase: "http://opencode",
+    });
+    const waitFor = async (predicate: () => boolean, timeoutMs = 200) => {
+      const start = Date.now();
+      while (Date.now() - start < timeoutMs) {
+        if (predicate()) return;
+        await new Promise((resolve) => setTimeout(resolve, 5));
+      }
+    };
+    await waitFor(() => promptBodies.length > 0);
+
+    expect(promptBodies[0]?.text).toContain("规则");
+    expect(promptBodies[0]?.text).toContain("验收标准");
+    expect(promptBodies[0]?.text).toContain("story-spec");
+    scheduler.stop();
+  });
 });

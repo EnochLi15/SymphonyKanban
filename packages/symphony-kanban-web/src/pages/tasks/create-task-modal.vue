@@ -57,11 +57,10 @@
             </el-form-item>
           </div>
           <div class="form-block">
-            <el-form-item prop="tags" label="标签 (Tags)">
+            <el-form-item prop="tag" label="标签 (Tags)">
               <el-select
-                v-model="form.tags"
+                v-model="form.tag"
                 class="field-select"
-                multiple
                 filterable
                 allow-create
                 default-first-option
@@ -128,7 +127,7 @@ const form = reactive({
   workspaceId: "",
   title: "",
   priority: 2,
-  tags: [] as string[],
+  tag: "",
   description: "",
 });
 
@@ -204,7 +203,7 @@ const submitForm = async () => {
         description: form.description,
         priority: form.priority,
         workspace_id: form.workspaceId,
-        tags: form.tags,
+        tags: form.tag ? [form.tag] : [],
       }),
     });
 

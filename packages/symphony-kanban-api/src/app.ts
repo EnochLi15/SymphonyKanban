@@ -32,6 +32,7 @@ import {
   updateWorkspace,
 } from "./workspace-store.js";
 import { listOpenCodeProjects } from "./opencode-client.js";
+import { BUILTIN_TAG_NAMES } from "./builtin-tags.js";
 
 export const app = express();
 app.use(express.json({ limit: "5mb" }));
@@ -263,6 +264,13 @@ app.patch("/tags/:id", (req, res) => {
 });
 
 app.delete("/tags/:id", (req, res) => {
+  const row = db
+    .prepare("SELECT name FROM tags WHERE id = ?")
+    .get(req.params.id) as { name: string } | undefined;
+  if (row && BUILTIN_TAG_NAMES.includes(row.name as (typeof BUILTIN_TAG_NAMES)[number])) {
+    res.status(409).json({ error: "builtin_tag_protected" });
+    return;
+  }
   deleteTag(req.params.id);
   res.json({ ok: true });
 });

@@ -76,13 +76,13 @@
                   <span class="tag tag--neutral">
                     {{ issue.workspaceName ?? issue.workspaceId }}
                   </span>
-                  <span v-for="tag in issue.tags" :key="tag" class="tag tag--neutral">
-                    {{ tag }}
-                  </span>
-                </div>
-              </el-card>
-            </div>
+                <span v-if="issue.tags[0]" class="tag tag--neutral">
+                  {{ issue.tags[0] }}
+                </span>
+              </div>
+            </el-card>
           </div>
+        </div>
           <div class="priority-quadrant quadrant-p1">
             <div class="quadrant-title quadrant-title--warning">
               P1 (重要但不紧急) - 计划做
@@ -101,13 +101,13 @@
                   <span class="tag tag--neutral">
                     {{ issue.workspaceName ?? issue.workspaceId }}
                   </span>
-                  <span v-for="tag in issue.tags" :key="tag" class="tag tag--neutral">
-                    {{ tag }}
-                  </span>
-                </div>
-              </el-card>
-            </div>
+                <span v-if="issue.tags[0]" class="tag tag--neutral">
+                  {{ issue.tags[0] }}
+                </span>
+              </div>
+            </el-card>
           </div>
+        </div>
         </div>
 
         <div class="priority-row">
@@ -129,13 +129,13 @@
                   <span class="tag tag--neutral">
                     {{ issue.workspaceName ?? issue.workspaceId }}
                   </span>
-                  <span v-for="tag in issue.tags" :key="tag" class="tag tag--neutral">
-                    {{ tag }}
-                  </span>
-                </div>
-              </el-card>
-            </div>
+                <span v-if="issue.tags[0]" class="tag tag--neutral">
+                  {{ issue.tags[0] }}
+                </span>
+              </div>
+            </el-card>
           </div>
+        </div>
           <div class="priority-quadrant quadrant-p3">
             <div class="quadrant-title quadrant-title--muted">
               P3 (不紧急不重要) - 稍后做
@@ -154,13 +154,13 @@
                   <span class="tag tag--neutral">
                     {{ issue.workspaceName ?? issue.workspaceId }}
                   </span>
-                  <span v-for="tag in issue.tags" :key="tag" class="tag tag--neutral">
-                    {{ tag }}
-                  </span>
-                </div>
-              </el-card>
-            </div>
+                <span v-if="issue.tags[0]" class="tag tag--neutral">
+                  {{ issue.tags[0] }}
+                </span>
+              </div>
+            </el-card>
           </div>
+        </div>
         </div>
       </section>
     </div>

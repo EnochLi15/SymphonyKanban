@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import request from "supertest";
 import { app } from "../src/app.js";
+import { ensureBuiltinTags } from "../src/builtin-tags.js";
 
 const makeName = () => `spec-tag-${Math.random().toString(36).slice(2)}`;
 
@@ -23,5 +24,14 @@ describe("tags api", () => {
       .patch(`/tags/${found.id}`)
       .send({ name, rules: "rule-2", acceptanceCriteria: "acc-2" });
     expect(updateRes.status).toBe(200);
+  });
+
+  it("rejects deleting built-in tags", async () => {
+    ensureBuiltinTags();
+    const listRes = await request(app).get("/tags");
+    const builtin = listRes.body.data.find((tag: any) => tag.name === "UserStory");
+    const delRes = await request(app).delete(`/tags/${builtin.id}`);
+    expect(delRes.status).toBe(409);
+    expect(delRes.body.error).toBe("builtin_tag_protected");
   });
 });
