@@ -14,6 +14,9 @@ This workspace hosts the monorepo-managed multi-repo layout described in `doc/20
 - `packages/symphony-kanban-symphony/fizzy-popper` is a clone of `basecamp/fizzy-popper`.
 - Each repo is intentionally minimal and ready for incremental build-out.
 
+## Testing
+- `packages/symphony-kanban-api` uses SQLite; running tests in parallel can cause `SQLITE_BUSY`/500 errors. The API test runner is configured to run single-threaded to avoid database lock contention.
+
 ## Quick start
 1. `pnpm -w install`
 2. `pnpm -w dev`
