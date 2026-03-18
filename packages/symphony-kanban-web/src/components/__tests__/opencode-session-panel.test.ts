@@ -1,4 +1,5 @@
 import { mount } from "@vue/test-utils";
+import { nextTick } from "vue";
 import { describe, expect, it } from "vitest";
 import OpencodeSessionPanel from "../opencode-session-panel.vue";
 
@@ -13,6 +14,7 @@ describe("OpencodeSessionPanel", () => {
       props: { sessionUrl: "http://example/session" },
     });
     await wrapper.find(".fullscreen-toggle").trigger("click");
+    await nextTick();
     expect(wrapper.find(".opencode-panel-wrap").classes()).toContain("is-fullscreen");
   });
 });
