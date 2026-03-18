@@ -12,6 +12,8 @@
 - API 启动时补齐内置标签与工作流（若不存在）。
 - API 禁止删除内置标签。
 - Symphony scheduler 在领取 Todo 任务时拉取标签/工作流定义并注入运行器上下文。
+- Web：看板卡片展示单标签（状态视图与优先级视图）。
+- Web：创建/编辑任务时标签改为下拉单选（所有入口）。
 - 不改变现有 issue 状态机，仅增强上下文输入。
 
 ## 内置标签与工作流定义（默认值，可被用户修改）
@@ -104,19 +106,25 @@
 - API: 读取 `builtin-tags.json` 并进行启动初始化（tags/workflow_defs 补齐）。
 - API: 删除标签时拦截内置标签。
 - Symphony: scheduler 增加“拉取 workflow context 并注入运行器”的步骤。
+- Web: 看板卡片渲染单标签（issue.tags[0]）。
+- Web: 所有任务创建/编辑入口的标签选择改为单选下拉。
 
 ### 数据流
 1. API 启动 → 检查 tags/workflow_defs 是否已有内置项 → 缺失则插入。
 2. Scheduler claim Todo → 获取 issue → 获取 tags/workflows → 过滤内置标签 → 组装工作流上下文 → 注入 runner。
+3. Web 看板加载 issue → 卡片显示 `issue.tags[0]`（无则不显示）。
+4. Web 创建/编辑任务 → 前端只提交 0 或 1 个标签到 `tags` 数组。
 
 ### 错误处理
 - 初始化失败：记录错误日志，不中断服务（可后续再补齐）。
 - workflow 上下文拉取失败：继续执行，但 prompt 中提示“workflow 未加载”。
 - 删除内置标签：返回 409 或 400（错误码 `builtin_tag_protected`）。
+- 旧数据含多标签：前端仅展示第一个，保存后保持单标签（如需保留多标签需另行说明）。
 
 ### 测试
 - API：验证初始化补齐与不可删除。
 - Symphony：验证注入 workflow context 的逻辑（mock API）。
+- Web：看板卡片展示标签；创建/编辑提交单标签。
 
 ## 非目标
 - 不修改现有状态机与调度策略。
