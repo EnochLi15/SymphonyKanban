@@ -21,11 +21,6 @@ import {
 } from "./settings-store.js";
 import { createTag, deleteTag, listTags, updateTag } from "./tag-store.js";
 import {
-  createWorkflowDef,
-  listWorkflowDefs,
-  updateWorkflowDef,
-} from "./workflow-store.js";
-import {
   createWorkspace,
   findWorkspaceIdByLocalPath,
   listWorkspaces,
@@ -214,7 +209,18 @@ app.get("/tags", (_req, res) => {
 });
 
 app.post("/tags", (req, res) => {
-  const { name, type, color, rules, acceptanceCriteria } = req.body ?? {};
+  const {
+    name,
+    type,
+    color,
+    rules,
+    acceptanceCriteria,
+    state,
+    behavior,
+    workflowDefinition,
+    afterCreate,
+    beforeRemove,
+  } = req.body ?? {};
   if (!name || typeof name !== "string") {
     res.status(400).json({ error: "name required" });
     return;
@@ -228,6 +234,11 @@ app.post("/tags", (req, res) => {
     color ?? null,
     rules ?? null,
     acceptanceCriteria ?? null,
+    state ?? null,
+    behavior ?? null,
+    workflowDefinition ?? null,
+    afterCreate ?? null,
+    beforeRemove ?? null,
     now,
   );
   res.status(201).json({
@@ -238,6 +249,11 @@ app.post("/tags", (req, res) => {
       color: color ?? null,
       rules: rules ?? null,
       acceptanceCriteria: acceptanceCriteria ?? null,
+      state: state ?? null,
+      behavior: behavior ?? null,
+      workflowDefinition: workflowDefinition ?? null,
+      afterCreate: afterCreate ?? null,
+      beforeRemove: beforeRemove ?? null,
       createdAt: now,
       updatedAt: now,
     },
@@ -245,7 +261,18 @@ app.post("/tags", (req, res) => {
 });
 
 app.patch("/tags/:id", (req, res) => {
-  const { name, type, color, rules, acceptanceCriteria } = req.body ?? {};
+  const {
+    name,
+    type,
+    color,
+    rules,
+    acceptanceCriteria,
+    state,
+    behavior,
+    workflowDefinition,
+    afterCreate,
+    beforeRemove,
+  } = req.body ?? {};
   if (!name || typeof name !== "string") {
     res.status(400).json({ error: "name required" });
     return;
@@ -258,6 +285,11 @@ app.patch("/tags/:id", (req, res) => {
     color ?? null,
     rules ?? null,
     acceptanceCriteria ?? null,
+    state ?? null,
+    behavior ?? null,
+    workflowDefinition ?? null,
+    afterCreate ?? null,
+    beforeRemove ?? null,
     now,
   );
   res.json({ ok: true });
@@ -279,32 +311,6 @@ app.get("/issues", (_req, res) => {
   res.json({ data: listIssues() });
 });
 
-app.get("/workflows", (_req, res) => {
-  res.json({ data: listWorkflowDefs() });
-});
-
-app.post("/workflows", (req, res) => {
-  const { tagId, state, behavior, configJson } = req.body ?? {};
-  if (!tagId || !state || !behavior) {
-    res.status(400).json({ error: "invalid" });
-    return;
-  }
-  const now = new Date().toISOString();
-  const id = randomUUID();
-  createWorkflowDef(id, tagId, state, behavior, configJson ?? null, now);
-  res.status(201).json({ data: { id } });
-});
-
-app.patch("/workflows/:id", (req, res) => {
-  const { state, behavior, configJson } = req.body ?? {};
-  if (!state || !behavior) {
-    res.status(400).json({ error: "invalid" });
-    return;
-  }
-  const now = new Date().toISOString();
-  updateWorkflowDef(req.params.id, state, behavior, configJson ?? null, now);
-  res.json({ ok: true });
-});
 
 app.get("/settings/scheduler", (_req, res) => {
   res.json({ data: getSchedulerSettings() });
