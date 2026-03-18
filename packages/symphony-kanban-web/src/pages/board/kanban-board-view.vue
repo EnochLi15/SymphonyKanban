@@ -103,8 +103,8 @@
                 <span class="tag tag--neutral">
                   {{ issue.workspaceName ?? issue.workspaceId }}
                 </span>
-                <span v-for="tag in issue.tags" :key="tag" class="tag tag--neutral">
-                  {{ tag }}
+                <span v-if="issue.tags[0]" class="tag tag--neutral">
+                  {{ issue.tags[0] }}
                 </span>
               </div>
             </el-card>
