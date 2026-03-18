@@ -62,29 +62,6 @@ export const buildApi = (base: string) => ({
     if (!res.ok) throw new Error("tag_delete_failed");
     return res.json();
   },
-  async listWorkflows() {
-    const res = await fetch(`${base}/workflows`);
-    if (!res.ok) throw new Error("workflow_failed");
-    return res.json();
-  },
-  async createWorkflow(payload: Record<string, unknown>) {
-    const res = await fetch(`${base}/workflows`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
-    if (!res.ok) throw new Error("workflow_create_failed");
-    return res.json();
-  },
-  async updateWorkflow(id: string, payload: Record<string, unknown>) {
-    const res = await fetch(`${base}/workflows/${id}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
-    if (!res.ok) throw new Error("workflow_update_failed");
-    return res.json();
-  },
   async createWorkspace(payload: Record<string, unknown>) {
     const res = await fetch(`${base}/workspaces`, {
       method: "POST",
