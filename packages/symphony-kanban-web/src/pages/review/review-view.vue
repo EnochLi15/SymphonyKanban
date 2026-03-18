@@ -17,6 +17,8 @@
         </div>
       </header>
 
+      <OpencodeSessionPanel :session-url="sessionUrl" />
+
       <section class="review-panels">
         <div class="panel-left">
           <div class="panel-title">工作量证明 (测试 / CI)</div>
@@ -53,10 +55,13 @@ import { useRoute, useRouter } from "vue-router";
 import AppShell from "../../components/AppShell.vue";
 import { buildApi } from "../../lib/api";
 import type { ExecutionArtifactDTO, ReviewDTO } from "symphony-kanban-shared";
+import OpencodeSessionPanel from "../../components/opencode-session-panel.vue";
+import { resolveOpencodeSessionUrl } from "../sessions/opencode-session";
 
 const route = useRoute();
 const router = useRouter();
 const api = buildApi(import.meta.env.VITE_API_BASE ?? "http://localhost:3001");
+const opencodeWebBase = import.meta.env.VITE_OPENCODE_WEB_BASE ?? "http://localhost:4096";
 
 const review = ref<ReviewDTO | null>(null);
 
@@ -73,6 +78,9 @@ const diffArtifact = computed(() =>
 );
 const testArtifact = computed(() =>
   review.value?.artifacts.find((artifact) => artifact.type === "test"),
+);
+const sessionUrl = computed(() =>
+  resolveOpencodeSessionUrl(opencodeWebBase, review.value?.artifacts),
 );
 
 const approve = async () => {

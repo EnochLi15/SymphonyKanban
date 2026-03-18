@@ -8,6 +8,8 @@
         </div>
       </header>
 
+      <OpencodeSessionPanel :session-url="sessionUrl" />
+
       <section class="blocked-panels">
         <div class="alert-box">
           <div class="alert-title">执行中断</div>
@@ -42,10 +44,13 @@ import { useRoute, useRouter } from "vue-router";
 import AppShell from "../../components/AppShell.vue";
 import { buildApi } from "../../lib/api";
 import type { ReviewDTO } from "symphony-kanban-shared";
+import OpencodeSessionPanel from "../../components/opencode-session-panel.vue";
+import { resolveOpencodeSessionUrl } from "../sessions/opencode-session";
 
 const route = useRoute();
 const router = useRouter();
 const api = buildApi(import.meta.env.VITE_API_BASE ?? "http://localhost:3001");
+const opencodeWebBase = import.meta.env.VITE_OPENCODE_WEB_BASE ?? "http://localhost:4096";
 
 const review = ref<ReviewDTO | null>(null);
 
@@ -56,6 +61,9 @@ const load = async () => {
 
 const summaryArtifact = computed(() =>
   review.value?.artifacts.find((artifact) => artifact.type === "summary"),
+);
+const sessionUrl = computed(() =>
+  resolveOpencodeSessionUrl(opencodeWebBase, review.value?.artifacts),
 );
 
 const retry = async () => {
