@@ -16,6 +16,11 @@
 
 ## 内置标签与工作流定义（默认值，可被用户修改）
 
+默认值存放在 JSON 文件中，API 启动时读取并幂等补齐。后续修改“默认模板”只需改该 JSON 文件；已初始化的数据不会被覆盖。
+
+建议文件路径：
+- `packages/symphony-kanban-api/src/data/builtin-tags.json`
+
 ### 1) UserStory
 **Tag.name**: `UserStory`
 
@@ -91,12 +96,12 @@
 ## 设计方案
 
 ### 架构
-- API 启动时执行一次幂等初始化：确保内置标签与其 workflow_def 存在。
+- API 启动时执行一次幂等初始化：从 JSON 读取内置模板，确保内置标签与其 workflow_def 存在。
 - 标签删除接口加保护，禁止删除内置标签。
 - Symphony scheduler 在领取任务后获取标签/工作流定义并注入运行器上下文（prompt）。
 
 ### 组件变更
-- API: 启动初始化逻辑（tags/workflow_defs 补齐）。
+- API: 读取 `builtin-tags.json` 并进行启动初始化（tags/workflow_defs 补齐）。
 - API: 删除标签时拦截内置标签。
 - Symphony: scheduler 增加“拉取 workflow context 并注入运行器”的步骤。
 
