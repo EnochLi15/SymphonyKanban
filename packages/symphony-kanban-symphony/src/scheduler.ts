@@ -9,14 +9,7 @@ type TagRow = {
   name: string;
   rules?: string | null;
   acceptanceCriteria?: string | null;
-};
-
-type WorkflowRow = {
-  id: string;
-  tagId: string;
-  state: string;
-  behavior: string;
-  configJson?: string | null;
+  workflowDefinition?: string | null;
 };
 
 const toNumberOrDefault = (value: string | undefined, fallback: number) => {
@@ -31,24 +24,17 @@ const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 const buildWorkflowContext = (
   issueTags: string[] | undefined,
   tags: TagRow[],
-  workflows: WorkflowRow[],
 ) => {
   if (!issueTags || issueTags.length === 0) return null;
   const matchedTag = tags.find((tag) => issueTags.includes(tag.name));
   if (!matchedTag) return null;
-  const workflow = workflows.find((row) => row.tagId === matchedTag.id);
-  const config =
-    workflow?.configJson && typeof workflow.configJson === "string"
-      ? workflow.configJson
-      : workflow?.configJson
-        ? JSON.stringify(workflow.configJson)
-        : null;
   const parts = [
     `标签: ${matchedTag.name}`,
+    matchedTag.workflowDefinition
+      ? `工作流定义:\n${matchedTag.workflowDefinition}`
+      : "",
     matchedTag.rules ? `规则:\n${matchedTag.rules}` : "",
     matchedTag.acceptanceCriteria ? `验收标准:\n${matchedTag.acceptanceCriteria}` : "",
-    workflow?.behavior ? `行为: ${workflow.behavior}` : "",
-    config ? `配置: ${config}` : "",
   ].filter((part) => part.length > 0);
   return parts.join("\n\n");
 };
@@ -135,13 +121,9 @@ export const startScheduler = async ({
     const workspace = workspaces.find((row: any) => row.id === issue.workspaceId);
     let workflowContext: string | null = null;
     try {
-      const [tagsRes, workflowsRes] = await Promise.all([
-        api.listTags(),
-        api.listWorkflows(),
-      ]);
+      const tagsRes = await api.listTags();
       const tags = tagsRes.data ?? [];
-      const workflows = workflowsRes.data ?? [];
-      workflowContext = buildWorkflowContext(issue.tags, tags, workflows);
+      workflowContext = buildWorkflowContext(issue.tags, tags);
     } catch (error) {
       workflowContext = "workflow 未加载";
     }

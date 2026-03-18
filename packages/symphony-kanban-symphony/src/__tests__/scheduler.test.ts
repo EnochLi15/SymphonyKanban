@@ -192,24 +192,9 @@ describe("scheduler", () => {
               {
                 id: "tag-1",
                 name: "UserStory",
+                workflowDefinition: "流程定义",
                 rules: "rule-1",
                 acceptanceCriteria: "acc-1",
-              },
-            ],
-          }),
-        };
-      }
-      if (String(url).includes("/workflows")) {
-        return {
-          ok: true,
-          json: async () => ({
-            data: [
-              {
-                id: "wf-1",
-                tagId: "tag-1",
-                state: "Todo",
-                behavior: "story-spec",
-                configJson: "{\"checklist\":[\"A\",\"B\"]}",
               },
             ],
           }),
@@ -259,9 +244,9 @@ describe("scheduler", () => {
     };
     await waitFor(() => promptBodies.length > 0);
 
+    expect(promptBodies[0]?.text).toContain("工作流定义");
     expect(promptBodies[0]?.text).toContain("规则");
     expect(promptBodies[0]?.text).toContain("验收标准");
-    expect(promptBodies[0]?.text).toContain("story-spec");
     scheduler.stop();
   });
 });
