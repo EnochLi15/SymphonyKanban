@@ -14,7 +14,8 @@ describe("OpencodeSessionPanel", () => {
       props: { sessionUrl: "http://example/session" },
     });
     await wrapper.find(".fullscreen-toggle").trigger("click");
-    await nextTick();
-    expect(wrapper.find(".opencode-panel-wrap").classes()).toContain("is-fullscreen");
+    await wrapper.vm.$forceUpdate();
+    await wrapper.vm.$nextTick();
+    expect(wrapper.classes()).toContain("is-fullscreen");
   });
 });
