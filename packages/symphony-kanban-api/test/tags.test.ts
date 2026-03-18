@@ -6,11 +6,20 @@ import { ensureBuiltinTags } from "../src/builtin-tags.js";
 const makeName = () => `spec-tag-${Math.random().toString(36).slice(2)}`;
 
 describe("tags api", () => {
-  it("persists rules and acceptance criteria", async () => {
+  it("persists workflow fields on tags", async () => {
     const name = makeName();
     const createRes = await request(app)
       .post("/tags")
-      .send({ name, rules: "rule-1", acceptanceCriteria: "acc-1" });
+      .send({
+        name,
+        rules: "rule-1",
+        acceptanceCriteria: "acc-1",
+        state: "Todo",
+        behavior: "bugfix",
+        workflowDefinition: "定义-1",
+        afterCreate: "after-1",
+        beforeRemove: "before-1",
+      });
     expect(createRes.status).toBe(201);
 
     const listRes = await request(app).get("/tags");
@@ -19,10 +28,24 @@ describe("tags api", () => {
     expect(found).toBeDefined();
     expect(found.rules).toBe("rule-1");
     expect(found.acceptanceCriteria).toBe("acc-1");
+    expect(found.state).toBe("Todo");
+    expect(found.behavior).toBe("bugfix");
+    expect(found.workflowDefinition).toBe("定义-1");
+    expect(found.afterCreate).toBe("after-1");
+    expect(found.beforeRemove).toBe("before-1");
 
     const updateRes = await request(app)
       .patch(`/tags/${found.id}`)
-      .send({ name, rules: "rule-2", acceptanceCriteria: "acc-2" });
+      .send({
+        name,
+        rules: "rule-2",
+        acceptanceCriteria: "acc-2",
+        state: "Todo",
+        behavior: "bugfix",
+        workflowDefinition: "定义-2",
+        afterCreate: "after-2",
+        beforeRemove: "before-2",
+      });
     expect(updateRes.status).toBe(200);
   });
 
