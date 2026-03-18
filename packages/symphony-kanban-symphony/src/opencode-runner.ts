@@ -5,6 +5,7 @@ type RunInput = {
   issue: { id: string; title: string; description?: string; tags?: string[] };
   context: string | null;
   workspacePath: string | null;
+  workflowContext?: string | null;
   onArtifact: (type: string, content: string, summary?: string) => Promise<void>;
 };
 
@@ -30,12 +31,13 @@ export const resolveOpencodeProjectId = (
   return null;
 };
 
-const buildPrompt = (input: RunInput) => {
+export const buildPrompt = (input: RunInput) => {
   const lines = [
     `任务: ${input.issue.title}`,
     input.issue.description ? `描述: ${input.issue.description}` : "",
     input.context ? `工作区上下文:\n${input.context}` : "",
     input.issue.tags?.length ? `标签: ${input.issue.tags.join(", ")}` : "",
+    input.workflowContext ? `工作流要求:\n${input.workflowContext}` : "",
   ].filter((line) => line.length > 0);
   return `${lines.join("\n\n")}\n\n请完成任务并提供日志、diff 和摘要。`;
 };

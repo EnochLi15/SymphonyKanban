@@ -1,10 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { resolveOpencodeProjectId } from "../opencode-runner.js";
+import { buildPrompt, resolveOpencodeProjectId } from "../opencode-runner.js";
 
 describe("resolveOpencodeProjectId", () => {
   it("prefers workspace-derived project id when workspace path is available", () => {
     const workspacePath = "/Users/enoch/Workspace/test-sp";
-    const rawProjectId = "L1VzZXJzL--_vXrvv73vv70c77-977-977-956ed77-9fx_Rve-_vem2mu-_ve-_vTbvv71uXXXvv719";
+    const rawProjectId =
+      "L1VzZXJzL--_vXrvv73vv70c77-977-977-956ed77-9fx_Rve-_vem2mu-_ve-_vTbvv71uXXXvv719";
     const expected = Buffer.from(workspacePath, "utf8").toString("base64");
 
     const result = resolveOpencodeProjectId(rawProjectId, workspacePath, null);
@@ -28,5 +29,20 @@ describe("resolveOpencodeProjectId", () => {
     const result = resolveOpencodeProjectId(rawProjectId, null, sessionDirectory);
 
     expect(result).toBe(expected);
+  });
+});
+
+describe("buildPrompt", () => {
+  it("includes workflow context in prompt", () => {
+    const prompt = buildPrompt({
+      baseUrl: "http://localhost:3001",
+      issue: { id: "1", title: "Test", tags: ["UserStory"] },
+      context: null,
+      workspacePath: null,
+      workflowContext: "流程要求: ...",
+      onArtifact: async () => {},
+    });
+
+    expect(prompt).toContain("流程要求");
   });
 });
