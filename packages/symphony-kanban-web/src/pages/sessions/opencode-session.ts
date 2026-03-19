@@ -8,7 +8,7 @@ export const buildOpencodeSessionUrl = (
   sessionId: string,
 ): string => {
   const safeBase = normalizeBase(base);
-  return `${safeBase}/${encodeURIComponent(projectId)}/session/${encodeURIComponent(sessionId)}`;
+  return `${safeBase}/${projectId}/session/${sessionId}`;
 };
 
 export const resolveOpencodeSessionUrl = (
