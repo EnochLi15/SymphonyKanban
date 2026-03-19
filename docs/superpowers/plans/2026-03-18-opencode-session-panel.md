@@ -229,7 +229,7 @@ onUnmounted(() => {
 
 .session-iframe {
   width: 100%;
-  height: 520px;
+  height: 800px;
   border: none;
 }
 
