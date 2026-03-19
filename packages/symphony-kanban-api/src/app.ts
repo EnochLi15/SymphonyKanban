@@ -76,11 +76,12 @@ app.get("/workspaces/import/opencode/list", async (_req, res) => {
             (typeof record.path === "string" && record.path) ||
             "";
           if (!localPath) return null;
+          const normalizedPath = localPath.replace(/\\/g, "/");
           let name =
             (typeof record.name === "string" && record.name) ||
-            (localPath === "/" ? "Global" : path.basename(localPath));
+            (normalizedPath === "/" ? "Global" : path.basename(normalizedPath));
           if (!name) name = localPath;
-          return { name, localPath };
+          return { name, localPath: normalizedPath };
         })
         .filter(Boolean),
     });

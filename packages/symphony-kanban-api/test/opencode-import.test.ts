@@ -16,7 +16,7 @@ beforeEach(() => {
   vi.clearAllMocks();
   __resetOpenCodeClient();
   listMock.mockResolvedValue([
-    { name: "Alpha", local_path: "/repo/alpha" },
+    { name: "Alpha", local_path: "C:\\repo\\alpha" },
     { name: "Beta", local_path: "/repo/beta" },
   ]);
   createOpencodeMock.mockResolvedValue({
@@ -38,7 +38,7 @@ describe("opencode import api", () => {
     const res = await request(app).get("/workspaces/import/opencode/list");
     expect(res.status).toBe(200);
     expect(res.body.data).toEqual([
-      { name: "Alpha", localPath: "/repo/alpha" },
+      { name: "Alpha", localPath: "C:/repo/alpha" },
       { name: "Beta", localPath: "/repo/beta" },
     ]);
   });
@@ -52,7 +52,7 @@ describe("opencode import api", () => {
     expect(res.status).toBe(200);
     expect(createOpencodeClientMock).toHaveBeenCalled();
     expect(res.body.data).toEqual([
-      { name: "Alpha", localPath: "/repo/alpha" },
+      { name: "Alpha", localPath: "C:/repo/alpha" },
       { name: "Beta", localPath: "/repo/beta" },
     ]);
   });
