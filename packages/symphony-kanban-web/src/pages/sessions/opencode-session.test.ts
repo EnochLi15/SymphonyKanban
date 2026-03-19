@@ -6,6 +6,11 @@ describe("buildOpencodeSessionUrl", () => {
     const url = buildOpencodeSessionUrl("http://localhost:4096", "proj-1", "sess-1");
     expect(url).toBe("http://localhost:4096/proj-1/session/sess-1");
   });
+
+  it("keeps raw ids without encoding", () => {
+    const url = buildOpencodeSessionUrl("http://localhost:4096", "proj/1", "sess?1");
+    expect(url).toBe("http://localhost:4096/proj/1/session/sess?1");
+  });
 });
 
 describe("resolveOpencodeSessionUrl", () => {
