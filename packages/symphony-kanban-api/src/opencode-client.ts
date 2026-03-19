@@ -19,7 +19,7 @@ export const listOpenCodeProjects = async () => {
       cachedClient = server.client;
     } catch (error) {
       const baseUrl =
-        process.env.OPENCODE_BASE_URL?.trim() || "http://127.0.0.1:4096";
+        process.env.OPENCODE_BASE_URL?.trim() || "http://localhost:4096";
       cachedClient = createOpencodeClient({ baseUrl });
     }
   }

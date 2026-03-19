@@ -122,8 +122,8 @@ import { describe, expect, it } from "vitest";
 import { buildOpencodeSessionUrl } from "./opencode-session";
 
 it("builds url with project and session", () => {
-  const url = buildOpencodeSessionUrl("http://127.0.0.1:4096", "proj-1", "sess-1");
-  expect(url).toBe("http://127.0.0.1:4096/proj-1/session/sess-1");
+  const url = buildOpencodeSessionUrl("http://localhost:4096", "proj-1", "sess-1");
+  expect(url).toBe("http://localhost:4096/proj-1/session/sess-1");
 });
 ```
 
@@ -194,7 +194,7 @@ const sessionUrl = computed(() =>
 
 Run app, open an InProgress issue, confirm iframe URL:
 ```
-http://127.0.0.1:4096/{projectId}/session/{sessionId}
+http://localhost:4096/{projectId}/session/{sessionId}
 ```
 
 - [ ] **Step 4: Commit**
