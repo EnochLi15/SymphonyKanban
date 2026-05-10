@@ -350,7 +350,7 @@ onMounted(loadOptions);
 
 .action-primary {
   background: var(--kanban-primary);
-  color: var(--kanban-text-primary);
+  color: #ffffff;
   border: none;
 }
 </style>

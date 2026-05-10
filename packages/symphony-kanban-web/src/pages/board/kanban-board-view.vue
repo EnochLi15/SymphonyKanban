@@ -328,8 +328,8 @@ onUnmounted(() => {
 .main-content {
   display: flex;
   flex-direction: column;
-  gap: 24px;
-  padding: 32px;
+  gap: 20px;
+  padding: 32px 36px;
   box-sizing: border-box;
   flex: 1;
   min-height: 0;
@@ -340,6 +340,12 @@ onUnmounted(() => {
   align-items: center;
   justify-content: space-between;
   gap: 16px;
+  padding: 18px 20px;
+  border: 1px solid var(--kanban-border);
+  border-radius: var(--kanban-radius-lg);
+  background: var(--kanban-glass);
+  box-shadow: var(--kanban-shadow-md);
+  backdrop-filter: blur(18px) saturate(145%);
 }
 
 .board-actions {
@@ -353,10 +359,11 @@ onUnmounted(() => {
 .filters {
   display: flex;
   gap: 8px;
-  padding: 4px 8px;
-  border-radius: 6px;
-  background: var(--kanban-surface);
+  padding: 6px;
+  border-radius: var(--kanban-radius-md);
+  background: var(--kanban-surface-raised);
   border: 1px solid var(--kanban-border);
+  box-shadow: var(--kanban-shadow-sm);
 }
 
 .filter-select {
@@ -364,11 +371,12 @@ onUnmounted(() => {
 }
 
 .board-title {
-  font-size: 28px;
-  font-weight: 700;
+  font-size: 26px;
+  font-weight: 800;
   display: flex;
   align-items: center;
   gap: 12px;
+  letter-spacing: 0;
 }
 
 .hint-trigger {
@@ -405,35 +413,38 @@ onUnmounted(() => {
 .view-modes {
   display: flex;
   gap: 8px;
-  padding: 4px;
-  border-radius: 6px;
-  background: var(--kanban-surface);
+  padding: 6px;
+  border-radius: var(--kanban-radius-md);
+  background: var(--kanban-surface-raised);
   border: 1px solid var(--kanban-border);
+  box-shadow: var(--kanban-shadow-sm);
 }
 
 .mode {
-  height: auto;
+  min-height: 32px;
   padding: 6px 12px;
-  border-radius: 4px;
+  border-radius: var(--kanban-radius-sm);
   font-size: 14px;
-  font-weight: 400;
+  font-weight: 700;
   color: var(--kanban-text-secondary);
 }
 
 .mode--active {
-  color: var(--kanban-text-primary);
-  font-weight: 600;
+  background: var(--kanban-primary);
+  color: #ffffff;
+  box-shadow: 0 8px 16px rgba(37, 99, 235, 0.18);
 }
 
 .mode--muted {
   color: var(--kanban-primary);
+  background: var(--kanban-primary-soft);
 }
 
 .board {
   display: flex;
   gap: 16px;
   overflow-x: auto;
-  padding-bottom: 8px;
+  padding: 2px 2px 10px;
   flex: 1;
   min-height: 0;
 }
@@ -442,10 +453,18 @@ onUnmounted(() => {
   display: flex;
   flex-direction: column;
   gap: 12px;
-  min-height: 120px;
-  min-height: 0;
   flex: 1 1 0;
-  min-width: 0;
+  min-width: 220px;
+  min-height: 0;
+  padding: 14px;
+  border: 1px solid var(--kanban-border);
+  border-radius: var(--kanban-radius-lg);
+  background: rgba(255, 255, 255, 0.42);
+  box-shadow: var(--kanban-shadow-sm);
+}
+
+.theme-dark .board-col {
+  background: rgba(21, 29, 43, 0.56);
 }
 
 .col-scroll {
@@ -474,15 +493,17 @@ onUnmounted(() => {
 
 .board-loading {
   padding: 24px;
-  border-radius: 8px;
-  background: var(--kanban-surface);
+  border-radius: var(--kanban-radius-md);
+  background: var(--kanban-surface-raised);
   border: 1px solid var(--kanban-border);
   font-size: 14px;
+  box-shadow: var(--kanban-shadow-sm);
 }
 
 .col-title {
-  font-size: 16px;
-  font-weight: 600;
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--kanban-text-primary);
 }
 
 .col-title--success {
@@ -496,12 +517,27 @@ onUnmounted(() => {
 .empty-col {
   font-size: 12px;
   color: var(--kanban-text-secondary);
-  padding: 8px 0;
+  padding: 18px 12px;
+  border: 1px dashed var(--kanban-border-strong);
+  border-radius: var(--kanban-radius-md);
+  background: var(--kanban-surface-muted);
+  text-align: center;
 }
 
 .card {
-  border-radius: 10px;
+  border-radius: var(--kanban-radius-md);
   min-width: 0;
+  overflow: hidden;
+}
+
+.card :deep(.el-card__body) {
+  padding: 15px;
+}
+
+.card:hover {
+  border-color: var(--kanban-border-strong);
+  box-shadow: var(--kanban-shadow-md);
+  transform: translateY(-1px);
 }
 
 .card-clickable {
@@ -509,7 +545,8 @@ onUnmounted(() => {
 }
 
 .card-title {
-  font-weight: 600;
+  color: var(--kanban-text-primary);
+  font-weight: 700;
   margin-bottom: 8px;
   word-break: break-word;
   overflow-wrap: anywhere;
@@ -522,22 +559,23 @@ onUnmounted(() => {
 }
 
 .tag {
-  padding: 2px 6px;
-  border-radius: 4px;
+  padding: 3px 7px;
+  border-radius: 999px;
   font-size: 11px;
-  background: var(--kanban-surface);
+  font-weight: 700;
+  background: var(--kanban-surface-muted);
   border: 1px solid var(--kanban-border);
 }
 
 .tag--p0 {
-  background: #ef4444;
-  color: #fff;
+  background: var(--kanban-error);
+  color: #ffffff;
   border-color: transparent;
 }
 
 .tag--p1 {
-  background: #f59e0b;
-  color: #fff;
+  background: var(--kanban-warning);
+  color: #ffffff;
   border-color: transparent;
 }
 

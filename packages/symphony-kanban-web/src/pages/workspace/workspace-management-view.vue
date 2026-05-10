@@ -329,8 +329,8 @@ onMounted(() => {
 .workspace-content {
   display: flex;
   flex-direction: column;
-  gap: 24px;
-  padding: 32px;
+  gap: 20px;
+  padding: 32px 36px;
   box-sizing: border-box;
   flex: 1;
   min-height: 0;
@@ -344,12 +344,19 @@ onMounted(() => {
   align-items: center;
   justify-content: space-between;
   gap: 16px;
+  padding: 18px 20px;
+  border: 1px solid var(--kanban-border);
+  border-radius: var(--kanban-radius-lg);
+  background: var(--kanban-glass);
+  box-shadow: var(--kanban-shadow-md);
+  backdrop-filter: blur(18px) saturate(145%);
 }
 
 .workspace-title {
   margin: 0;
   font-size: 24px;
-  font-weight: 700;
+  font-weight: 800;
+  letter-spacing: 0;
 }
 
 .header-actions {
@@ -358,22 +365,23 @@ onMounted(() => {
 }
 
 .action-button {
-  border-radius: 6px;
+  border-radius: var(--kanban-radius-sm);
   padding: 8px 16px;
   font-size: 14px;
-  font-weight: 400;
+  font-weight: 700;
   color: var(--kanban-text-primary);
 }
 
 .action-primary {
   background: var(--kanban-primary);
   border: none;
+  color: #ffffff;
 }
 
 .workspace-list {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 14px;
   flex: 1;
   min-height: 0;
   height: 100%;
@@ -383,15 +391,22 @@ onMounted(() => {
 }
 
 .workspace-card {
-  border-radius: 8px;
-  background: var(--kanban-surface);
+  border-radius: var(--kanban-radius-md);
+  background: var(--kanban-surface-raised);
   border: 1px solid var(--kanban-border);
   cursor: pointer;
   min-height: 88px;
+  overflow: hidden;
+}
+
+.workspace-card:hover {
+  border-color: var(--kanban-border-strong);
+  box-shadow: var(--kanban-shadow-md);
+  transform: translateY(-1px);
 }
 
 .workspace-card :deep(.el-card__body) {
-  padding: 0 12px;
+  padding: 0 18px;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -415,7 +430,7 @@ onMounted(() => {
 
 .workspace-name {
   font-size: 18px;
-  font-weight: 600;
+  font-weight: 800;
 }
 
 .workspace-path {
@@ -429,9 +444,11 @@ onMounted(() => {
 
 .workspace-dialog :deep(.el-dialog) {
   width: 560px;
-  border-radius: 12px;
-  background: var(--kanban-surface);
+  border-radius: var(--kanban-radius-lg);
+  background: var(--kanban-glass);
   border: 1px solid var(--kanban-border);
+  box-shadow: var(--kanban-shadow-lg);
+  backdrop-filter: blur(18px) saturate(145%);
 }
 
 .workspace-dialog :deep(.el-dialog__header) {
@@ -455,7 +472,7 @@ onMounted(() => {
 
 .dialog-title {
   font-size: 18px;
-  font-weight: 600;
+  font-weight: 800;
 }
 
 .dialog-close {
@@ -487,5 +504,33 @@ onMounted(() => {
 
 .action-cancel {
   color: var(--kanban-text-secondary);
+}
+
+@media (max-width: 900px) {
+  .workspace-content {
+    padding: 20px;
+    height: auto;
+    overflow: visible;
+  }
+
+  .workspace-header {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .header-actions {
+    flex-wrap: wrap;
+  }
+
+  .workspace-list {
+    max-height: none;
+  }
+
+  .workspace-card :deep(.el-card__body) {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 14px;
+    padding: 16px 18px;
+  }
 }
 </style>

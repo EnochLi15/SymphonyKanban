@@ -119,7 +119,7 @@ onMounted(() => {
   border-radius: 6px;
   padding: 12px 24px;
   background: var(--kanban-primary);
-  color: var(--kanban-text-primary);
+  color: #ffffff;
   font-size: 14px;
   font-weight: 600;
   border: none;

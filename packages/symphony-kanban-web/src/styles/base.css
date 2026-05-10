@@ -4,10 +4,35 @@ body,
   height: 100%;
 }
 
+html {
+  background: var(--kanban-bg);
+}
+
 body {
   margin: 0;
-  background: var(--kanban-bg);
+  background:
+    radial-gradient(circle at top left, rgba(37, 99, 235, 0.1), transparent 34rem),
+    linear-gradient(135deg, var(--kanban-bg), var(--kanban-bg-soft));
   color: var(--kanban-text-primary);
   font-family: "Inter", "DM Sans", "Space Grotesk", system-ui, -apple-system,
     sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+  text-rendering: optimizeLegibility;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+}
+
+::selection {
+  background: var(--kanban-primary-soft);
+  color: var(--kanban-text-primary);
 }

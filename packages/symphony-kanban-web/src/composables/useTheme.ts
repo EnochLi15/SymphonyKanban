@@ -3,7 +3,7 @@ import { ref, watch } from "vue";
 type ThemeMode = "dark" | "light";
 
 const STORAGE_KEY = "symphony-theme";
-const theme = ref<ThemeMode>("dark");
+const theme = ref<ThemeMode>("light");
 let initialized = false;
 
 const applyTheme = (value: ThemeMode) => {

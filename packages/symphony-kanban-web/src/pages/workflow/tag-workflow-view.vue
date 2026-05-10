@@ -8,14 +8,15 @@
       <section class="config-panel">
         <aside class="tag-col">
           <div class="tag-col-title">管理标签 (Tags)</div>
-          <el-button class="tag-item tag-item--add" text @click="createNewTag">
+          <el-button class="tag-item tag-item--add" type="primary" plain @click="createNewTag">
             + 新建标签
           </el-button>
           <div v-for="tag in tags" :key="tag.id">
             <el-button
               class="tag-item"
               :class="{ 'tag-item--active': tag.id === selectedTagId }"
-              text
+              :type="tag.id === selectedTagId ? 'primary' : 'default'"
+              :plain="tag.id !== selectedTagId"
               @click="selectTag(tag.id)"
             >
               {{ tag.name }}
@@ -90,12 +91,14 @@
           <div class="hooks-actions">
             <el-button
               class="hook-action hook-action--delete"
+              type="danger"
+              plain
               @click="deleteTag"
               :disabled="!selectedTagId"
             >
               删除
             </el-button>
-            <el-button class="hook-action hook-action--apply" @click="applyAll">
+            <el-button class="hook-action hook-action--apply" type="primary" @click="applyAll">
               应用并保存配置
             </el-button>
           </div>
@@ -232,14 +235,17 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
   gap: 24px;
-  padding: 32px;
+  padding: 32px 36px;
   box-sizing: border-box;
+  flex: 1;
+  min-height: 0;
 }
 
 .page-title {
   margin: 0;
   font-size: 24px;
-  font-weight: 700;
+  font-weight: 800;
+  letter-spacing: 0;
 }
 
 .config-panel {
@@ -252,13 +258,14 @@ onMounted(() => {
 .tag-col {
   width: 200px;
   padding: 20px;
-  border-radius: 8px;
-  background: var(--kanban-surface);
+  border-radius: var(--kanban-radius-lg);
+  background: var(--kanban-surface-raised);
   border: 1px solid var(--kanban-border);
   display: flex;
   flex-direction: column;
   gap: 12px;
   box-sizing: border-box;
+  box-shadow: var(--kanban-shadow-sm);
 }
 
 .tag-col-title {
@@ -268,29 +275,23 @@ onMounted(() => {
 }
 
 .tag-item {
+  width: fit-content;
+  max-width: 100%;
   padding: 8px 10px;
-  border-radius: 6px;
-  border: 1px solid var(--kanban-border);
-  background: transparent;
-  color: var(--kanban-text-secondary);
+  border-radius: var(--kanban-radius-sm);
   font-size: 14px;
-  font-weight: 400;
+  font-weight: 700;
   text-align: left;
   justify-content: flex-start;
 }
 
 .tag-item--active {
-  background: var(--kanban-primary);
-  border-color: var(--kanban-primary);
-  color: var(--kanban-text-primary);
-  font-weight: 600;
+  box-shadow: 0 8px 16px rgba(37, 99, 235, 0.18);
 }
 
 .tag-item--add {
-  border-color: var(--kanban-primary);
-  color: var(--kanban-primary);
   font-size: 13px;
-  font-weight: 600;
+  font-weight: 800;
   text-align: center;
 }
 
@@ -322,9 +323,7 @@ onMounted(() => {
 }
 
 .param-input :deep(.el-input__wrapper) {
-  background: var(--kanban-surface);
-  border: 1px solid var(--kanban-border);
-  box-shadow: none;
+  background: var(--kanban-surface-raised);
 }
 
 .param-input :deep(.el-input__inner) {
@@ -338,14 +337,12 @@ onMounted(() => {
 }
 
 .form-area :deep(.el-textarea__inner) {
-  background: var(--kanban-surface);
-  border: 1px solid var(--kanban-border);
-  color: var(--kanban-text-secondary);
+  background: var(--kanban-surface-raised);
+  color: var(--kanban-text-primary);
   font-size: 14px;
   font-family: "Space Grotesk", "Inter", "DM Sans", system-ui, -apple-system,
     sans-serif;
   line-height: 1.5;
-  box-shadow: none;
 }
 
 .hooks-col {
@@ -380,26 +377,22 @@ onMounted(() => {
 }
 
 .hook-area :deep(.el-textarea__inner) {
-  background: #0f1117;
-  border-radius: 6px;
+  background: var(--kanban-surface-raised);
+  border-radius: var(--kanban-radius-sm);
+  color: var(--kanban-text-primary);
   font-size: 12px;
   font-family: "Fira Code", "Space Grotesk", monospace;
   line-height: 1.5;
-  opacity: 0.9;
-  border: 1px solid transparent;
-  box-shadow: none;
   padding: 12px;
   min-height: 200px;
 }
 
 .hook-area--success :deep(.el-textarea__inner) {
   border-color: var(--kanban-success);
-  color: var(--kanban-success);
 }
 
 .hook-area--danger :deep(.el-textarea__inner) {
   border-color: var(--kanban-error);
-  color: var(--kanban-error);
   min-height: 120px;
 }
 
@@ -410,7 +403,7 @@ onMounted(() => {
 }
 
 .hook-action {
-  border-radius: 6px;
+  border-radius: var(--kanban-radius-sm);
   padding: 14px;
   font-size: 14px;
   font-weight: 700;
@@ -418,15 +411,9 @@ onMounted(() => {
 
 .hook-action--delete {
   width: 100px;
-  border: 1px solid var(--kanban-error);
-  color: var(--kanban-error);
-  background: transparent;
 }
 
 .hook-action--apply {
   flex: 1;
-  background: var(--kanban-primary);
-  color: var(--kanban-text-primary);
-  border: none;
 }
 </style>

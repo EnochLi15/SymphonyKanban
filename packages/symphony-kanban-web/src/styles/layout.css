@@ -3,7 +3,9 @@
   min-height: 100vh;
   height: 100vh;
   width: 100%;
-  background: var(--kanban-bg);
+  background:
+    radial-gradient(circle at 14% 0%, rgba(37, 99, 235, 0.12), transparent 28rem),
+    linear-gradient(135deg, var(--kanban-bg), var(--kanban-bg-soft));
   color: var(--kanban-text-primary);
   font-family: "Inter", "DM Sans", "Space Grotesk", system-ui, -apple-system,
     sans-serif;
@@ -30,23 +32,28 @@
 }
 
 .app-sidebar {
+  position: relative;
+  z-index: 2;
   display: flex;
   flex-direction: column;
-  gap: 16px;
-  width: 240px;
-  padding: 24px;
-  background: var(--kanban-surface);
+  gap: 18px;
+  width: 264px;
+  padding: 24px 20px;
+  background: var(--kanban-glass);
   border-right: 1px solid var(--kanban-border);
-  box-sizing: border-box;
+  box-shadow: 12px 0 32px rgba(31, 49, 75, 0.08);
+  backdrop-filter: blur(18px) saturate(145%);
 }
 
 .sidebar-title {
-  font-size: 18px;
-  font-weight: 700;
+  padding: 0 8px;
+  font-size: 19px;
+  font-weight: 800;
+  letter-spacing: 0;
 }
 
 .sidebar-space {
-  height: 24px;
+  height: 8px;
 }
 
 .nav-menu {
@@ -62,40 +69,48 @@
 }
 
 .sidebar-menu .el-menu-item {
-  height: auto;
-  line-height: normal;
-  border-radius: 6px;
-  padding: 8px 12px;
+  height: 40px;
+  line-height: 40px;
+  border: 1px solid transparent;
+  border-radius: var(--kanban-radius-sm);
+  padding: 0 12px;
   color: var(--kanban-text-secondary);
   font-size: 14px;
-  font-weight: 400;
+  font-weight: 600;
+  transition:
+    background-color var(--kanban-transition),
+    border-color var(--kanban-transition),
+    color var(--kanban-transition),
+    transform var(--kanban-transition);
 }
 
 .sidebar-menu .el-menu-item:hover {
-  background: rgba(255, 255, 255, 0.06);
-  color: var(--kanban-text-primary);
-}
-
-.theme-light .sidebar-menu .el-menu-item:hover {
-  background: rgba(37, 99, 235, 0.08);
-  color: var(--kanban-text-primary);
+  background: var(--kanban-primary-soft);
+  color: var(--kanban-primary);
+  transform: translateX(2px);
 }
 
 .sidebar-menu .el-menu-item.is-active {
-  background: transparent;
-  border: 1px solid var(--kanban-primary);
+  background: var(--kanban-surface-raised);
+  border-color: var(--kanban-border-strong);
   color: var(--kanban-primary);
+  box-shadow: var(--kanban-shadow-sm);
 }
 
 .sidebar-menu .el-menu-item.menu-subitem {
-  padding-left: 24px;
+  height: 32px;
+  line-height: 32px;
+  margin-left: 14px;
+  padding-left: 18px;
   font-size: 12px;
   color: var(--kanban-text-secondary);
 }
 
 .sidebar-menu .el-menu-item.menu-subitem.is-active {
   color: var(--kanban-primary);
-  border: none;
+  border-color: transparent;
+  background: transparent;
+  box-shadow: none;
 }
 
 .nav-item {
@@ -104,11 +119,11 @@
   height: auto;
   border: 1px solid transparent;
   padding: 8px 12px;
-  border-radius: 6px;
+  border-radius: var(--kanban-radius-sm);
   background: var(--kanban-surface);
   color: var(--kanban-text-secondary);
   font-size: 14px;
-  font-weight: 400;
+  font-weight: 600;
   text-align: left;
 }
 
@@ -121,8 +136,8 @@
 
 .nav-item--active,
 .nav-item--active.el-button.is-text {
-  background: transparent;
-  border-color: var(--kanban-primary);
+  background: var(--kanban-surface-raised);
+  border-color: var(--kanban-border-strong);
   color: var(--kanban-primary);
 }
 
@@ -133,7 +148,7 @@
   border: none;
   color: var(--kanban-text-secondary);
   font-size: 12px;
-  font-weight: 400;
+  font-weight: 500;
   justify-content: flex-start;
 }
 
@@ -161,9 +176,10 @@
   display: flex;
   gap: 8px;
   padding: 4px;
-  border-radius: 8px;
-  background: var(--kanban-surface);
+  border-radius: var(--kanban-radius-md);
+  background: var(--kanban-surface-raised);
   border: 1px solid var(--kanban-border);
+  box-shadow: var(--kanban-shadow-sm);
 }
 
 .theme-toggle-group {
@@ -173,24 +189,50 @@
 
 .theme-option {
   flex: 1;
-  padding: 8px 0;
+  min-height: 34px;
+  padding: 7px 0;
   text-align: center;
-  border-radius: 4px;
+  border-radius: var(--kanban-radius-sm);
   color: var(--kanban-text-secondary);
   font-size: 12px;
-  font-weight: 400;
+  font-weight: 700;
 }
 
-.theme-option--active {
+.theme-option--active,
+.theme-option--active.el-button.is-text {
   background: var(--kanban-primary);
-  color: var(--kanban-text-primary);
+  color: #ffffff;
+  box-shadow: 0 8px 16px rgba(37, 99, 235, 0.18);
 }
 
 .app-back-button {
   border: 1px solid var(--kanban-border);
-  border-radius: 6px;
+  border-radius: var(--kanban-radius-sm);
   padding: 8px 12px;
   font-size: 14px;
-  font-weight: 600;
+  font-weight: 700;
   color: var(--kanban-text-secondary);
+  background: var(--kanban-surface-raised);
+}
+
+@media (max-width: 900px) {
+  .app-shell {
+    flex-direction: column;
+    height: auto;
+    min-height: 100vh;
+    overflow: auto;
+  }
+
+  .app-sidebar {
+    width: 100%;
+    border-right: none;
+    border-bottom: 1px solid var(--kanban-border);
+  }
+
+  .app-main,
+  .app-page {
+    height: auto;
+    min-height: 0;
+    overflow: visible;
+  }
 }

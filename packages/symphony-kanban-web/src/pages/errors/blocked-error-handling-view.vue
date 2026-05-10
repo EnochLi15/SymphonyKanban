@@ -175,16 +175,17 @@ onMounted(() => {
   padding: 8px 16px;
   font-size: 14px;
   font-weight: 600;
-  color: var(--kanban-text-primary);
   border: none;
 }
 
 .action-retry {
   background: var(--kanban-primary);
+  color: #ffffff;
 }
 
 .action-context {
   background: var(--kanban-surface);
   border: 1px solid var(--kanban-border);
+  color: var(--kanban-text-primary);
 }
 </style>
