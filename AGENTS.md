@@ -1,6 +1,6 @@
 # Symphony Kanban Development Guide
 
-This repository is a monorepo managing the Symphony Kanban system, which includes a Vue 3 frontend, an Express API with SQLite, and an orchestration layer.
+This repository is a monorepo managing the Symphony Kanban system, which includes a Vue 3 frontend and an Express API with SQLite. The scheduler is currently fused into the API runtime as an internal module.
 
 ## Development Environment
 
@@ -11,7 +11,7 @@ This repository is a monorepo managing the Symphony Kanban system, which include
 ### Quick Start
 ```bash
 pnpm install          # Install all dependencies
-pnpm dev              # Start all services (via scripts/services.mjs)
+pnpm dev              # Start API and Web (via scripts/services.mjs)
 pnpm build            # Build all packages
 pnpm test             # Run all tests
 ```
@@ -19,7 +19,7 @@ pnpm test             # Run all tests
 ### Running Specific Packages
 - **API**: `cd packages/symphony-kanban-api && pnpm dev` (Port 3001)
 - **Web**: `cd packages/symphony-kanban-web && pnpm dev` (Port 5173)
-- **Symphony**: `cd packages/symphony-kanban-symphony && pnpm dev`
+- **Scheduler**: `cd packages/symphony-kanban-api && SCHEDULER_ENABLED=true pnpm dev`
 
 ## Testing
 
@@ -65,7 +65,7 @@ The API tests run single-threaded to avoid `SQLITE_BUSY` errors due to SQLite da
 - `packages/symphony-kanban-web`: Vue 3 + Vite + Element Plus.
 - `packages/symphony-kanban-api`: Express + SQLite + tsx.
 - `packages/symphony-kanban-shared`: Common TypeScript definitions.
-- `packages/symphony-kanban-symphony`: Orchestration layer wrapping `fizzy-popper`.
+- `packages/symphony-kanban-symphony`: Archived standalone scheduler prototype wrapping `fizzy-popper` (not part of the default workspace runtime).
 - `packages/symphony-kanban-db`: Database migrations and seeds.
 
 ### Error Handling
@@ -75,7 +75,7 @@ The API tests run single-threaded to avoid `SQLITE_BUSY` errors due to SQLite da
 ## Agent Specifics
 - When modifying the API, ensure `db.transaction()` is used for multi-statement atomic operations.
 - When adding new DTOs, place them in `packages/symphony-kanban-shared/src/index.ts`.
-- `fizzy-popper` (inside `symphony-kanban-symphony`) has its own `AGENTS.md` with upstream core logic.
+- `fizzy-popper` (inside `symphony-kanban-symphony`) has its own `AGENTS.md` with upstream core logic and is kept as reference material.
 
 ## Agent skills
 

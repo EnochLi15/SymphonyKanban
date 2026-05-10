@@ -4,15 +4,17 @@ import express from "express";
 import { db } from "./db.js";
 import {
   createExecution,
-  insertArtifact,
   listArtifacts,
   listExecutionsByIssue,
+  recordArtifact,
   updateExecution,
 } from "./execution-store.js";
 import {
+  claimNextTodoIssue,
   getIssueById,
   getIssueByIdIncludingDeleted,
   listIssues,
+  transitionIssueStatus,
   writeIssueEvent,
 } from "./issue-store.js";
 import {
@@ -44,15 +46,6 @@ app.use((req, res, next) => {
   }
   next();
 });
-
-const MAX_ARTIFACT_CHARS = 200_000;
-const truncateTail = (input: string | null | undefined) => {
-  if (!input) return { content: input ?? null, truncated: 0, size: 0 };
-  const size = input.length;
-  if (size <= MAX_ARTIFACT_CHARS) return { content: input, truncated: 0, size };
-  const tail = input.slice(size - MAX_ARTIFACT_CHARS);
-  return { content: tail, truncated: 1, size };
-};
 
 app.get("/health", (_req, res) => {
   res.json({ ok: true });
@@ -525,7 +518,7 @@ app.patch("/issues/:id", (req, res) => {
       ? null
       : Array.from(
           new Set(
-            tags
+            (tags as unknown[])
               .map((tag) => (typeof tag === "string" ? tag.trim() : ""))
               .filter((tag) => tag.length > 0),
           ),
@@ -669,11 +662,7 @@ app.post("/issues/:id/transition", (req, res) => {
       return;
     }
   }
-  db.prepare("UPDATE issues SET status = ?, updated_at = ? WHERE id = ?").run(
-    toStatus,
-    new Date().toISOString(),
-    issue.id,
-  );
+  transitionIssueStatus(issue.id, toStatus, "issue_transitioned");
   res.json({ ok: true });
 });
 
@@ -683,11 +672,7 @@ app.post("/issues/:id/retry", (req, res) => {
     res.status(404).json({ error: "issue not found" });
     return;
   }
-  db.prepare("UPDATE issues SET status = ?, updated_at = ? WHERE id = ?").run(
-    "Todo",
-    new Date().toISOString(),
-    issue.id,
-  );
+  transitionIssueStatus(issue.id, "Todo", "issue_retry_requested");
   res.json({ ok: true });
 });
 
@@ -696,26 +681,7 @@ app.get("/issues/:id/executions", (req, res) => {
 });
 
 app.get("/scheduler/claim", (_req, res) => {
-  const tx = db.transaction(() => {
-    const row = db
-      .prepare(
-        "SELECT id FROM issues WHERE status = 'Todo' ORDER BY COALESCE(priority, 1) ASC, created_at ASC LIMIT 1",
-      )
-      .get() as { id: string } | undefined;
-    if (!row) return null;
-    const now = new Date().toISOString();
-    db.prepare("UPDATE issues SET status = ?, updated_at = ? WHERE id = ?").run(
-      "InProgress",
-      now,
-      row.id,
-    );
-    const claimed = getIssueById(row.id);
-    if (claimed) {
-      writeIssueEvent(row.id, "scheduler_claimed", claimed);
-    }
-    return claimed;
-  });
-  const claimed = tx();
+  const claimed = claimNextTodoIssue();
   if (!claimed) {
     res.json({ data: null });
     return;
@@ -768,20 +734,15 @@ app.post("/executions/:id/artifacts", (req, res) => {
   }
   const now = new Date().toISOString();
   const id = randomUUID();
-  const { content: safe, truncated, size } = truncateTail(
-    typeof content === "string" ? content : null,
-  );
-  insertArtifact(
+  const artifact = recordArtifact(
     id,
     req.params.id,
     type,
-    safe,
+    typeof content === "string" ? content : null,
     typeof summary === "string" ? summary : null,
-    truncated,
-    size,
     now,
   );
-  res.status(201).json({ data: { id, truncated: !!truncated } });
+  res.status(201).json({ data: artifact });
 });
 
 app.get("/review/:issueId", (req, res) => {

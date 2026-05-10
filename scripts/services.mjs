@@ -23,12 +23,6 @@ const services = [
     cmd: "pnpm",
     args: ["dev"],
   },
-  {
-    name: "symphony",
-    cwd: path.join(rootDir, "packages", "symphony-kanban-symphony"),
-    cmd: "pnpm",
-    args: ["dev"],
-  },
 ];
 
 const ensureRuntime = () => {

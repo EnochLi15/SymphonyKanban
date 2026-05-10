@@ -1,12 +1,13 @@
 # symphony-kanban-symphony
 
-TypeScript orchestration layer. Wraps `basecamp/fizzy-popper` for scheduling and state transitions.
+Archived standalone scheduler prototype. The active scheduler now runs as an
+internal Module inside `packages/symphony-kanban-api` and can be enabled with
+`SCHEDULER_ENABLED=true`.
 
 ## Scope
-- Task polling/subscription
-- Scheduler + state machine
-- Trigger execution via opencode-ai/sdk
-- Write back execution artifacts
+- Reference material for a future split-out scheduler runtime.
+- `fizzy-popper` upstream orchestration core clone.
+- Historical scheduler and OpenCode runner prototype code.
 
 ## Structure
 - `src/` orchestration source
