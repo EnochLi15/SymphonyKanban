@@ -76,3 +76,17 @@ The API tests run single-threaded to avoid `SQLITE_BUSY` errors due to SQLite da
 - When modifying the API, ensure `db.transaction()` is used for multi-statement atomic operations.
 - When adding new DTOs, place them in `packages/symphony-kanban-shared/src/index.ts`.
 - `fizzy-popper` (inside `symphony-kanban-symphony`) has its own `AGENTS.md` with upstream core logic.
+
+## Agent skills
+
+### Issue tracker
+
+Issues are tracked in GitHub Issues for this repository. See `docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+This repository uses the default five-label triage vocabulary. See `docs/agents/triage-labels.md`.
+
+### Domain docs
+
+This repository uses a multi-context domain-docs layout via `CONTEXT-MAP.md`. See `docs/agents/domain.md`.
