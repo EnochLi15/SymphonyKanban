@@ -9,11 +9,10 @@ Module that can be enabled with `SCHEDULER_ENABLED=true`.
 - `packages/symphony-kanban-api` (Express + SQLite + internal scheduler)
 - `packages/symphony-kanban-shared` (Shared types/DTOs)
 - `packages/symphony-kanban-db` (Schema/migrations/seed)
-- `packages/symphony-kanban-symphony` (archived standalone scheduler prototype; not part of the default workspace runtime)
 
 ## Notes
 - Monorepo is managed with `pnpm` workspaces.
-- `packages/symphony-kanban-symphony/fizzy-popper` is a clone of `basecamp/fizzy-popper` kept as prototype/reference material.
+- The standalone scheduler prototype package has been removed; scheduler locality now lives in the API Module.
 - `pnpm dev` starts API and Web. To run the scheduler locally, start the API with `SCHEDULER_ENABLED=true`.
 - See `docs/adr/0001-fuse-scheduler-into-api.md` for the scheduler fusion decision.
 

@@ -24,6 +24,11 @@ export const buildApi = (base: string) => ({
     if (!res.ok) throw new Error("delete_failed");
     return res.json();
   },
+  async deleteAllIssues() {
+    const res = await fetch(`${base}/issues`, { method: "DELETE" });
+    if (!res.ok) throw new Error("delete_all_failed");
+    return res.json();
+  },
   async listWorkspaces() {
     const res = await fetch(`${base}/workspaces`);
     if (!res.ok) throw new Error("workspaces_failed");

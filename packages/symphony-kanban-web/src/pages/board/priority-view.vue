@@ -54,6 +54,16 @@
               新建任务
             </el-button>
           </div>
+          <el-button
+            class="clear-button"
+            type="danger"
+            plain
+            :disabled="loading || issues.length === 0"
+            :loading="clearing"
+            @click="clearAllTasks"
+          >
+            清空任务
+          </el-button>
         </div>
       </header>
 
@@ -173,7 +183,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from "vue";
 import { useRouter } from "vue-router";
-import { ElMessage } from "element-plus";
+import { ElMessage, ElMessageBox } from "element-plus";
 import AppShell from "../../components/AppShell.vue";
 import { buildApi } from "../../lib/api";
 import {
@@ -214,6 +224,7 @@ const apiBase = import.meta.env.VITE_API_BASE ?? "http://localhost:3001";
 const api = buildApi(apiBase);
 
 const loading = ref(true);
+const clearing = ref(false);
 const issues = ref<IssueView[]>([]);
 const workspaces = ref<WorkspaceDTO[]>([]);
 const tags = ref<TagDTO[]>([]);
@@ -258,6 +269,37 @@ const loadIssues = async () => {
 
 const createTask = () => {
   router.push("/tasks/new");
+};
+
+const clearAllTasks = async () => {
+  if (issues.value.length === 0 || clearing.value) return;
+
+  try {
+    await ElMessageBox.confirm(
+      `将删除当前系统中的全部 ${issues.value.length} 个任务，删除后不会在看板中显示。`,
+      "确认清空所有任务？",
+      {
+        confirmButtonText: "清空任务",
+        cancelButtonText: "取消",
+        type: "warning",
+        confirmButtonClass: "el-button--danger",
+      },
+    );
+  } catch {
+    return;
+  }
+
+  clearing.value = true;
+  try {
+    const response = await api.deleteAllIssues();
+    issues.value = [];
+    ElMessage.success(`已清空 ${response.deletedCount ?? 0} 个任务`);
+  } catch (error) {
+    ElMessage.error("清空任务失败");
+    await loadIssues();
+  } finally {
+    clearing.value = false;
+  }
 };
 
 const goPriorityView = () => {
@@ -368,6 +410,12 @@ onMounted(loadIssues);
 .mode--muted {
   color: var(--kanban-primary);
   background: transparent;
+}
+
+.clear-button {
+  min-height: 44px;
+  border-radius: var(--kanban-radius-sm);
+  font-weight: 600;
 }
 
 .priority-grid {
@@ -575,7 +623,8 @@ onMounted(loadIssues);
   }
 
   .filters,
-  .view-modes {
+  .view-modes,
+  .clear-button {
     width: 100%;
   }
 

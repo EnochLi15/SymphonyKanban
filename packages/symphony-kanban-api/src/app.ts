@@ -305,6 +305,35 @@ app.get("/issues", (_req, res) => {
   res.json({ data: listIssues() });
 });
 
+app.delete("/issues", (_req, res) => {
+  const activeIssues = listIssues();
+  const now = new Date().toISOString();
+  const snapshots = activeIssues.map((issue) => ({
+    ...issue,
+    updatedAt: now,
+    deletedAt: now,
+  }));
+
+  const tx = db.transaction(() => {
+    db.prepare(
+      "UPDATE issues SET deleted_at = ?, updated_at = ? WHERE deleted_at IS NULL",
+    ).run(now, now);
+    for (const snapshot of snapshots) {
+      writeIssueEvent(snapshot.id, "issue_deleted", snapshot);
+    }
+  });
+
+  try {
+    tx();
+  } catch (error) {
+    // eslint-disable-next-line no-console
+    console.error("Failed to delete all issues", error);
+    res.status(500).json({ error: "failed to delete all issues" });
+    return;
+  }
+
+  res.json({ data: snapshots, deletedCount: snapshots.length });
+});
 
 app.get("/settings/scheduler", (_req, res) => {
   res.json({ data: getSchedulerSettings() });
@@ -354,7 +383,7 @@ app.post("/issues", (req, res) => {
   const now = new Date().toISOString();
   const issueId = randomUUID();
   const eventId = randomUUID();
-  const status = "Backlog";
+  const status = "Todo";
   const normalizedPriority =
     typeof priority === "number" ? priority : priority ? Number(priority) : null;
 

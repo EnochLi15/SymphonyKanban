@@ -65,7 +65,6 @@ The API tests run single-threaded to avoid `SQLITE_BUSY` errors due to SQLite da
 - `packages/symphony-kanban-web`: Vue 3 + Vite + Element Plus.
 - `packages/symphony-kanban-api`: Express + SQLite + tsx.
 - `packages/symphony-kanban-shared`: Common TypeScript definitions.
-- `packages/symphony-kanban-symphony`: Archived standalone scheduler prototype wrapping `fizzy-popper` (not part of the default workspace runtime).
 - `packages/symphony-kanban-db`: Database migrations and seeds.
 
 ### Error Handling
@@ -75,7 +74,6 @@ The API tests run single-threaded to avoid `SQLITE_BUSY` errors due to SQLite da
 ## Agent Specifics
 - When modifying the API, ensure `db.transaction()` is used for multi-statement atomic operations.
 - When adding new DTOs, place them in `packages/symphony-kanban-shared/src/index.ts`.
-- `fizzy-popper` (inside `symphony-kanban-symphony`) has its own `AGENTS.md` with upstream core logic and is kept as reference material.
 
 ## Agent skills
 

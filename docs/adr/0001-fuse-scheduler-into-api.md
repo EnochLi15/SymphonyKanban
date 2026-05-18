@@ -31,7 +31,7 @@ The API process now owns:
 
 The scheduler is opt-in at process startup with `SCHEDULER_ENABLED=true`. The default local runtime starts Web and API only.
 
-The standalone `packages/symphony-kanban-symphony` package is kept as archived prototype/reference material, especially for the `fizzy-popper` upstream clone, but it is not part of the default workspace runtime.
+The standalone `packages/symphony-kanban-symphony` package has been removed. Historical prototype/reference material should live in Git history or explicit docs, not in the active workspace.
 
 ## Consequences
 
@@ -39,6 +39,7 @@ The standalone `packages/symphony-kanban-symphony` package is kept as archived p
 - Tests can cross the scheduler Module Interface directly instead of mocking an API HTTP client.
 - The public HTTP Interface can focus on Web/UI use cases; scheduler-only routes become compatibility or debug seams.
 - Default development startup is simpler: Web plus API.
+- The workspace no longer carries the archived standalone Scheduler package or its `fizzy-popper` clone.
 
 ## Re-split Signals
 
