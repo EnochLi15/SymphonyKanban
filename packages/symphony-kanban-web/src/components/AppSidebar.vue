@@ -1,7 +1,12 @@
 <template>
   <aside class="app-sidebar">
-    <div class="sidebar-title">Symphony 看板</div>
-    <div class="sidebar-space"></div>
+    <div class="sidebar-brand">
+      <span class="brand-mark" aria-hidden="true"></span>
+      <div>
+        <div class="sidebar-title">Symphony</div>
+        <div class="sidebar-caption">Kanban</div>
+      </div>
+    </div>
     <nav class="nav-menu">
       <el-menu
         class="sidebar-menu"
@@ -10,13 +15,22 @@
         :unique-opened="true"
         @select="handleSelect"
       >
-        <el-menu-item index="workspaces">工作区 (Workspaces)</el-menu-item>
-        <el-menu-item index="boards">看板 (Boards)</el-menu-item>
-        <el-menu-item index="boards-recent" class="menu-subitem">
-          ↳ 最近一周
+        <el-menu-item index="workspaces">
+          <span class="menu-icon menu-icon--workspace" aria-hidden="true"></span>
+          工作区
         </el-menu-item>
-        <el-menu-item index="tags">标签与工作流 (Tags)</el-menu-item>
-        <el-menu-item index="settings">设置 (Settings)</el-menu-item>
+        <el-menu-item index="boards">
+          <span class="menu-icon menu-icon--board" aria-hidden="true"></span>
+          看板
+        </el-menu-item>
+        <el-menu-item index="tags">
+          <span class="menu-icon menu-icon--workflow" aria-hidden="true"></span>
+          工作流
+        </el-menu-item>
+        <el-menu-item index="settings">
+          <span class="menu-icon menu-icon--settings" aria-hidden="true"></span>
+          设置
+        </el-menu-item>
       </el-menu>
     </nav>
     <div class="sidebar-spacer"></div>
@@ -28,7 +42,7 @@
           text
           @click="setTheme('light')"
         >
-          日间
+          浅色
         </el-button>
         <el-button
           class="theme-option"
@@ -36,7 +50,7 @@
           text
           @click="setTheme('dark')"
         >
-          夜间
+          深色
         </el-button>
       </el-button-group>
     </div>

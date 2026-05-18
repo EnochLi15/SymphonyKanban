@@ -41,27 +41,28 @@ import AppShell from "../../components/AppShell.vue";
 .settings-content {
   display: flex;
   flex-direction: column;
-  gap: 32px;
-  padding: 32px;
+  gap: 18px;
+  padding: 26px 28px;
   box-sizing: border-box;
 }
 
 .page-title {
   margin: 0;
-  font-size: 24px;
+  font-size: 28px;
   font-weight: 700;
 }
 
 .settings-form {
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 14px;
   flex: 1;
 }
 
 .section-title {
-  font-size: 16px;
-  font-weight: 600;
+  color: var(--kanban-muted);
+  font-size: 13px;
+  font-weight: 650;
 }
 
 .skills-box {
@@ -77,8 +78,8 @@ import AppShell from "../../components/AppShell.vue";
 }
 
 .box-title {
-  font-size: 14px;
-  font-weight: 600;
+  font-size: 17px;
+  font-weight: 650;
   color: var(--kanban-text-primary);
 }
 
@@ -107,8 +108,8 @@ import AppShell from "../../components/AppShell.vue";
 }
 
 .download-button {
-  border-radius: 6px;
-  padding: 12px 32px;
+  border-radius: var(--kanban-radius-sm);
+  padding: 10px 20px;
   background: var(--kanban-primary);
   color: #ffffff;
   font-size: 14px;
@@ -122,8 +123,8 @@ import AppShell from "../../components/AppShell.vue";
 }
 
 .save-button {
-  border-radius: 6px;
-  padding: 12px 32px;
+  border-radius: var(--kanban-radius-sm);
+  padding: 10px 20px;
   background: var(--kanban-primary);
   color: #ffffff;
   font-size: 14px;

@@ -2,7 +2,10 @@
   <AppShell>
     <div class="priority-content">
       <header class="priority-header">
-        <div class="priority-title">最近一周</div>
+        <div class="priority-heading">
+          <div class="priority-title">优先级</div>
+          <div class="priority-subtitle">Eisenhower 矩阵</div>
+        </div>
         <div class="priority-actions">
           <div class="filters">
             <el-select
@@ -48,7 +51,7 @@
               优先级视图
             </el-button>
             <el-button class="mode mode--muted" text @click="createTask">
-              + 新建任务
+              新建任务
             </el-button>
           </div>
         </div>
@@ -278,8 +281,8 @@ onMounted(loadIssues);
 .priority-content {
   display: flex;
   flex-direction: column;
-  gap: 20px;
-  padding: 32px 36px;
+  gap: 18px;
+  padding: 26px 28px;
   box-sizing: border-box;
   flex: 1;
   min-height: 0;
@@ -287,15 +290,13 @@ onMounted(loadIssues);
 
 .priority-header {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
   gap: 16px;
-  padding: 18px 20px;
-  border: 1px solid var(--kanban-border);
-  border-radius: var(--kanban-radius-lg);
-  background: var(--kanban-glass);
-  box-shadow: var(--kanban-shadow-md);
-  backdrop-filter: blur(18px) saturate(145%);
+  padding: 4px 2px 2px;
+  border: 1px solid transparent;
+  background: transparent;
+  box-shadow: none;
 }
 
 .priority-actions {
@@ -309,9 +310,9 @@ onMounted(loadIssues);
 .filters {
   display: flex;
   gap: 8px;
-  padding: 6px;
-  border-radius: var(--kanban-radius-md);
-  background: var(--kanban-surface-raised);
+  padding: 4px;
+  border-radius: var(--kanban-radius-sm);
+  background: var(--kanban-surface);
   border: 1px solid var(--kanban-border);
   box-shadow: var(--kanban-shadow-sm);
 }
@@ -320,54 +321,67 @@ onMounted(loadIssues);
   min-width: 150px;
 }
 
+.priority-heading {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
 .priority-title {
-  font-size: 26px;
-  font-weight: 800;
+  font-size: 28px;
+  font-weight: 700;
   letter-spacing: 0;
+  white-space: nowrap;
+}
+
+.priority-subtitle {
+  color: var(--kanban-muted);
+  font-size: 13px;
+  font-weight: 500;
 }
 
 .view-modes {
   display: flex;
-  gap: 8px;
-  padding: 6px;
-  border-radius: var(--kanban-radius-md);
-  background: var(--kanban-surface-raised);
+  gap: 4px;
+  padding: 4px;
+  border-radius: var(--kanban-radius-sm);
+  background: var(--kanban-surface-muted);
   border: 1px solid var(--kanban-border);
-  box-shadow: var(--kanban-shadow-sm);
+  box-shadow: none;
 }
 
 .mode {
-  min-height: 32px;
+  min-height: 34px;
   padding: 6px 12px;
   border-radius: var(--kanban-radius-sm);
-  font-size: 14px;
-  font-weight: 700;
+  font-size: 13px;
+  font-weight: 600;
   color: var(--kanban-text-secondary);
 }
 
 .mode--active {
-  background: var(--kanban-primary);
-  color: #ffffff;
-  box-shadow: 0 8px 16px rgba(37, 99, 235, 0.18);
+  background: var(--kanban-surface);
+  color: var(--kanban-text-primary);
+  box-shadow: var(--kanban-shadow-sm);
 }
 
 .mode--muted {
-  background: var(--kanban-primary-soft);
   color: var(--kanban-primary);
+  background: transparent;
 }
 
 .priority-grid {
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 12px;
   min-height: 0;
 }
 
 .priority-loading {
   padding: 24px;
-  border-radius: var(--kanban-radius-md);
-  background: var(--kanban-surface-raised);
+  border-radius: var(--kanban-radius-sm);
+  background: var(--kanban-surface);
   border: 1px solid var(--kanban-border);
   font-size: 14px;
   box-shadow: var(--kanban-shadow-sm);
@@ -375,7 +389,7 @@ onMounted(loadIssues);
 
 .priority-row {
   display: flex;
-  gap: 16px;
+  gap: 12px;
   flex: 1;
   min-height: 0;
 }
@@ -384,38 +398,38 @@ onMounted(loadIssues);
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 16px;
-  padding: 18px;
-  border-radius: var(--kanban-radius-lg);
-  border: 1px solid transparent;
+  gap: 12px;
+  padding: 14px;
+  border-radius: var(--kanban-radius-md);
+  border: 1px solid var(--kanban-border);
   box-sizing: border-box;
   min-height: 0;
-  box-shadow: var(--kanban-shadow-sm);
+  box-shadow: none;
 }
 
 .quadrant-p0 {
-  background: var(--kanban-error-surface);
-  border-color: var(--kanban-error);
+  background: linear-gradient(180deg, var(--kanban-error-surface), var(--kanban-surface-muted));
+  border-color: color-mix(in srgb, var(--kanban-error) 30%, var(--kanban-border));
 }
 
 .quadrant-p1 {
-  background: var(--kanban-p1-surface);
-  border-color: var(--kanban-warning);
+  background: linear-gradient(180deg, var(--kanban-p1-surface), var(--kanban-surface-muted));
+  border-color: color-mix(in srgb, var(--kanban-warning) 32%, var(--kanban-border));
 }
 
 .quadrant-p2 {
-  background: var(--kanban-primary-soft);
-  border-color: var(--kanban-primary);
+  background: linear-gradient(180deg, var(--kanban-primary-soft), var(--kanban-surface-muted));
+  border-color: color-mix(in srgb, var(--kanban-primary) 28%, var(--kanban-border));
 }
 
 .quadrant-p3 {
-  background: var(--kanban-surface);
+  background: var(--kanban-surface-muted);
   border: 1px solid var(--kanban-border);
 }
 
 .quadrant-title {
-  font-size: 15px;
-  font-weight: 800;
+  font-size: 13px;
+  font-weight: 700;
   color: var(--kanban-error);
   letter-spacing: 0;
 }
@@ -437,8 +451,8 @@ onMounted(loadIssues);
   color: var(--kanban-text-secondary);
   padding: 18px 12px;
   border: 1px dashed var(--kanban-border-strong);
-  border-radius: var(--kanban-radius-md);
-  background: var(--kanban-surface-muted);
+  border-radius: var(--kanban-radius-sm);
+  background: color-mix(in srgb, var(--kanban-surface) 72%, transparent);
   text-align: center;
 }
 
@@ -482,8 +496,8 @@ onMounted(loadIssues);
 
 .priority-card:hover {
   border-color: var(--kanban-border-strong);
-  box-shadow: var(--kanban-shadow-md);
-  transform: translateY(-1px);
+  box-shadow: var(--kanban-shadow-sm);
+  transform: translateY(-1px) scale(1.005);
 }
 
 .priority-card :deep(.el-card__body) {
@@ -499,7 +513,8 @@ onMounted(loadIssues);
 
 .card-title {
   font-size: 14px;
-  font-weight: 700;
+  font-weight: 650;
+  line-height: 1.45;
   color: var(--kanban-text-primary);
   overflow-wrap: anywhere;
 }
@@ -520,7 +535,7 @@ onMounted(loadIssues);
   padding: 3px 8px;
   border-radius: 999px;
   font-size: 11px;
-  font-weight: 700;
+  font-weight: 650;
   border: 1px solid transparent;
 }
 
@@ -535,8 +550,63 @@ onMounted(loadIssues);
 }
 
 .tag--neutral {
-  background: var(--kanban-surface-muted);
+  background: var(--kanban-surface);
   border-color: var(--kanban-border);
   color: var(--kanban-text-secondary);
+}
+
+@media (max-width: 900px) {
+  .priority-content {
+    padding: 22px 14px;
+    overflow: hidden;
+  }
+
+  .priority-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 14px;
+  }
+
+  .priority-actions {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 8px;
+    width: 100%;
+  }
+
+  .filters,
+  .view-modes {
+    width: 100%;
+  }
+
+  .filters {
+    flex-wrap: wrap;
+  }
+
+  .filter-select {
+    flex: 1 1 150px;
+    min-width: 0;
+  }
+
+  .view-modes {
+    overflow-x: auto;
+  }
+
+  .mode {
+    flex: 1 0 max-content;
+    min-width: 92px;
+  }
+
+  .priority-grid {
+    overflow: visible;
+  }
+
+  .priority-row {
+    flex-direction: column;
+  }
+
+  .quadrant-scroll {
+    grid-template-columns: 1fr;
+  }
 }
 </style>

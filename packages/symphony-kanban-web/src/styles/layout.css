@@ -3,12 +3,10 @@
   min-height: 100vh;
   height: 100vh;
   width: 100%;
-  background:
-    radial-gradient(circle at 14% 0%, rgba(37, 99, 235, 0.12), transparent 28rem),
-    linear-gradient(135deg, var(--kanban-bg), var(--kanban-bg-soft));
+  background: var(--kanban-bg);
   color: var(--kanban-text-primary);
-  font-family: "Inter", "DM Sans", "Space Grotesk", system-ui, -apple-system,
-    sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Inter",
+    "Helvetica Neue", Arial, sans-serif;
   overflow: hidden;
 }
 
@@ -36,24 +34,55 @@
   z-index: 2;
   display: flex;
   flex-direction: column;
-  gap: 18px;
-  width: 264px;
-  padding: 24px 20px;
-  background: var(--kanban-glass);
+  gap: 16px;
+  width: 236px;
+  padding: 22px 14px;
+  background: rgba(255, 255, 255, 0.68);
   border-right: 1px solid var(--kanban-border);
-  box-shadow: 12px 0 32px rgba(31, 49, 75, 0.08);
+  box-shadow: none;
   backdrop-filter: blur(18px) saturate(145%);
 }
 
+.theme-dark .app-sidebar {
+  background: rgba(28, 28, 30, 0.7);
+}
+
+.sidebar-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  padding: 0 10px;
+}
+
+.brand-mark {
+  position: relative;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  background: linear-gradient(145deg, var(--kanban-primary), #64d2ff);
+  box-shadow: 0 8px 18px rgba(0, 122, 255, 0.22);
+}
+
+.brand-mark::after {
+  position: absolute;
+  inset: 7px;
+  content: "";
+  border: 2px solid rgba(255, 255, 255, 0.78);
+  border-radius: 5px;
+}
+
 .sidebar-title {
-  padding: 0 8px;
-  font-size: 19px;
-  font-weight: 800;
+  font-size: 17px;
+  font-weight: 700;
   letter-spacing: 0;
 }
 
-.sidebar-space {
-  height: 8px;
+.sidebar-caption {
+  margin-top: 1px;
+  color: var(--kanban-muted);
+  font-size: 12px;
+  font-weight: 500;
 }
 
 .nav-menu {
@@ -69,8 +98,11 @@
 }
 
 .sidebar-menu .el-menu-item {
-  height: 40px;
-  line-height: 40px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 38px;
+  line-height: 38px;
   border: 1px solid transparent;
   border-radius: var(--kanban-radius-sm);
   padding: 0 12px;
@@ -84,16 +116,95 @@
     transform var(--kanban-transition);
 }
 
+.menu-icon {
+  position: relative;
+  width: 18px;
+  height: 18px;
+  flex: 0 0 18px;
+  color: currentColor;
+  opacity: 0.82;
+}
+
+.menu-icon::before,
+.menu-icon::after {
+  position: absolute;
+  content: "";
+  border-color: currentColor;
+}
+
+.menu-icon--workspace::before {
+  inset: 3px 2px 2px;
+  border: 1.7px solid currentColor;
+  border-radius: 4px;
+}
+
+.menu-icon--workspace::after {
+  top: 1px;
+  left: 5px;
+  width: 6px;
+  height: 4px;
+  border: 1.7px solid currentColor;
+  border-bottom: 0;
+  border-radius: 3px 3px 0 0;
+}
+
+.menu-icon--board::before {
+  inset: 2px;
+  border: 1.7px solid currentColor;
+  border-radius: 4px;
+}
+
+.menu-icon--board::after {
+  top: 8px;
+  left: 3px;
+  right: 3px;
+  border-top: 1.7px solid currentColor;
+  box-shadow: 5px -5px 0 -4px currentColor;
+}
+
+.menu-icon--workflow::before {
+  left: 2px;
+  top: 3px;
+  width: 5px;
+  height: 5px;
+  border: 1.7px solid currentColor;
+  border-radius: 50%;
+  box-shadow:
+    9px 0 0 -1.7px var(--kanban-surface),
+    9px 0 0 0 currentColor,
+    4.5px 9px 0 -1.7px var(--kanban-surface),
+    4.5px 9px 0 0 currentColor;
+}
+
+.menu-icon--settings::before {
+  inset: 4px;
+  border: 1.7px solid currentColor;
+  border-radius: 50%;
+}
+
+.menu-icon--settings::after {
+  left: 8px;
+  top: 1px;
+  width: 2px;
+  height: 16px;
+  background: currentColor;
+  border-radius: 99px;
+  box-shadow:
+    0 0 0 0 currentColor,
+    0 0 0 0 currentColor;
+  transform: rotate(45deg);
+}
+
 .sidebar-menu .el-menu-item:hover {
   background: var(--kanban-primary-soft);
   color: var(--kanban-primary);
-  transform: translateX(2px);
+  transform: none;
 }
 
 .sidebar-menu .el-menu-item.is-active {
-  background: var(--kanban-surface-raised);
-  border-color: var(--kanban-border-strong);
-  color: var(--kanban-primary);
+  background: var(--kanban-surface);
+  border-color: var(--kanban-border);
+  color: var(--kanban-text-primary);
   box-shadow: var(--kanban-shadow-sm);
 }
 
@@ -176,10 +287,10 @@
   display: flex;
   gap: 8px;
   padding: 4px;
-  border-radius: var(--kanban-radius-md);
-  background: var(--kanban-surface-raised);
+  border-radius: var(--kanban-radius-sm);
+  background: var(--kanban-surface-muted);
   border: 1px solid var(--kanban-border);
-  box-shadow: var(--kanban-shadow-sm);
+  box-shadow: none;
 }
 
 .theme-toggle-group {
@@ -200,9 +311,9 @@
 
 .theme-option--active,
 .theme-option--active.el-button.is-text {
-  background: var(--kanban-primary);
-  color: #ffffff;
-  box-shadow: 0 8px 16px rgba(37, 99, 235, 0.18);
+  background: var(--kanban-surface);
+  color: var(--kanban-text-primary);
+  box-shadow: var(--kanban-shadow-sm);
 }
 
 .app-back-button {
@@ -210,9 +321,9 @@
   border-radius: var(--kanban-radius-sm);
   padding: 8px 12px;
   font-size: 14px;
-  font-weight: 700;
+  font-weight: 600;
   color: var(--kanban-text-secondary);
-  background: var(--kanban-surface-raised);
+  background: var(--kanban-surface);
 }
 
 @media (max-width: 900px) {

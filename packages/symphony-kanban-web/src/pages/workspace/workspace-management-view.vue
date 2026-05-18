@@ -329,8 +329,8 @@ onMounted(() => {
 .workspace-content {
   display: flex;
   flex-direction: column;
-  gap: 20px;
-  padding: 32px 36px;
+  gap: 18px;
+  padding: 26px 28px;
   box-sizing: border-box;
   flex: 1;
   min-height: 0;
@@ -341,21 +341,19 @@ onMounted(() => {
 
 .workspace-header {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
   gap: 16px;
-  padding: 18px 20px;
-  border: 1px solid var(--kanban-border);
-  border-radius: var(--kanban-radius-lg);
-  background: var(--kanban-glass);
-  box-shadow: var(--kanban-shadow-md);
-  backdrop-filter: blur(18px) saturate(145%);
+  padding: 4px 2px 2px;
+  border: 1px solid transparent;
+  background: transparent;
+  box-shadow: none;
 }
 
 .workspace-title {
   margin: 0;
-  font-size: 24px;
-  font-weight: 800;
+  font-size: 28px;
+  font-weight: 700;
   letter-spacing: 0;
 }
 
@@ -368,7 +366,7 @@ onMounted(() => {
   border-radius: var(--kanban-radius-sm);
   padding: 8px 16px;
   font-size: 14px;
-  font-weight: 700;
+  font-weight: 600;
   color: var(--kanban-text-primary);
 }
 
@@ -391,8 +389,8 @@ onMounted(() => {
 }
 
 .workspace-card {
-  border-radius: var(--kanban-radius-md);
-  background: var(--kanban-surface-raised);
+  border-radius: var(--kanban-radius-sm);
+  background: var(--kanban-surface);
   border: 1px solid var(--kanban-border);
   cursor: pointer;
   min-height: 88px;
@@ -401,8 +399,8 @@ onMounted(() => {
 
 .workspace-card:hover {
   border-color: var(--kanban-border-strong);
-  box-shadow: var(--kanban-shadow-md);
-  transform: translateY(-1px);
+  box-shadow: var(--kanban-shadow-sm);
+  transform: translateY(-1px) scale(1.002);
 }
 
 .workspace-card :deep(.el-card__body) {
@@ -429,23 +427,22 @@ onMounted(() => {
 }
 
 .workspace-name {
-  font-size: 18px;
-  font-weight: 800;
+  font-size: 17px;
+  font-weight: 650;
 }
 
 .workspace-path {
   font-size: 14px;
   font-weight: 400;
   color: var(--kanban-text-secondary);
-  font-family: "Space Grotesk", "Inter", "DM Sans", system-ui, -apple-system,
-    sans-serif;
+  font-family: "SF Mono", ui-monospace, Menlo, Consolas, monospace;
   min-height: 18px;
 }
 
 .workspace-dialog :deep(.el-dialog) {
   width: 560px;
   border-radius: var(--kanban-radius-lg);
-  background: var(--kanban-glass);
+  background: var(--kanban-surface-raised);
   border: 1px solid var(--kanban-border);
   box-shadow: var(--kanban-shadow-lg);
   backdrop-filter: blur(18px) saturate(145%);
@@ -472,7 +469,7 @@ onMounted(() => {
 
 .dialog-title {
   font-size: 18px;
-  font-weight: 800;
+  font-weight: 700;
 }
 
 .dialog-close {

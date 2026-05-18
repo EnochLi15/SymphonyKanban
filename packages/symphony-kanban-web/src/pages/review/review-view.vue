@@ -114,8 +114,8 @@ onMounted(() => {
 .review-content {
   display: flex;
   flex-direction: column;
-  gap: 24px;
-  padding: 32px;
+  gap: 18px;
+  padding: 26px 28px;
   box-sizing: border-box;
 }
 
@@ -123,7 +123,8 @@ onMounted(() => {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 24px;
+  gap: 16px;
+  padding: 4px 2px 2px;
 }
 
 .header-left {
@@ -140,34 +141,38 @@ onMounted(() => {
 
 .header-actions {
   display: flex;
-  gap: 16px;
+  gap: 10px;
+  flex-wrap: wrap;
 }
 
 .action-button {
-  border: none;
-  border-radius: 6px;
-  padding: 8px 16px;
+  border: 1px solid var(--kanban-border);
+  border-radius: var(--kanban-radius-sm);
+  padding: 8px 14px;
   font-size: 14px;
   font-weight: 600;
   color: var(--kanban-text-primary);
 }
 
 .action-reject {
-  background: var(--kanban-error);
+  background: var(--kanban-error-soft);
+  color: var(--kanban-error);
 }
 
 .action-more {
-  background: var(--kanban-muted);
+  background: var(--kanban-surface-muted);
 }
 
 .action-accept {
   background: var(--kanban-success);
+  border-color: transparent;
+  color: #ffffff;
 }
 
 .review-panels {
   flex: 1;
   display: flex;
-  gap: 24px;
+  gap: 14px;
   min-width: 0;
 }
 
@@ -181,13 +186,14 @@ onMounted(() => {
 }
 
 .panel-title {
-  font-size: 16px;
-  font-weight: 600;
+  color: var(--kanban-muted);
+  font-size: 13px;
+  font-weight: 650;
 }
 
 .ci-box {
-  padding: 16px;
-  border-radius: 8px;
+  padding: 14px;
+  border-radius: var(--kanban-radius-sm);
   background: var(--kanban-surface);
   border: 1px solid var(--kanban-border);
   display: flex;
@@ -205,8 +211,8 @@ onMounted(() => {
 }
 
 .summary-box {
-  padding: 16px;
-  border-radius: 8px;
+  padding: 14px;
+  border-radius: var(--kanban-radius-sm);
   background: var(--kanban-surface);
   border: 1px solid var(--kanban-border);
 }
@@ -221,8 +227,8 @@ onMounted(() => {
 
 .diff-box {
   flex: 1;
-  padding: 16px;
-  border-radius: 8px;
+  padding: 14px;
+  border-radius: var(--kanban-radius-sm);
   background: var(--kanban-surface);
   border: 1px solid var(--kanban-border);
   display: flex;

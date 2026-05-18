@@ -88,8 +88,8 @@ onMounted(() => {
 .blocked-content {
   display: flex;
   flex-direction: column;
-  gap: 24px;
-  padding: 32px;
+  gap: 18px;
+  padding: 26px 28px;
   box-sizing: border-box;
 }
 
@@ -97,6 +97,7 @@ onMounted(() => {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  padding: 4px 2px 2px;
 }
 
 .header-left {
@@ -115,13 +116,13 @@ onMounted(() => {
 .blocked-panels {
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 14px;
   flex: 1;
 }
 
 .alert-box {
-  padding: 16px;
-  border-radius: 8px;
+  padding: 14px;
+  border-radius: var(--kanban-radius-sm);
   background: var(--kanban-error-surface);
   border: 1px solid var(--kanban-error);
   display: flex;
@@ -142,8 +143,8 @@ onMounted(() => {
 }
 
 .context-box {
-  padding: 16px;
-  border-radius: 8px;
+  padding: 14px;
+  border-radius: var(--kanban-radius-sm);
   background: var(--kanban-surface);
   border: 1px solid var(--kanban-border);
   display: flex;
@@ -167,12 +168,12 @@ onMounted(() => {
 
 .blocked-actions {
   display: flex;
-  gap: 16px;
+  gap: 10px;
 }
 
 .action-button {
-  border-radius: 6px;
-  padding: 8px 16px;
+  border-radius: var(--kanban-radius-sm);
+  padding: 8px 14px;
   font-size: 14px;
   font-weight: 600;
   border: none;

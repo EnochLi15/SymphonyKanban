@@ -2,8 +2,12 @@
   <AppShell>
     <div class="main-content">
       <header class="board-header">
-        <div class="board-title">
-          最近一周
+        <div class="board-heading">
+          <div class="board-title">
+            看板
+            <span class="board-count">{{ filteredIssues.length }}</span>
+          </div>
+          <div class="board-subtitle">最近一周任务流</div>
           <el-tooltip placement="right" effect="dark">
             <template #content>
               <div class="hint-popover">
@@ -13,7 +17,7 @@
                 <div>4. 视图切换：点击右上角【优先级视图】可切换为四象限 Eisenhower 矩阵管理模式。</div>
               </div>
             </template>
-            <span class="hint-trigger">!</span>
+            <button class="hint-trigger" type="button" aria-label="查看看板提示">?</button>
           </el-tooltip>
         </div>
         <div class="board-actions">
@@ -61,7 +65,7 @@
               优先级视图
             </el-button>
             <el-button class="mode mode--muted" text @click="createTask">
-              + 新建任务
+              新建任务
             </el-button>
           </div>
         </div>
@@ -79,8 +83,11 @@
           @dragover.prevent
           @drop="onDrop(column.status)"
         >
-          <div class="col-title" :class="column.titleClass">
-            {{ column.title }}
+          <div class="col-header">
+            <div class="col-title" :class="column.titleClass">
+              {{ column.title }}
+            </div>
+            <span class="col-count">{{ column.items.length }}</span>
           </div>
           <div class="col-scroll">
             <div v-if="column.items.length === 0" class="empty-col">暂无任务</div>
@@ -91,6 +98,7 @@
               draggable="true"
               @click="goIssueDetail(issue.id)"
               @dragstart="onDragStart(issue)"
+              @dragend="onDragEnd"
             >
               <div class="card-title">{{ issue.title }}</div>
               <div class="tag-row">
@@ -268,6 +276,10 @@ const onDragStart = (issue: IssueView) => {
   dragging.value = issue;
 };
 
+const onDragEnd = () => {
+  dragging.value = null;
+};
+
 const onDrop = async (status: string) => {
   if (!dragging.value) return;
   const target = dragging.value;
@@ -328,8 +340,8 @@ onUnmounted(() => {
 .main-content {
   display: flex;
   flex-direction: column;
-  gap: 20px;
-  padding: 32px 36px;
+  gap: 18px;
+  padding: 26px 28px;
   box-sizing: border-box;
   flex: 1;
   min-height: 0;
@@ -337,15 +349,14 @@ onUnmounted(() => {
 
 .board-header {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
   gap: 16px;
-  padding: 18px 20px;
+  padding: 4px 2px 2px;
   border: 1px solid var(--kanban-border);
-  border-radius: var(--kanban-radius-lg);
-  background: var(--kanban-glass);
-  box-shadow: var(--kanban-shadow-md);
-  backdrop-filter: blur(18px) saturate(145%);
+  border-color: transparent;
+  background: transparent;
+  box-shadow: none;
 }
 
 .board-actions {
@@ -359,9 +370,9 @@ onUnmounted(() => {
 .filters {
   display: flex;
   gap: 8px;
-  padding: 6px;
-  border-radius: var(--kanban-radius-md);
-  background: var(--kanban-surface-raised);
+  padding: 4px;
+  border-radius: var(--kanban-radius-sm);
+  background: var(--kanban-surface);
   border: 1px solid var(--kanban-border);
   box-shadow: var(--kanban-shadow-sm);
 }
@@ -370,35 +381,62 @@ onUnmounted(() => {
   min-width: 150px;
 }
 
-.board-title {
-  font-size: 26px;
-  font-weight: 800;
+.board-heading {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.board-title {
+  font-size: 28px;
+  font-weight: 700;
   letter-spacing: 0;
+  white-space: nowrap;
+}
+
+.board-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 28px;
+  height: 24px;
+  margin-left: 8px;
+  padding: 0 8px;
+  border-radius: 999px;
+  background: var(--kanban-surface);
+  border: 1px solid var(--kanban-border);
+  color: var(--kanban-text-secondary);
+  font-size: 13px;
+  font-weight: 700;
+  vertical-align: middle;
+}
+
+.board-subtitle {
+  width: 100%;
+  color: var(--kanban-muted);
+  font-size: 13px;
+  font-weight: 500;
 }
 
 .hint-trigger {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 20px;
-  height: 20px;
-  border-radius: 10px;
-  background: var(--kanban-primary);
-  color: #ffffff;
+  width: 28px;
+  height: 28px;
+  border: 1px solid var(--kanban-border);
+  border-radius: 999px;
+  background: var(--kanban-surface);
+  color: var(--kanban-text-secondary);
   font-size: 12px;
   font-weight: 700;
   cursor: pointer;
 }
 
-.theme-dark .hint-trigger {
-  box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.25);
-}
-
-.theme-light .hint-trigger {
-  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.25);
+.hint-trigger:hover {
+  color: var(--kanban-primary);
+  border-color: var(--kanban-border-strong);
 }
 
 .hint-popover {
@@ -412,39 +450,39 @@ onUnmounted(() => {
 
 .view-modes {
   display: flex;
-  gap: 8px;
-  padding: 6px;
-  border-radius: var(--kanban-radius-md);
-  background: var(--kanban-surface-raised);
+  gap: 4px;
+  padding: 4px;
+  border-radius: var(--kanban-radius-sm);
+  background: var(--kanban-surface-muted);
   border: 1px solid var(--kanban-border);
-  box-shadow: var(--kanban-shadow-sm);
+  box-shadow: none;
 }
 
 .mode {
-  min-height: 32px;
+  min-height: 34px;
   padding: 6px 12px;
   border-radius: var(--kanban-radius-sm);
-  font-size: 14px;
-  font-weight: 700;
+  font-size: 13px;
+  font-weight: 600;
   color: var(--kanban-text-secondary);
 }
 
 .mode--active {
-  background: var(--kanban-primary);
-  color: #ffffff;
-  box-shadow: 0 8px 16px rgba(37, 99, 235, 0.18);
+  background: var(--kanban-surface);
+  color: var(--kanban-text-primary);
+  box-shadow: var(--kanban-shadow-sm);
 }
 
 .mode--muted {
   color: var(--kanban-primary);
-  background: var(--kanban-primary-soft);
+  background: transparent;
 }
 
 .board {
   display: flex;
-  gap: 16px;
+  gap: 12px;
   overflow-x: auto;
-  padding: 2px 2px 10px;
+  padding: 2px 2px 12px;
   flex: 1;
   min-height: 0;
 }
@@ -452,19 +490,26 @@ onUnmounted(() => {
 .board-col {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
   flex: 1 1 0;
-  min-width: 220px;
+  min-width: 236px;
   min-height: 0;
-  padding: 14px;
+  padding: 12px;
   border: 1px solid var(--kanban-border);
-  border-radius: var(--kanban-radius-lg);
-  background: rgba(255, 255, 255, 0.42);
-  box-shadow: var(--kanban-shadow-sm);
+  border-radius: var(--kanban-radius-md);
+  background: var(--kanban-surface-muted);
+  box-shadow: none;
+  transition:
+    background-color var(--kanban-transition),
+    border-color var(--kanban-transition);
 }
 
 .theme-dark .board-col {
-  background: rgba(21, 29, 43, 0.56);
+  background: rgba(44, 44, 46, 0.6);
+}
+
+.board-col:hover {
+  border-color: var(--kanban-border-strong);
 }
 
 .col-scroll {
@@ -493,17 +538,40 @@ onUnmounted(() => {
 
 .board-loading {
   padding: 24px;
-  border-radius: var(--kanban-radius-md);
-  background: var(--kanban-surface-raised);
+  border-radius: var(--kanban-radius-sm);
+  background: var(--kanban-surface);
   border: 1px solid var(--kanban-border);
   font-size: 14px;
   box-shadow: var(--kanban-shadow-sm);
 }
 
 .col-title {
-  font-size: 14px;
-  font-weight: 800;
+  font-size: 13px;
+  font-weight: 700;
   color: var(--kanban-text-primary);
+}
+
+.col-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  min-height: 30px;
+}
+
+.col-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 24px;
+  height: 22px;
+  padding: 0 7px;
+  border-radius: 999px;
+  background: var(--kanban-surface);
+  border: 1px solid var(--kanban-border);
+  color: var(--kanban-muted);
+  font-size: 12px;
+  font-weight: 700;
 }
 
 .col-title--success {
@@ -519,8 +587,8 @@ onUnmounted(() => {
   color: var(--kanban-text-secondary);
   padding: 18px 12px;
   border: 1px dashed var(--kanban-border-strong);
-  border-radius: var(--kanban-radius-md);
-  background: var(--kanban-surface-muted);
+  border-radius: var(--kanban-radius-sm);
+  background: color-mix(in srgb, var(--kanban-surface) 72%, transparent);
   text-align: center;
 }
 
@@ -531,22 +599,28 @@ onUnmounted(() => {
 }
 
 .card :deep(.el-card__body) {
-  padding: 15px;
+  padding: 14px;
 }
 
 .card:hover {
   border-color: var(--kanban-border-strong);
-  box-shadow: var(--kanban-shadow-md);
-  transform: translateY(-1px);
+  box-shadow: var(--kanban-shadow-sm);
+  transform: translateY(-1px) scale(1.005);
 }
 
 .card-clickable {
   cursor: grab;
 }
 
+.card-clickable:active {
+  cursor: grabbing;
+}
+
 .card-title {
   color: var(--kanban-text-primary);
-  font-weight: 700;
+  font-size: 14px;
+  font-weight: 650;
+  line-height: 1.45;
   margin-bottom: 8px;
   word-break: break-word;
   overflow-wrap: anywhere;
@@ -562,8 +636,8 @@ onUnmounted(() => {
   padding: 3px 7px;
   border-radius: 999px;
   font-size: 11px;
-  font-weight: 700;
-  background: var(--kanban-surface-muted);
+  font-weight: 650;
+  background: var(--kanban-surface);
   border: 1px solid var(--kanban-border);
 }
 
@@ -581,5 +655,79 @@ onUnmounted(() => {
 
 .tag--neutral {
   color: var(--kanban-text-secondary);
+}
+
+@media (max-width: 900px) {
+  .main-content {
+    padding: 22px 14px;
+    overflow: hidden;
+  }
+
+  .board-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 14px;
+  }
+
+  .board-heading {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 6px 10px;
+  }
+
+  .board-title {
+    grid-column: 1;
+    font-size: 26px;
+  }
+
+  .board-subtitle {
+    grid-column: 1 / -1;
+    width: auto;
+  }
+
+  .hint-trigger {
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  .board-actions {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 8px;
+    width: 100%;
+  }
+
+  .filters,
+  .view-modes {
+    width: 100%;
+  }
+
+  .filters {
+    flex-wrap: wrap;
+  }
+
+  .filter-select {
+    flex: 1 1 150px;
+    min-width: 0;
+  }
+
+  .view-modes {
+    overflow-x: auto;
+  }
+
+  .mode {
+    flex: 1 0 max-content;
+    min-width: 92px;
+  }
+
+  .board {
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .board-col {
+    flex: 0 0 236px;
+  }
 }
 </style>
