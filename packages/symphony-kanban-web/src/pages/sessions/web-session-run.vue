@@ -81,8 +81,8 @@ onMounted(() => {
 .session-content {
   display: flex;
   flex-direction: column;
-  gap: 24px;
-  padding: 32px;
+  gap: 18px;
+  padding: 26px 28px;
   box-sizing: border-box;
 }
 
@@ -90,6 +90,7 @@ onMounted(() => {
   display: flex;
   align-items: center;
   gap: 16px;
+  padding: 4px 2px 2px;
 }
 
 .session-title {
@@ -105,21 +106,22 @@ onMounted(() => {
 }
 
 .panel {
-  border-radius: 8px;
+  border-radius: var(--kanban-radius-sm);
   background: var(--kanban-surface);
   border: 1px solid var(--kanban-border);
   padding: 16px;
 }
 
 .panel-title {
-  font-size: 16px;
-  font-weight: 600;
+  color: var(--kanban-muted);
+  font-size: 13px;
+  font-weight: 650;
   margin-bottom: 12px;
 }
 
 .panel-text {
   font-size: 13px;
-  font-family: "Fira Code", "Space Grotesk", "Inter", monospace;
+  font-family: "SF Mono", ui-monospace, Menlo, Consolas, monospace;
   white-space: pre-wrap;
   color: var(--kanban-text-secondary);
 }

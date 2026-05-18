@@ -1,18 +1,20 @@
 # Symphony Kanban (Monorepo Scaffold)
 
-This workspace hosts the monorepo-managed multi-repo layout described in `doc/2026-03-15-04-Arch-Symphony-Kanban-Layers.md`.
+This workspace hosts the monorepo-managed Symphony Kanban app. The default
+runtime is now two processes: Web plus API. The scheduler is an internal API
+Module that can be enabled with `SCHEDULER_ENABLED=true`.
 
 ## Repos
 - `packages/symphony-kanban-web` (Vue3 UI)
-- `packages/symphony-kanban-api` (Express + SQLite)
-- `packages/symphony-kanban-symphony` (Orchestration; wraps fizzy-popper)
+- `packages/symphony-kanban-api` (Express + SQLite + internal scheduler)
 - `packages/symphony-kanban-shared` (Shared types/DTOs)
 - `packages/symphony-kanban-db` (Schema/migrations/seed)
 
 ## Notes
 - Monorepo is managed with `pnpm` workspaces.
-- `packages/symphony-kanban-symphony/fizzy-popper` is a clone of `basecamp/fizzy-popper`.
-- Each repo is intentionally minimal and ready for incremental build-out.
+- The standalone scheduler prototype package has been removed; scheduler locality now lives in the API Module.
+- `pnpm dev` starts API and Web. To run the scheduler locally, start the API with `SCHEDULER_ENABLED=true`.
+- See `docs/adr/0001-fuse-scheduler-into-api.md` for the scheduler fusion decision.
 
 ## Testing
 - `packages/symphony-kanban-api` uses SQLite; running tests in parallel can cause `SQLITE_BUSY`/500 errors. The API test runner is configured to run single-threaded to avoid database lock contention.

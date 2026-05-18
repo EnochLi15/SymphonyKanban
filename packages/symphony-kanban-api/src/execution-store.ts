@@ -1,5 +1,15 @@
 import { db } from "./db.js";
 
+const MAX_ARTIFACT_CHARS = 200_000;
+
+export const truncateArtifactContent = (input: string | null | undefined) => {
+  if (!input) return { content: input ?? null, truncated: 0, size: 0 };
+  const size = input.length;
+  if (size <= MAX_ARTIFACT_CHARS) return { content: input, truncated: 0, size };
+  const tail = input.slice(size - MAX_ARTIFACT_CHARS);
+  return { content: tail, truncated: 1, size };
+};
+
 export const createExecution = (
   id: string,
   issueId: string,
@@ -44,6 +54,19 @@ export const insertArtifact = (
   db.prepare(
     "INSERT INTO execution_artifacts (id, execution_id, type, content, summary, content_truncated, content_size, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
   ).run(id, executionId, type, content, summary, truncated, size, now);
+};
+
+export const recordArtifact = (
+  id: string,
+  executionId: string,
+  type: string,
+  content: string | null,
+  summary: string | null,
+  now: string,
+) => {
+  const { content: safe, truncated, size } = truncateArtifactContent(content);
+  insertArtifact(id, executionId, type, safe, summary, truncated, size, now);
+  return { id, truncated: !!truncated };
 };
 
 export const listArtifacts = (executionId: string) =>

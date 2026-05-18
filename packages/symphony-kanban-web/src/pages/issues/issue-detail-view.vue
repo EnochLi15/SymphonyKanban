@@ -414,8 +414,8 @@ const sessionUrl = computed(() =>
 .issue-content {
   display: flex;
   flex-direction: column;
-  gap: 20px;
-  padding: 32px 36px;
+  gap: 18px;
+  padding: 26px 28px;
   box-sizing: border-box;
   flex: 1;
   min-height: 0;
@@ -426,12 +426,10 @@ const sessionUrl = computed(() =>
   justify-content: space-between;
   align-items: center;
   gap: 16px;
-  padding: 18px 20px;
-  border: 1px solid var(--kanban-border);
-  border-radius: var(--kanban-radius-lg);
-  background: var(--kanban-glass);
-  box-shadow: var(--kanban-shadow-md);
-  backdrop-filter: blur(18px) saturate(145%);
+  padding: 4px 2px 2px;
+  border: 1px solid transparent;
+  background: transparent;
+  box-shadow: none;
 }
 
 .header-left {
@@ -441,8 +439,8 @@ const sessionUrl = computed(() =>
 }
 
 .issue-title {
-  font-size: 24px;
-  font-weight: 800;
+  font-size: 28px;
+  font-weight: 700;
   margin: 0;
   letter-spacing: 0;
 }
@@ -456,8 +454,8 @@ const sessionUrl = computed(() =>
 
 .loading {
   padding: 24px;
-  border-radius: var(--kanban-radius-md);
-  background: var(--kanban-surface-raised);
+  border-radius: var(--kanban-radius-sm);
+  background: var(--kanban-surface);
   border: 1px solid var(--kanban-border);
   font-size: 14px;
   box-shadow: var(--kanban-shadow-sm);
@@ -467,7 +465,7 @@ const sessionUrl = computed(() =>
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 14px;
   min-width: 0;
 }
 
@@ -476,29 +474,28 @@ const sessionUrl = computed(() =>
   display: flex;
   flex-direction: column;
   gap: 16px;
-  padding: 18px;
+  padding: 14px;
   border: 1px solid var(--kanban-border);
-  border-radius: var(--kanban-radius-lg);
-  background: var(--kanban-glass);
-  box-shadow: var(--kanban-shadow-md);
-  backdrop-filter: blur(18px) saturate(145%);
+  border-radius: var(--kanban-radius-md);
+  background: var(--kanban-surface-muted);
+  box-shadow: none;
   box-sizing: border-box;
 }
 
 .field-card {
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  padding: 16px;
-  border-radius: var(--kanban-radius-md);
-  background: var(--kanban-surface-raised);
+  gap: 10px;
+  padding: 14px;
+  border-radius: var(--kanban-radius-sm);
+  background: var(--kanban-surface);
   border: 1px solid var(--kanban-border);
   box-shadow: var(--kanban-shadow-sm);
 }
 
 .field-label {
   font-size: 13px;
-  font-weight: 800;
+  font-weight: 650;
   color: var(--kanban-text-secondary);
 }
 

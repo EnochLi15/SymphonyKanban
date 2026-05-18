@@ -1,65 +1,65 @@
 :root,
 .theme-light {
   color-scheme: light;
-  --kanban-bg: #eef4fb;
-  --kanban-bg-soft: #f6f9fd;
+  --kanban-bg: #f5f5f7;
+  --kanban-bg-soft: #ffffff;
   --kanban-surface: #ffffff;
-  --kanban-surface-raised: rgba(255, 255, 255, 0.86);
-  --kanban-surface-muted: #f8fafc;
-  --kanban-glass: rgba(255, 255, 255, 0.72);
-  --kanban-border: #dbe5f1;
-  --kanban-border-strong: #c5d3e4;
-  --kanban-primary: #2563eb;
-  --kanban-primary-strong: #1d4ed8;
-  --kanban-primary-soft: #e7efff;
-  --kanban-text-primary: #101828;
-  --kanban-text-secondary: #526071;
-  --kanban-muted: #8a98aa;
-  --kanban-success: #159947;
-  --kanban-success-soft: #e8f7ee;
-  --kanban-warning: #c97706;
-  --kanban-warning-soft: #fff4dc;
-  --kanban-error: #d92d20;
-  --kanban-error-soft: #fff0ee;
-  --kanban-error-surface: #fff0ee;
-  --kanban-p1-surface: #fff4dc;
-  --kanban-hint-bg: #eefdf4;
-  --kanban-hint-border: #8ed9a8;
-  --kanban-hint-text: #12743a;
-  --kanban-shadow-sm: 0 1px 2px rgba(16, 24, 40, 0.06);
-  --kanban-shadow-md: 0 12px 32px rgba(31, 49, 75, 0.1);
-  --kanban-shadow-lg: 0 24px 60px rgba(31, 49, 75, 0.16);
-  --kanban-focus-ring: 0 0 0 3px rgba(37, 99, 235, 0.16);
+  --kanban-surface-raised: rgba(255, 255, 255, 0.88);
+  --kanban-surface-muted: #f2f2f6;
+  --kanban-glass: rgba(255, 255, 255, 0.78);
+  --kanban-border: rgba(60, 60, 67, 0.14);
+  --kanban-border-strong: rgba(60, 60, 67, 0.24);
+  --kanban-primary: #007aff;
+  --kanban-primary-strong: #0066d6;
+  --kanban-primary-soft: rgba(0, 122, 255, 0.1);
+  --kanban-text-primary: #1d1d1f;
+  --kanban-text-secondary: #515154;
+  --kanban-muted: #8e8e93;
+  --kanban-success: #248a3d;
+  --kanban-success-soft: rgba(52, 199, 89, 0.12);
+  --kanban-warning: #b26a00;
+  --kanban-warning-soft: rgba(255, 159, 10, 0.14);
+  --kanban-error: #d70015;
+  --kanban-error-soft: rgba(255, 59, 48, 0.1);
+  --kanban-error-surface: rgba(255, 59, 48, 0.08);
+  --kanban-p1-surface: rgba(255, 159, 10, 0.1);
+  --kanban-hint-bg: rgba(52, 199, 89, 0.1);
+  --kanban-hint-border: rgba(52, 199, 89, 0.32);
+  --kanban-hint-text: #1f7a36;
+  --kanban-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.04);
+  --kanban-shadow-md: 0 12px 28px rgba(0, 0, 0, 0.08);
+  --kanban-shadow-lg: 0 24px 64px rgba(0, 0, 0, 0.14);
+  --kanban-focus-ring: 0 0 0 4px rgba(0, 122, 255, 0.18);
   --kanban-radius-sm: 8px;
-  --kanban-radius-md: 12px;
-  --kanban-radius-lg: 16px;
-  --kanban-transition: 180ms ease;
+  --kanban-radius-md: 10px;
+  --kanban-radius-lg: 14px;
+  --kanban-transition: 180ms cubic-bezier(0.2, 0.8, 0.2, 1);
   --el-color-primary: var(--kanban-primary);
-  --el-color-primary-light-3: #5b8df1;
-  --el-color-primary-light-5: #8db0f6;
-  --el-color-primary-light-7: #bed3fb;
-  --el-color-primary-light-8: #d9e6fd;
+  --el-color-primary-light-3: #4da3ff;
+  --el-color-primary-light-5: #80bdff;
+  --el-color-primary-light-7: #b3d7ff;
+  --el-color-primary-light-8: #d1e8ff;
   --el-color-primary-light-9: var(--kanban-primary-soft);
   --el-color-primary-dark-2: var(--kanban-primary-strong);
   --el-color-success: var(--kanban-success);
   --el-color-warning: var(--kanban-warning);
   --el-color-danger: var(--kanban-error);
   --el-color-error: var(--kanban-error);
-  --el-color-info: #64748b;
+  --el-color-info: #6e6e73;
   --el-text-color-primary: var(--kanban-text-primary);
   --el-text-color-regular: var(--kanban-text-secondary);
-  --el-text-color-secondary: #667085;
-  --el-text-color-placeholder: #98a2b3;
-  --el-text-color-disabled: #b8c2d0;
+  --el-text-color-secondary: #6e6e73;
+  --el-text-color-placeholder: #9a9aa0;
+  --el-text-color-disabled: #b7b7bd;
   --el-border-color: var(--kanban-border);
-  --el-border-color-light: #e4ebf3;
-  --el-border-color-lighter: #edf2f7;
-  --el-border-color-extra-light: #f4f7fb;
-  --el-fill-color: #f6f9fd;
-  --el-fill-color-light: #f8fbff;
-  --el-fill-color-lighter: #fbfdff;
+  --el-border-color-light: rgba(60, 60, 67, 0.1);
+  --el-border-color-lighter: rgba(60, 60, 67, 0.08);
+  --el-border-color-extra-light: rgba(60, 60, 67, 0.06);
+  --el-fill-color: #f5f5f7;
+  --el-fill-color-light: #f9f9fb;
+  --el-fill-color-lighter: #fbfbfd;
   --el-fill-color-extra-light: #ffffff;
-  --el-fill-color-dark: #e7edf5;
+  --el-fill-color-dark: #e7e7ec;
   --el-fill-color-blank: var(--kanban-surface);
   --el-bg-color: var(--kanban-surface);
   --el-bg-color-page: var(--kanban-bg);
@@ -77,39 +77,39 @@
 
 .theme-dark {
   color-scheme: dark;
-  --kanban-bg: #0b1019;
-  --kanban-bg-soft: #101826;
-  --kanban-surface: #151d2b;
-  --kanban-surface-raised: rgba(24, 34, 50, 0.9);
-  --kanban-surface-muted: #111827;
-  --kanban-glass: rgba(24, 34, 50, 0.72);
-  --kanban-border: #2b384a;
-  --kanban-border-strong: #405069;
-  --kanban-primary: #6ea8fe;
-  --kanban-primary-strong: #9cc4ff;
-  --kanban-primary-soft: #142849;
-  --kanban-text-primary: #f7fbff;
-  --kanban-text-secondary: #a9b5c6;
-  --kanban-muted: #748197;
-  --kanban-success: #4ade80;
-  --kanban-success-soft: #12321f;
-  --kanban-warning: #fbbf24;
-  --kanban-warning-soft: #3a2b0c;
-  --kanban-error: #fb7185;
-  --kanban-error-soft: #3a1720;
-  --kanban-error-surface: #3a1720;
-  --kanban-p1-surface: #3a2b0c;
-  --kanban-hint-bg: #0f2a1b;
-  --kanban-hint-border: #2f8552;
-  --kanban-hint-text: #86efac;
-  --kanban-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.36);
-  --kanban-shadow-md: 0 14px 34px rgba(0, 0, 0, 0.34);
-  --kanban-shadow-lg: 0 28px 68px rgba(0, 0, 0, 0.44);
-  --kanban-focus-ring: 0 0 0 3px rgba(110, 168, 254, 0.2);
+  --kanban-bg: #000000;
+  --kanban-bg-soft: #111113;
+  --kanban-surface: #1c1c1e;
+  --kanban-surface-raised: rgba(28, 28, 30, 0.88);
+  --kanban-surface-muted: #2c2c2e;
+  --kanban-glass: rgba(28, 28, 30, 0.74);
+  --kanban-border: rgba(235, 235, 245, 0.14);
+  --kanban-border-strong: rgba(235, 235, 245, 0.24);
+  --kanban-primary: #0a84ff;
+  --kanban-primary-strong: #5eb0ff;
+  --kanban-primary-soft: rgba(10, 132, 255, 0.16);
+  --kanban-text-primary: #f5f5f7;
+  --kanban-text-secondary: #c7c7cc;
+  --kanban-muted: #8e8e93;
+  --kanban-success: #30d158;
+  --kanban-success-soft: rgba(48, 209, 88, 0.16);
+  --kanban-warning: #ffd60a;
+  --kanban-warning-soft: rgba(255, 214, 10, 0.14);
+  --kanban-error: #ff453a;
+  --kanban-error-soft: rgba(255, 69, 58, 0.16);
+  --kanban-error-surface: rgba(255, 69, 58, 0.12);
+  --kanban-p1-surface: rgba(255, 214, 10, 0.12);
+  --kanban-hint-bg: rgba(48, 209, 88, 0.14);
+  --kanban-hint-border: rgba(48, 209, 88, 0.34);
+  --kanban-hint-text: #86ef9f;
+  --kanban-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.28);
+  --kanban-shadow-md: 0 14px 34px rgba(0, 0, 0, 0.32);
+  --kanban-shadow-lg: 0 28px 68px rgba(0, 0, 0, 0.5);
+  --kanban-focus-ring: 0 0 0 4px rgba(10, 132, 255, 0.24);
   --kanban-radius-sm: 8px;
-  --kanban-radius-md: 12px;
-  --kanban-radius-lg: 16px;
-  --kanban-transition: 180ms ease;
+  --kanban-radius-md: 10px;
+  --kanban-radius-lg: 14px;
+  --kanban-transition: 180ms cubic-bezier(0.2, 0.8, 0.2, 1);
   --el-color-primary: var(--kanban-primary);
   --el-color-primary-light-3: #8bbaff;
   --el-color-primary-light-5: #5f8dcc;
@@ -172,11 +172,12 @@
   min-height: 36px;
   border-radius: var(--kanban-radius-sm);
   font-weight: 600;
+  letter-spacing: 0;
 }
 
 .el-button--primary,
 .action-primary {
-  box-shadow: 0 8px 18px rgba(37, 99, 235, 0.2);
+  box-shadow: 0 8px 18px rgba(0, 122, 255, 0.18);
 }
 
 .el-button--primary:hover,
@@ -219,6 +220,7 @@
   background: var(--kanban-surface-raised);
   border-color: var(--kanban-border);
   box-shadow: var(--kanban-shadow-sm);
+  border-radius: var(--kanban-radius-sm);
 }
 
 .el-table {
@@ -237,7 +239,7 @@
 .el-message-box {
   border: 1px solid var(--kanban-border);
   border-radius: var(--kanban-radius-lg);
-  background: var(--kanban-glass);
+  background: var(--kanban-surface-raised);
   box-shadow: var(--kanban-shadow-lg);
   backdrop-filter: blur(18px) saturate(145%);
 }

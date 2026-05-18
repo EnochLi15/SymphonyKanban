@@ -81,3 +81,34 @@ export const writeIssueEvent = (
     "INSERT INTO issue_events (id, issue_id, event_type, payload, created_at) VALUES (?, ?, ?, ?, ?)",
   ).run(randomUUID(), issueId, eventType, JSON.stringify(payload), now);
 };
+
+export const transitionIssueStatus = (
+  issueId: string,
+  status: string,
+  eventType = "status_changed",
+): IssueDTO | null => {
+  const now = new Date().toISOString();
+  db.prepare("UPDATE issues SET status = ?, updated_at = ? WHERE id = ?").run(
+    status,
+    now,
+    issueId,
+  );
+  const snapshot = getIssueById(issueId);
+  if (snapshot) {
+    writeIssueEvent(issueId, eventType, snapshot);
+  }
+  return snapshot;
+};
+
+export const claimNextTodoIssue = (): IssueDTO | null => {
+  const tx = db.transaction(() => {
+    const row = db
+      .prepare(
+        "SELECT id FROM issues WHERE status = 'Todo' AND deleted_at IS NULL ORDER BY COALESCE(priority, 1) ASC, created_at ASC LIMIT 1",
+      )
+      .get() as { id: string } | undefined;
+    if (!row) return null;
+    return transitionIssueStatus(row.id, "InProgress", "scheduler_claimed");
+  });
+  return tx();
+};

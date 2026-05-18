@@ -10,15 +10,14 @@ html {
 
 body {
   margin: 0;
-  background:
-    radial-gradient(circle at top left, rgba(37, 99, 235, 0.1), transparent 34rem),
-    linear-gradient(135deg, var(--kanban-bg), var(--kanban-bg-soft));
+  background: var(--kanban-bg);
   color: var(--kanban-text-primary);
-  font-family: "Inter", "DM Sans", "Space Grotesk", system-ui, -apple-system,
-    sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Inter",
+    "Helvetica Neue", Arial, sans-serif;
   font-size: 14px;
-  line-height: 1.5;
+  line-height: 1.55;
   text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
 }
 
 * {
@@ -30,6 +29,22 @@ input,
 textarea,
 select {
   font: inherit;
+}
+
+button {
+  touch-action: manipulation;
+}
+
+button,
+[role="button"],
+.el-button,
+.el-menu-item {
+  cursor: pointer;
+}
+
+:focus-visible {
+  outline: none;
+  box-shadow: var(--kanban-focus-ring);
 }
 
 ::selection {

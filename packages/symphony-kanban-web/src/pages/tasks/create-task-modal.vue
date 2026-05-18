@@ -9,8 +9,13 @@
     >
       <template #header>
         <div class="dialog-header">
-          <div class="dialog-title">新建任务</div>
-          <el-button class="dialog-close" text @click="visible = false">✕</el-button>
+          <div>
+            <div class="dialog-title">新建任务</div>
+            <div class="dialog-subtitle">创建后会进入 Backlog 等待规划</div>
+          </div>
+          <el-button class="dialog-close" text aria-label="关闭" @click="visible = false">
+            ×
+          </el-button>
         </div>
       </template>
 
@@ -101,10 +106,11 @@
         </el-button>
         <el-button
           class="action-button action-primary"
+          type="primary"
           :loading="submitting"
           @click="submitForm"
         >
-          创建并规划 (Create &amp; Plan)
+          创建任务
         </el-button>
       </div>
     </el-dialog>
@@ -229,20 +235,23 @@ onMounted(loadOptions);
 <style scoped>
 .modal-wrapper {
   width: 100%;
-  min-height: 900px;
+  min-height: 100dvh;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(0, 0, 0, 0.67);
-  font-family: "Inter", "DM Sans", "Space Grotesk", system-ui, -apple-system,
-    sans-serif;
+  background: rgba(0, 0, 0, 0.34);
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Inter",
+    "Helvetica Neue", Arial, sans-serif;
+  backdrop-filter: blur(16px);
 }
 
 .task-dialog :deep(.el-dialog) {
-  width: 600px;
-  border-radius: 12px;
-  background: var(--kanban-surface);
+  width: min(620px, calc(100vw - 32px));
+  border-radius: var(--kanban-radius-lg);
+  background: var(--kanban-surface-raised);
   border: 1px solid var(--kanban-border);
+  box-shadow: var(--kanban-shadow-lg);
+  backdrop-filter: blur(18px) saturate(145%);
 }
 
 .task-dialog :deep(.el-dialog__header) {
@@ -251,10 +260,10 @@ onMounted(loadOptions);
 }
 
 .task-dialog :deep(.el-dialog__body) {
-  padding: 24px;
+  padding: 20px 24px 24px;
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 20px;
 }
 
 .dialog-header {
@@ -264,12 +273,23 @@ onMounted(loadOptions);
 }
 
 .dialog-title {
-  font-size: 24px;
+  font-size: 22px;
   font-weight: 700;
   color: var(--kanban-text-primary);
 }
 
+.dialog-subtitle {
+  margin-top: 4px;
+  color: var(--kanban-muted);
+  font-size: 13px;
+}
+
 .dialog-close {
+  min-width: 36px;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border-radius: 999px;
   color: var(--kanban-text-secondary);
   font-size: 20px;
 }
@@ -281,23 +301,22 @@ onMounted(loadOptions);
 }
 
 .task-form :deep(.el-form-item__label) {
-  font-size: 14px;
-  font-weight: 400;
-  color: var(--kanban-text-primary);
+  font-size: 13px;
+  font-weight: 650;
+  color: var(--kanban-text-secondary);
 }
 
 .field-input :deep(.el-input__wrapper),
 .field-select :deep(.el-input__wrapper),
 .field-textarea :deep(.el-textarea__inner) {
-  background: transparent;
-  border: 1px solid var(--kanban-border);
-  box-shadow: none;
+  background: var(--kanban-surface);
+  box-shadow: 0 0 0 1px var(--kanban-border) inset;
 }
 
 .field-input :deep(.el-input__inner),
 .field-select :deep(.el-input__inner),
 .field-textarea :deep(.el-textarea__inner) {
-  color: var(--kanban-text-secondary);
+  color: var(--kanban-text-primary);
   font-size: 14px;
 }
 
@@ -319,10 +338,15 @@ onMounted(loadOptions);
   align-items: center;
   justify-content: space-between;
   gap: 16px;
+  padding: 14px 16px;
+  border: 1px solid var(--kanban-border);
+  border-radius: var(--kanban-radius-sm);
+  background: var(--kanban-surface);
 }
 
 .schedule-label {
   font-size: 14px;
+  font-weight: 600;
   color: var(--kanban-text-primary);
 }
 
@@ -334,12 +358,13 @@ onMounted(loadOptions);
 .dialog-actions {
   display: flex;
   justify-content: flex-end;
-  gap: 16px;
+  gap: 10px;
 }
 
 .action-button {
-  padding: 10px 24px;
-  border-radius: 6px;
+  min-height: 38px;
+  padding: 9px 18px;
+  border-radius: var(--kanban-radius-sm);
   font-size: 14px;
   font-weight: 600;
 }
@@ -352,5 +377,11 @@ onMounted(loadOptions);
   background: var(--kanban-primary);
   color: #ffffff;
   border: none;
+}
+
+@media (max-width: 720px) {
+  .form-row {
+    flex-direction: column;
+  }
 }
 </style>

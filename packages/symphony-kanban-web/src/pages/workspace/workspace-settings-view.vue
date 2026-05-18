@@ -63,51 +63,48 @@ onMounted(() => {
 .settings-content {
   display: flex;
   flex-direction: column;
-  gap: 24px;
-  padding: 32px;
+  gap: 18px;
+  padding: 26px 28px;
   box-sizing: border-box;
 }
 
 .page-title {
   margin: 0;
-  font-size: 24px;
+  font-size: 28px;
   font-weight: 700;
 }
 
 .settings-form {
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 14px;
   flex: 1;
 }
 
 .section-title {
-  font-size: 16px;
-  font-weight: 600;
+  color: var(--kanban-text-secondary);
+  font-size: 13px;
+  font-weight: 650;
 }
 
 .path-box :deep(.el-input__wrapper) {
   background: var(--kanban-surface);
-  border: 1px solid var(--kanban-border);
-  box-shadow: none;
+  box-shadow: 0 0 0 1px var(--kanban-border) inset;
 }
 
 .path-box :deep(.el-input__inner) {
-  color: var(--kanban-text-secondary);
+  color: var(--kanban-text-primary);
   font-size: 14px;
-  font-family: "Space Grotesk", "Inter", "DM Sans", system-ui, -apple-system,
-    sans-serif;
+  font-family: "SF Mono", ui-monospace, Menlo, Consolas, monospace;
 }
 
 .context-box :deep(.el-textarea__inner) {
   background: var(--kanban-surface);
-  border: 1px solid var(--kanban-border);
-  color: var(--kanban-text-secondary);
+  color: var(--kanban-text-primary);
   line-height: 1.6;
   font-size: 15px;
-  font-family: "Space Grotesk", "Inter", "DM Sans", system-ui, -apple-system,
-    sans-serif;
-  box-shadow: none;
+  font-family: "SF Mono", ui-monospace, Menlo, Consolas, monospace;
+  box-shadow: 0 0 0 1px var(--kanban-border) inset;
 }
 
 .button-row {
@@ -116,8 +113,8 @@ onMounted(() => {
 }
 
 .save-button {
-  border-radius: 6px;
-  padding: 12px 24px;
+  border-radius: var(--kanban-radius-sm);
+  padding: 10px 20px;
   background: var(--kanban-primary);
   color: #ffffff;
   font-size: 14px;

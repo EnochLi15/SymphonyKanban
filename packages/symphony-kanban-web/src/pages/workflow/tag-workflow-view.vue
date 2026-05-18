@@ -234,8 +234,8 @@ onMounted(() => {
 .tag-content {
   display: flex;
   flex-direction: column;
-  gap: 24px;
-  padding: 32px 36px;
+  gap: 18px;
+  padding: 26px 28px;
   box-sizing: border-box;
   flex: 1;
   min-height: 0;
@@ -243,34 +243,34 @@ onMounted(() => {
 
 .page-title {
   margin: 0;
-  font-size: 24px;
-  font-weight: 800;
+  font-size: 28px;
+  font-weight: 700;
   letter-spacing: 0;
 }
 
 .config-panel {
   display: flex;
-  gap: 24px;
+  gap: 14px;
   flex: 1;
   min-width: 0;
 }
 
 .tag-col {
   width: 200px;
-  padding: 20px;
-  border-radius: var(--kanban-radius-lg);
-  background: var(--kanban-surface-raised);
+  padding: 14px;
+  border-radius: var(--kanban-radius-md);
+  background: var(--kanban-surface-muted);
   border: 1px solid var(--kanban-border);
   display: flex;
   flex-direction: column;
   gap: 12px;
   box-sizing: border-box;
-  box-shadow: var(--kanban-shadow-sm);
+  box-shadow: none;
 }
 
 .tag-col-title {
   font-size: 14px;
-  font-weight: 600;
+  font-weight: 650;
   color: var(--kanban-text-secondary);
 }
 
@@ -280,13 +280,13 @@ onMounted(() => {
   padding: 8px 10px;
   border-radius: var(--kanban-radius-sm);
   font-size: 14px;
-  font-weight: 700;
+  font-weight: 600;
   text-align: left;
   justify-content: flex-start;
 }
 
 .tag-item--active {
-  box-shadow: 0 8px 16px rgba(37, 99, 235, 0.18);
+  box-shadow: var(--kanban-shadow-sm);
 }
 
 .tag-item--add {
@@ -307,7 +307,7 @@ onMounted(() => {
 
 .params-row {
   display: flex;
-  gap: 24px;
+  gap: 14px;
 }
 
 .param-block {
@@ -319,7 +319,8 @@ onMounted(() => {
 
 .param-label {
   font-size: 13px;
-  font-weight: 600;
+  font-weight: 650;
+  color: var(--kanban-text-secondary);
 }
 
 .param-input :deep(.el-input__wrapper) {
@@ -333,15 +334,15 @@ onMounted(() => {
 
 .form-label {
   font-size: 13px;
-  font-weight: 600;
+  font-weight: 650;
+  color: var(--kanban-text-secondary);
 }
 
 .form-area :deep(.el-textarea__inner) {
-  background: var(--kanban-surface-raised);
+  background: var(--kanban-surface);
   color: var(--kanban-text-primary);
   font-size: 14px;
-  font-family: "Space Grotesk", "Inter", "DM Sans", system-ui, -apple-system,
-    sans-serif;
+  font-family: "SF Mono", ui-monospace, Menlo, Consolas, monospace;
   line-height: 1.5;
 }
 
@@ -353,8 +354,9 @@ onMounted(() => {
 }
 
 .hooks-title {
-  font-size: 16px;
-  font-weight: 700;
+  font-size: 14px;
+  font-weight: 650;
+  color: var(--kanban-text-secondary);
 }
 
 .hook-block {
@@ -365,7 +367,7 @@ onMounted(() => {
 
 .hook-label {
   font-size: 13px;
-  font-weight: 600;
+  font-weight: 650;
 }
 
 .hook-label--success {
@@ -377,11 +379,11 @@ onMounted(() => {
 }
 
 .hook-area :deep(.el-textarea__inner) {
-  background: var(--kanban-surface-raised);
+  background: var(--kanban-surface);
   border-radius: var(--kanban-radius-sm);
   color: var(--kanban-text-primary);
   font-size: 12px;
-  font-family: "Fira Code", "Space Grotesk", monospace;
+  font-family: "SF Mono", ui-monospace, Menlo, Consolas, monospace;
   line-height: 1.5;
   padding: 12px;
   min-height: 200px;
@@ -404,9 +406,9 @@ onMounted(() => {
 
 .hook-action {
   border-radius: var(--kanban-radius-sm);
-  padding: 14px;
+  padding: 10px 14px;
   font-size: 14px;
-  font-weight: 700;
+  font-weight: 600;
 }
 
 .hook-action--delete {

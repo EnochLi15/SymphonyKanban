@@ -1,8 +1,8 @@
-import { createOpencodeClient } from "@opencode-ai/sdk";
+import { createOpencode, createOpencodeClient } from "@opencode-ai/sdk";
 
 type RunInput = {
   baseUrl: string;
-  issue: { id: string; title: string; description?: string; tags?: string[] };
+  issue: { id: string; title: string; description?: string | null; tags?: string[] };
   context: string | null;
   workspacePath: string | null;
   workflowContext?: string | null;
@@ -12,6 +12,41 @@ type RunInput = {
 type RunResult = {
   status: "succeeded" | "failed";
   errorSummary?: string;
+};
+
+type EmbeddedOpencodeServer = {
+  url: string;
+  close(): void;
+};
+
+let embeddedOpencodeServer: EmbeddedOpencodeServer | null = null;
+
+export const __resetEmbeddedOpencodeServer = () => {
+  embeddedOpencodeServer?.close();
+  embeddedOpencodeServer = null;
+};
+
+const isDefaultLocalOpencodeBase = (baseUrl: string) => {
+  try {
+    const url = new URL(baseUrl);
+    return (
+      (url.hostname === "localhost" || url.hostname === "127.0.0.1") &&
+      (url.port === "4096" || (!url.port && url.protocol === "http:"))
+    );
+  } catch {
+    return false;
+  }
+};
+
+const isFetchFailure = (error: unknown) =>
+  error instanceof Error && /fetch failed|ECONNREFUSED/.test(error.message);
+
+const ensureEmbeddedOpencodeBase = async () => {
+  if (!embeddedOpencodeServer) {
+    const opencode = await createOpencode();
+    embeddedOpencodeServer = opencode.server;
+  }
+  return embeddedOpencodeServer.url;
 };
 
 export const resolveOpencodeProjectId = (
@@ -65,13 +100,26 @@ const isQuestionLike = (text: string) => {
 };
 
 export const runOpencode = async (input: RunInput): Promise<RunResult> => {
-  const client = createOpencodeClient({ baseUrl: input.baseUrl });
+  let client = createOpencodeClient({ baseUrl: input.baseUrl });
   const prompt = buildPrompt(input);
 
-  const session = await client.session.create({
-    body: { title: input.issue.title },
-    query: input.workspacePath ? { directory: input.workspacePath } : undefined,
-  });
+  const createSession = () =>
+    client.session.create({
+      body: { title: input.issue.title },
+      query: input.workspacePath ? { directory: input.workspacePath } : undefined,
+    });
+
+  let session: Awaited<ReturnType<typeof createSession>>;
+  try {
+    session = await createSession();
+  } catch (error) {
+    if (!isFetchFailure(error) || !isDefaultLocalOpencodeBase(input.baseUrl)) {
+      throw error;
+    }
+    const embeddedBaseUrl = await ensureEmbeddedOpencodeBase();
+    client = createOpencodeClient({ baseUrl: embeddedBaseUrl });
+    session = await createSession();
+  }
   const sessionId = (session as any).data?.id ?? (session as any).id;
   const rawProjectId =
     (session as any).data?.projectID ?? (session as any).projectID ?? null;
@@ -82,7 +130,6 @@ export const runOpencode = async (input: RunInput): Promise<RunResult> => {
     input.workspacePath,
     sessionDirectory,
   );
-  // Record session id for debugging/correlation.
   await input.onArtifact("session", sessionId, "opencode session id");
   if (projectId) {
     await input.onArtifact("opencode_project", projectId, "opencode project id");
@@ -167,12 +214,10 @@ export const runOpencode = async (input: RunInput): Promise<RunResult> => {
           query: input.workspacePath ? { directory: input.workspacePath } : undefined,
         });
         const messages = (messagesRes as any).data ?? messagesRes ?? [];
-        const latestTextMessage = [...messages]
-          .reverse()
-          .find((msg: any) => {
-            const parts = msg?.parts ?? [];
-            return parts.some((part: any) => part.type === "text" && part.text);
-          });
+        const latestTextMessage = [...messages].reverse().find((msg: any) => {
+          const parts = msg?.parts ?? [];
+          return parts.some((part: any) => part.type === "text" && part.text);
+        });
         const parts = latestTextMessage?.parts ?? [];
         const textParts = parts
           .filter((part: any) => part.type === "text")
@@ -209,13 +254,12 @@ export const runOpencode = async (input: RunInput): Promise<RunResult> => {
     }
   }
 
-  let summaryText: string | null = null;
   const messagesRes = await client.session.messages({
     path: { id: sessionId },
     query: input.workspacePath ? { directory: input.workspacePath } : undefined,
   });
   const messages = (messagesRes as any).data ?? messagesRes ?? [];
-  summaryText = extractSummary(messages);
+  let summaryText = extractSummary(messages);
   if (!summaryText) {
     summaryText = errorSummary
       ? `Execution failed: ${errorSummary}`

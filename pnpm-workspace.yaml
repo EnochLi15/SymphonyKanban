@@ -1,2 +1,5 @@
 packages:
-  - "packages/*"
+  - "packages/symphony-kanban-api"
+  - "packages/symphony-kanban-db"
+  - "packages/symphony-kanban-shared"
+  - "packages/symphony-kanban-web"
