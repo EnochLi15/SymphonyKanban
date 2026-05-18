@@ -9,6 +9,15 @@ const __dirname = path.dirname(__filename);
 const rootDir = path.resolve(__dirname, "..");
 const runtimeDir = path.join(rootDir, ".runtime");
 const pidFile = path.join(runtimeDir, "services.pids");
+const node20Bin = path.join(process.env.HOME ?? "", ".nvm", "versions", "node", "v20.19.0", "bin");
+
+const serviceEnv = (extra = {}) => ({
+  ...process.env,
+  PATH: fs.existsSync(node20Bin)
+    ? `${node20Bin}${path.delimiter}${process.env.PATH ?? ""}`
+    : process.env.PATH,
+  ...extra,
+});
 
 const services = [
   {
@@ -16,6 +25,7 @@ const services = [
     cwd: path.join(rootDir, "packages", "symphony-kanban-api"),
     cmd: "pnpm",
     args: ["dev"],
+    env: { SCHEDULER_ENABLED: "true" },
   },
   {
     name: "web",
@@ -54,14 +64,21 @@ const start = () => {
   }
   ensureRuntime();
   const rows = services.map((service) => {
+    const out = fs.openSync(path.join(runtimeDir, `${service.name}.log`), "a");
+    const err = fs.openSync(path.join(runtimeDir, `${service.name}.err.log`), "a");
     const child = spawn(service.cmd, service.args, {
       cwd: service.cwd,
-      stdio: "inherit",
-      shell: true,
+      detached: true,
+      stdio: ["ignore", out, err],
+      env: serviceEnv(service.env),
     });
+    child.unref();
     return { name: service.name, pid: child.pid };
   });
   writePids(rows);
+  console.log(
+    `Started services. Logs: ${path.relative(rootDir, runtimeDir)}/api.log, ${path.relative(rootDir, runtimeDir)}/web.log`,
+  );
 };
 
 const stop = () => {
@@ -73,10 +90,15 @@ const stop = () => {
   rows.forEach((row) => {
     if (!Number.isNaN(row.pid)) {
       try {
-        process.kill(row.pid, "SIGTERM");
+        process.kill(-row.pid, "SIGTERM");
       } catch (error) {
-        const message = error instanceof Error ? error.message : String(error);
-        console.warn(`Failed to stop ${row.name}: ${message}`);
+        try {
+          process.kill(row.pid, "SIGTERM");
+        } catch (fallbackError) {
+          const message =
+            fallbackError instanceof Error ? fallbackError.message : String(fallbackError);
+          console.warn(`Failed to stop ${row.name}: ${message}`);
+        }
       }
     }
   });
