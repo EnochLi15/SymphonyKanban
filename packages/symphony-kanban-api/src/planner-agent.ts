@@ -214,19 +214,185 @@ type PlannerNoOpResult = {
   reason: string;
 };
 
+type PlannerInsightType =
+  | "backlog-needs-prioritization"
+  | "todo-ready-to-claim"
+  | "in-progress-active"
+  | "in-progress-stale"
+  | "review-waiting-human"
+  | "blocked-needs-recovery";
+
+type PlannerSeverity = "info" | "warning" | "critical";
+
+type PlannerInsight = {
+  issueId: string;
+  title: string;
+  status: string;
+  type: PlannerInsightType;
+  severity: PlannerSeverity;
+  reason: string;
+  recommendedAction: string;
+  sideEffectAllowed: boolean;
+};
+
+type PlannerQueueRisk = {
+  type: "stale_in_progress" | "review_waiting" | "blocked_recovery";
+  severity: PlannerSeverity;
+  title: string;
+  message: string;
+  issueIds: string[];
+};
+
+const STALE_IN_PROGRESS_MS = 24 * 60 * 60 * 1000;
+
+const hoursSince = (now: string, value: string) =>
+  Math.max(0, Math.floor((Date.parse(now) - Date.parse(value)) / 3_600_000));
+
+const buildIssueInsight = (issue: {
+  id: string;
+  title: string;
+  status: string;
+  updatedAt: string;
+}, now: string): PlannerInsight | null => {
+  const staleHours = hoursSince(now, issue.updatedAt);
+  switch (issue.status) {
+    case "Backlog":
+      return {
+        issueId: issue.id,
+        title: issue.title,
+        status: issue.status,
+        type: "backlog-needs-prioritization",
+        severity: "info",
+        reason: "Backlog 任务尚未进入可执行队列，需要保持优先级和描述可判定。",
+        recommendedAction: "确认任务是否已经足够清晰，必要时补充验收标准或调整优先级。",
+        sideEffectAllowed: false,
+      };
+    case "Todo":
+      return {
+        issueId: issue.id,
+        title: issue.title,
+        status: issue.status,
+        type: "todo-ready-to-claim",
+        severity: "info",
+        reason: "Todo 任务已经可以被调度器认领，但本次 Planner 扫描不直接认领任务。",
+        recommendedAction: "保持 Todo 队列可执行，交给 scheduler 按并发和优先级认领。",
+        sideEffectAllowed: false,
+      };
+    case "InProgress":
+      if (Date.parse(now) - Date.parse(issue.updatedAt) >= STALE_IN_PROGRESS_MS) {
+        return {
+          issueId: issue.id,
+          title: issue.title,
+          status: issue.status,
+          type: "in-progress-stale",
+          severity: "warning",
+          reason: `InProgress 任务已 ${staleHours} 小时没有更新，可能需要看护或恢复。`,
+          recommendedAction: "检查最近执行和工作区状态，必要时转为 Blocked 或重新调度。",
+          sideEffectAllowed: false,
+        };
+      }
+      return {
+        issueId: issue.id,
+        title: issue.title,
+        status: issue.status,
+        type: "in-progress-active",
+        severity: "info",
+        reason: "InProgress 任务最近有更新，暂不需要 Planner 介入。",
+        recommendedAction: "继续观察执行结果。",
+        sideEffectAllowed: false,
+      };
+    case "Review":
+      return {
+        issueId: issue.id,
+        title: issue.title,
+        status: issue.status,
+        type: "review-waiting-human",
+        severity: "warning",
+        reason: "Review 任务正在等待人类验收或反馈。",
+        recommendedAction: "进入 Review 页面检查执行产物，决定通过、退回或补充要求。",
+        sideEffectAllowed: false,
+      };
+    case "Blocked":
+      return {
+        issueId: issue.id,
+        title: issue.title,
+        status: issue.status,
+        type: "blocked-needs-recovery",
+        severity: "critical",
+        reason: "Blocked 任务需要恢复动作；该规则允许创建通知和最小人类接入悬赏。",
+        recommendedAction: "查看阻塞摘要，处理或回答 Planner 创建的人类接入请求。",
+        sideEffectAllowed: true,
+      };
+    default:
+      return null;
+  }
+};
+
+const buildQueueRisks = (insights: PlannerInsight[]): PlannerQueueRisk[] => {
+  const staleInProgress = insights.filter(
+    (insight) => insight.type === "in-progress-stale",
+  );
+  const reviewWaiting = insights.filter(
+    (insight) => insight.type === "review-waiting-human",
+  );
+  const blockedRecovery = insights.filter(
+    (insight) => insight.type === "blocked-needs-recovery",
+  );
+  return [
+    staleInProgress.length > 0
+      ? {
+          type: "stale_in_progress" as const,
+          severity: "warning" as const,
+          title: "InProgress 工作停滞",
+          message: `${staleInProgress.length} 个进行中任务长时间未更新。`,
+          issueIds: staleInProgress.map((insight) => insight.issueId),
+        }
+      : null,
+    reviewWaiting.length > 0
+      ? {
+          type: "review_waiting" as const,
+          severity: "warning" as const,
+          title: "Review 等待人类动作",
+          message: `${reviewWaiting.length} 个任务等待验收或反馈。`,
+          issueIds: reviewWaiting.map((insight) => insight.issueId),
+        }
+      : null,
+    blockedRecovery.length > 0
+      ? {
+          type: "blocked_recovery" as const,
+          severity: "critical" as const,
+          title: "Blocked 任务需要恢复",
+          message: `${blockedRecovery.length} 个阻塞任务需要恢复或人类接入。`,
+          issueIds: blockedRecovery.map((insight) => insight.issueId),
+        }
+      : null,
+  ].filter((risk): risk is PlannerQueueRisk => risk !== null);
+};
+
 const recommendNextStep = ({
   createdActions,
   skippedActions,
   noOpResults,
   inspectedIssues,
+  queueRisks,
 }: {
   createdActions: PlannerCreatedAction[];
   skippedActions: PlannerSkippedAction[];
   noOpResults: PlannerNoOpResult[];
   inspectedIssues: PlannerInspectedIssue[];
+  queueRisks: PlannerQueueRisk[];
 }) => {
   if (createdActions.some((action) => action.type === "bounty")) {
     return "查看人类接入队列，推动新建悬赏获得最小可验收答案。";
+  }
+  if (queueRisks.some((risk) => risk.type === "blocked_recovery")) {
+    return "优先处理 Blocked 队列中的恢复风险。";
+  }
+  if (queueRisks.some((risk) => risk.type === "stale_in_progress")) {
+    return "检查停滞的 InProgress 任务，决定继续看护、退回还是转为 Blocked。";
+  }
+  if (queueRisks.some((risk) => risk.type === "review_waiting")) {
+    return "处理等待人类动作的 Review 任务，释放已完成工作。";
   }
   if (skippedActions.some((action) => action.type === "bounty")) {
     return "继续处理已有悬赏，避免为同一个阻塞点创建重复求助。";
@@ -255,11 +421,14 @@ export const runPlannerCycle = ({
     ? listIssues().filter((issue) => issueFilter.has(issue.id))
     : listIssues();
   const inspectedIssues: PlannerInspectedIssue[] = [];
+  const insights: PlannerInsight[] = [];
   const createdActions: PlannerCreatedAction[] = [];
   const skippedActions: PlannerSkippedAction[] = [];
   const noOpResults: PlannerNoOpResult[] = [];
 
   for (const issue of issues) {
+    const insight = buildIssueInsight(issue, now);
+    if (insight) insights.push(insight);
     const inspected: PlannerInspectedIssue = {
       issueId: issue.id,
       title: issue.title,
@@ -425,10 +594,13 @@ export const runPlannerCycle = ({
   const createdNotifications = createdActions.filter(
     (action) => action.type === "notification",
   ).length;
+  const queueRisks = buildQueueRisks(insights);
 
   return {
     generatedAt: now,
     inspectedIssues,
+    insights,
+    queueRisks,
     createdActions,
     skippedActions,
     noOpResults,
@@ -437,11 +609,14 @@ export const runPlannerCycle = ({
       skippedActions,
       noOpResults,
       inspectedIssues,
+      queueRisks,
     }),
     createdBounties,
     createdNotifications,
     summary: {
       inspectedIssues: inspectedIssues.length,
+      insights: insights.length,
+      queueRisks: queueRisks.length,
       createdActions: createdActions.length,
       skippedActions: skippedActions.length,
       noOpResults: noOpResults.length,

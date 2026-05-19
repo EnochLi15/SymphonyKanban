@@ -21,12 +21,12 @@ const insertBlockedIssue = () => {
   return id;
 };
 
-const insertIssue = (status: string) => {
+const insertIssue = (status: string, updatedAt = new Date().toISOString()) => {
   const id = `planner-${Math.random().toString(36).slice(2)}`;
   const now = new Date().toISOString();
   db.prepare(
     "INSERT INTO issues (id, title, description, status, priority, workspace_id, created_at, updated_at) VALUES (?, ?, ?, ?, 2, 'wksp-default', ?, ?)",
-  ).run(id, `Planner ${status} issue`, "无需人类接入", status, now, now);
+  ).run(id, `Planner ${status} issue`, "无需人类接入", status, now, updatedAt);
   createdIssueIds.push(id);
   return id;
 };
@@ -84,6 +84,23 @@ describe("planner bounty flow", () => {
           }),
         );
         expect(body.data.recommendedNextStep).toContain("人类接入队列");
+        expect(body.data.insights).toEqual(
+          expect.arrayContaining([
+            expect.objectContaining({
+              issueId,
+              type: "blocked-needs-recovery",
+              sideEffectAllowed: true,
+            }),
+          ]),
+        );
+        expect(body.data.queueRisks).toEqual(
+          expect.arrayContaining([
+            expect.objectContaining({
+              type: "blocked_recovery",
+              issueIds: expect.arrayContaining([issueId]),
+            }),
+          ]),
+        );
       });
 
     const bountyResponse = await request(app).get("/bounties").expect(200);
@@ -198,6 +215,48 @@ describe("planner bounty flow", () => {
           }),
         ]);
         expect(body.data.recommendedNextStep).toContain("没有需要创建");
+      });
+  });
+
+  it("emits explainable insights across the full work queue without side effects", async () => {
+    const staleUpdatedAt = new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString();
+    const issueIds = [
+      insertIssue("Backlog"),
+      insertIssue("Todo"),
+      insertIssue("InProgress", staleUpdatedAt),
+      insertIssue("Review"),
+    ];
+
+    await request(app)
+      .post("/planner/cycle")
+      .send({ issueIds })
+      .expect(200)
+      .expect(({ body }) => {
+        expect(body.data.createdActions).toEqual([]);
+        expect(body.data.skippedActions).toEqual([]);
+        expect(body.data.insights).toEqual(
+          expect.arrayContaining([
+            expect.objectContaining({ type: "backlog-needs-prioritization" }),
+            expect.objectContaining({ type: "todo-ready-to-claim" }),
+            expect.objectContaining({ type: "in-progress-stale" }),
+            expect.objectContaining({ type: "review-waiting-human" }),
+          ]),
+        );
+        expect(body.data.insights.every(
+          (insight: { sideEffectAllowed: boolean }) => !insight.sideEffectAllowed,
+        )).toBe(true);
+        expect(body.data.queueRisks).toEqual(
+          expect.arrayContaining([
+            expect.objectContaining({
+              type: "stale_in_progress",
+              issueIds: expect.arrayContaining([issueIds[2]]),
+            }),
+            expect.objectContaining({
+              type: "review_waiting",
+              issueIds: expect.arrayContaining([issueIds[3]]),
+            }),
+          ]),
+        );
       });
   });
 

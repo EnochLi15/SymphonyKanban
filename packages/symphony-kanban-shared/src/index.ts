@@ -207,9 +207,36 @@ export interface PlannerNoOpResultDTO {
   reason: string;
 }
 
+export interface PlannerInsightDTO {
+  issueId: string;
+  title: string;
+  status: IssueStatus;
+  type:
+    | "backlog-needs-prioritization"
+    | "todo-ready-to-claim"
+    | "in-progress-active"
+    | "in-progress-stale"
+    | "review-waiting-human"
+    | "blocked-needs-recovery";
+  severity: "info" | "warning" | "critical";
+  reason: string;
+  recommendedAction: string;
+  sideEffectAllowed: boolean;
+}
+
+export interface PlannerQueueRiskDTO {
+  type: "stale_in_progress" | "review_waiting" | "blocked_recovery";
+  severity: "info" | "warning" | "critical";
+  title: string;
+  message: string;
+  issueIds: string[];
+}
+
 export interface PlannerScanReportDTO {
   generatedAt: string;
   inspectedIssues: PlannerInspectedIssueDTO[];
+  insights: PlannerInsightDTO[];
+  queueRisks: PlannerQueueRiskDTO[];
   createdActions: PlannerCreatedActionDTO[];
   skippedActions: PlannerSkippedActionDTO[];
   noOpResults: PlannerNoOpResultDTO[];
@@ -218,6 +245,8 @@ export interface PlannerScanReportDTO {
   createdNotifications: number;
   summary: {
     inspectedIssues: number;
+    insights: number;
+    queueRisks: number;
     createdActions: number;
     skippedActions: number;
     noOpResults: number;

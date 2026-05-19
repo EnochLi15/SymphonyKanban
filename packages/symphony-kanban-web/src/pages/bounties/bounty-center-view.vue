@@ -66,6 +66,14 @@
 
         <div class="report-metrics">
           <div class="report-metric">
+            <span>洞察</span>
+            <strong>{{ lastPlannerReport.summary.insights }}</strong>
+          </div>
+          <div class="report-metric">
+            <span>队列风险</span>
+            <strong>{{ lastPlannerReport.summary.queueRisks }}</strong>
+          </div>
+          <div class="report-metric">
             <span>检查任务</span>
             <strong>{{ lastPlannerReport.summary.inspectedIssues }}</strong>
           </div>
@@ -83,6 +91,18 @@
           </div>
         </div>
 
+        <div v-if="lastPlannerReport.queueRisks.length > 0" class="risk-list">
+          <article
+            v-for="risk in lastPlannerReport.queueRisks"
+            :key="risk.type"
+            class="risk-row"
+            :class="`risk-row--${risk.severity}`"
+          >
+            <strong>{{ risk.title }}</strong>
+            <span>{{ risk.message }}</span>
+          </article>
+        </div>
+
         <div class="report-grid">
           <article
             v-for="issue in lastPlannerReport.inspectedIssues"
@@ -92,6 +112,10 @@
             <div class="report-issue-head">
               <span>{{ issue.status }}</span>
               <strong>{{ issue.title }}</strong>
+            </div>
+            <div v-if="insightByIssueId.get(issue.issueId)" class="insight-row">
+              <span>{{ insightByIssueId.get(issue.issueId)?.type }}</span>
+              <p>{{ insightByIssueId.get(issue.issueId)?.reason }}</p>
             </div>
             <div class="rule-list">
               <div
@@ -467,6 +491,13 @@ const approvedMemories = computed(() =>
 const totalPoints = computed(() =>
   points.value.reduce((total, point) => total + point.points, 0),
 );
+const insightByIssueId = computed(() => {
+  const rows = new Map<string, PlannerScanReportDTO["insights"][number]>();
+  for (const insight of lastPlannerReport.value?.insights ?? []) {
+    rows.set(insight.issueId, insight);
+  }
+  return rows;
+});
 
 const plannerState = computed(() => {
   if (criticalCount.value > 0) {
@@ -1000,7 +1031,7 @@ onMounted(load);
 
 .report-metrics {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(118px, 1fr));
   gap: 10px;
   margin-top: 14px;
 }
@@ -1031,6 +1062,43 @@ onMounted(load);
   margin-top: 12px;
 }
 
+.risk-list {
+  display: grid;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.risk-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 12px;
+  border: 1px solid var(--kanban-border);
+  border-left: 3px solid var(--kanban-primary);
+  border-radius: var(--kanban-radius-sm);
+  background: var(--kanban-surface-muted);
+}
+
+.risk-row--warning {
+  border-left-color: var(--kanban-warning);
+}
+
+.risk-row--critical {
+  border-left-color: var(--kanban-error);
+}
+
+.risk-row strong {
+  font-size: 13px;
+}
+
+.risk-row span {
+  color: var(--kanban-text-secondary);
+  font-size: 12px;
+  line-height: 1.45;
+  text-align: right;
+}
+
 .report-issue {
   min-width: 0;
   padding: 12px;
@@ -1057,6 +1125,28 @@ onMounted(load);
   min-width: 0;
   font-size: 13px;
   line-height: 1.35;
+}
+
+.insight-row {
+  margin-top: 10px;
+  padding: 9px;
+  border: 1px solid var(--kanban-border);
+  border-radius: var(--kanban-radius-sm);
+  background: var(--kanban-primary-soft);
+}
+
+.insight-row span {
+  display: block;
+  color: var(--kanban-primary);
+  font-size: 11px;
+  font-weight: 760;
+}
+
+.insight-row p {
+  margin: 5px 0 0;
+  color: var(--kanban-text-secondary);
+  font-size: 12px;
+  line-height: 1.45;
 }
 
 .rule-list {
@@ -1565,6 +1655,15 @@ onMounted(load);
 
   .report-next {
     max-width: none;
+    text-align: left;
+  }
+
+  .risk-row {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .risk-row span {
     text-align: left;
   }
 }
