@@ -26,6 +26,22 @@ export type IssueDTO = {
   deletedAt: string | null;
 };
 
+type IssueEventRow = {
+  id: string;
+  issue_id: string;
+  event_type: string;
+  payload: string | null;
+  created_at: string;
+};
+
+export type IssueEventDTO = {
+  id: string;
+  issueId: string;
+  eventType: string;
+  payload: unknown | null;
+  createdAt: string;
+};
+
 const getTagNames = (issueId: string): string[] => {
   const tags = db
     .prepare(
@@ -46,6 +62,14 @@ const mapIssueRow = (row: IssueRow): IssueDTO => ({
   createdAt: row.created_at,
   updatedAt: row.updated_at,
   deletedAt: row.deleted_at,
+});
+
+const mapIssueEventRow = (row: IssueEventRow) => ({
+  id: row.id,
+  issueId: row.issue_id,
+  eventType: row.event_type,
+  payload: row.payload ? (JSON.parse(row.payload) as unknown) : null,
+  createdAt: row.created_at,
 });
 
 export const getIssueById = (id: string): IssueDTO | null => {
@@ -74,13 +98,20 @@ export const listIssues = (): IssueDTO[] => {
 export const writeIssueEvent = (
   issueId: string,
   eventType: string,
-  payload: IssueDTO,
+  payload: unknown,
 ) => {
   const now = new Date().toISOString();
   db.prepare(
     "INSERT INTO issue_events (id, issue_id, event_type, payload, created_at) VALUES (?, ?, ?, ?, ?)",
   ).run(randomUUID(), issueId, eventType, JSON.stringify(payload), now);
 };
+
+export const listIssueEvents = (issueId: string) =>
+  (
+    db
+      .prepare("SELECT * FROM issue_events WHERE issue_id = ? ORDER BY created_at DESC")
+      .all(issueId) as IssueEventRow[]
+  ).map(mapIssueEventRow);
 
 export const transitionIssueStatus = (
   issueId: string,

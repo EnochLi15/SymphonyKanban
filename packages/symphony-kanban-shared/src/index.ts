@@ -19,6 +19,14 @@ export interface IssueDTO {
   deletedAt?: string | null;
 }
 
+export interface IssueEventDTO {
+  id: string;
+  issueId: string;
+  eventType: string;
+  payload?: unknown | null;
+  createdAt: string;
+}
+
 export interface TagDTO {
   id: string;
   name: string;

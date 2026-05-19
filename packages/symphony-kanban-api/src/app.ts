@@ -13,6 +13,7 @@ import {
   claimNextTodoIssue,
   getIssueById,
   getIssueByIdIncludingDeleted,
+  listIssueEvents,
   listIssues,
   transitionIssueStatus,
   writeIssueEvent,
@@ -475,7 +476,50 @@ app.post("/bounties/:id/accept", (req, res) => {
     res.status(409).json({ error: "bounty_not_submitted" });
     return;
   }
-  res.json({ data: bounty });
+  const recoveryAction = req.body?.recoveryAction === "retry" ? "retry" : "keep_blocked";
+  const applyToContext = req.body?.applyToContext === true;
+  const recovery = db.transaction(() => {
+    const issue = getIssueById(bounty.issueId);
+    if (!issue) return null;
+    const recoveryNote = [
+      "Human handoff accepted",
+      `Question: ${bounty.question}`,
+      `Answer: ${bounty.response ?? ""}`,
+      `Assignee: ${bounty.assigneeName ?? "unknown"}`,
+      `Decision: ${recoveryAction}`,
+    ].join("\n");
+
+    if (applyToContext) {
+      const nextDescription = [issue.description, recoveryNote]
+        .filter((part): part is string => Boolean(part && part.trim().length > 0))
+        .join("\n\n");
+      db.prepare("UPDATE issues SET description = ?, updated_at = ? WHERE id = ?").run(
+        nextDescription,
+        new Date().toISOString(),
+        issue.id,
+      );
+    }
+
+    if (recoveryAction === "retry") {
+      db.prepare("UPDATE issues SET status = 'Todo', updated_at = ? WHERE id = ?").run(
+        new Date().toISOString(),
+        issue.id,
+      );
+    }
+
+    const snapshot = getIssueById(issue.id);
+    writeIssueEvent(issue.id, "human_handoff_accepted", {
+      bountyId: bounty.id,
+      recoveryAction,
+      appliedToContext: applyToContext,
+      question: bounty.question,
+      response: bounty.response,
+      assigneeName: bounty.assigneeName,
+      issue: snapshot,
+    });
+    return snapshot;
+  })();
+  res.json({ data: bounty, recovery });
 });
 
 app.post("/bounties/:id/cancel", (req, res) => {
@@ -512,6 +556,15 @@ app.get("/planner/memories", (req, res) => {
 
 app.get("/points", (_req, res) => {
   res.json({ data: listPointLedger() });
+});
+
+app.get("/issues/:id/events", (req, res) => {
+  const issue = getIssueById(req.params.id);
+  if (!issue) {
+    res.status(404).json({ error: "issue not found" });
+    return;
+  }
+  res.json({ data: listIssueEvents(req.params.id) });
 });
 
 app.get("/issues/:id", (req, res) => {
