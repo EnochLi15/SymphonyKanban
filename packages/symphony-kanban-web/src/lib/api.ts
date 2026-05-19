@@ -170,6 +170,11 @@ export const buildApi = (base: string) => ({
     if (!res.ok) throw new Error("planner_cycle_failed");
     return res.json();
   },
+  async getPlannerStatus() {
+    const res = await fetch(`${base}/planner/status`);
+    if (!res.ok) throw new Error("planner_status_failed");
+    return res.json();
+  },
   async listPlannerChatMessages() {
     const res = await fetch(`${base}/planner/chat`);
     if (!res.ok) throw new Error("planner_chat_failed");

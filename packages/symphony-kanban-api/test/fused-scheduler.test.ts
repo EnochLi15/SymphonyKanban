@@ -42,6 +42,7 @@ beforeEach(() => {
 });
 
 afterEach(() => {
+  db.prepare("DELETE FROM planner_runs").run();
   for (const id of createdIssueIds) {
     db.prepare("DELETE FROM issues WHERE id = ?").run(id);
   }
@@ -133,5 +134,30 @@ describe("fused scheduler", () => {
     expect(issue.status).toBe("Blocked");
     expect(execution.status).toBe("failed");
     expect(execution.errorSummary).toBe("needs_user_input");
+  });
+
+  it("records automatic planner runs when watch mode is enabled", async () => {
+    const oldEnabled = process.env.PLANNER_AGENT_ENABLED;
+    process.env.PLANNER_AGENT_ENABLED = "true";
+    try {
+      const scheduler = createScheduler({
+        opencodeBase: "http://opencode",
+        runner: async () => ({ status: "succeeded" }),
+      });
+
+      await scheduler.tick();
+
+      const run = db
+        .prepare("SELECT trigger, inspected_issues FROM planner_runs ORDER BY started_at DESC LIMIT 1")
+        .get() as { trigger: string; inspected_issues: number } | undefined;
+      expect(run).toEqual(
+        expect.objectContaining({
+          trigger: "automatic",
+        }),
+      );
+    } finally {
+      if (oldEnabled === undefined) delete process.env.PLANNER_AGENT_ENABLED;
+      else process.env.PLANNER_AGENT_ENABLED = oldEnabled;
+    }
   });
 });

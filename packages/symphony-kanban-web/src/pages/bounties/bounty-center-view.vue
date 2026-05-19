@@ -298,6 +298,40 @@
             </div>
           </section>
 
+          <section class="side-section">
+            <div class="side-head">
+              <div>
+                <h2 class="side-title">看护状态</h2>
+                <div class="side-subtitle">
+                  {{ plannerWatchStatus?.enabled ? "自动看护中" : "仅手动响应" }}
+                </div>
+              </div>
+              <span class="agent-badge">{{ plannerWatchStatus?.enabled ? "Watch" : "Manual" }}</span>
+            </div>
+            <div class="run-list">
+              <div class="run-meta">
+                <span>上次运行</span>
+                <strong>{{ plannerWatchStatus?.lastRunAt ? relativeTime(plannerWatchStatus.lastRunAt) : "暂无" }}</strong>
+              </div>
+              <div class="run-meta">
+                <span>下次预计</span>
+                <strong>{{ plannerWatchStatus?.nextExpectedRunAt ? relativeTime(plannerWatchStatus.nextExpectedRunAt) : "未计划" }}</strong>
+              </div>
+              <article
+                v-for="run in plannerWatchStatus?.recentRuns ?? []"
+                :key="run.id"
+                class="run-row"
+              >
+                <div>
+                  <strong>{{ run.trigger === "automatic" ? "自动" : "手动" }}</strong>
+                  <span>{{ relativeTime(run.finishedAt) }}</span>
+                </div>
+                <p>{{ run.recommendedNextStep }}</p>
+              </article>
+              <div v-if="!plannerWatchStatus?.recentRuns.length" class="empty-text">暂无运行历史</div>
+            </div>
+          </section>
+
           <section class="side-section side-section--alerts">
             <div class="side-head">
               <div>
@@ -463,6 +497,7 @@ import type {
   PlannerNotificationDTO,
   PlannerRuleOutcome,
   PlannerScanReportDTO,
+  PlannerWatchStatusDTO,
   PointLedgerDTO,
 } from "symphony-kanban-shared";
 import AppShell from "../../components/AppShell.vue";
@@ -480,6 +515,7 @@ const memories = ref<PlannerMemoryDTO[]>([]);
 const points = ref<PointLedgerDTO[]>([]);
 const chatMessages = ref<PlannerChatMessageDTO[]>([]);
 const lastPlannerReport = ref<PlannerScanReportDTO | null>(null);
+const plannerWatchStatus = ref<PlannerWatchStatusDTO | null>(null);
 const loading = ref(false);
 const plannerRunning = ref(false);
 const submitting = ref(false);
@@ -664,18 +700,20 @@ const contributors = computed(() => {
 const load = async () => {
   loading.value = true;
   try {
-    const [bountyRes, notificationRes, memoryRes, pointRes, chatRes] = await Promise.all([
+    const [bountyRes, notificationRes, memoryRes, pointRes, chatRes, statusRes] = await Promise.all([
       api.listBounties(),
       api.listPlannerNotifications(),
       api.listPlannerMemories(),
       api.listPointLedger(),
       api.listPlannerChatMessages(),
+      api.getPlannerStatus(),
     ]);
     bounties.value = bountyRes.data ?? [];
     notifications.value = notificationRes.data ?? [];
     memories.value = memoryRes.data ?? [];
     points.value = pointRes.data ?? [];
     chatMessages.value = chatRes.data ?? [];
+    plannerWatchStatus.value = statusRes.data ?? null;
   } catch (error) {
     ElMessage.error("加载规划控制台失败");
   } finally {
@@ -1680,6 +1718,47 @@ onMounted(load);
 .score-row strong {
   color: var(--kanban-success);
   font-variant-numeric: tabular-nums;
+}
+
+.run-list {
+  display: grid;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.run-meta,
+.run-row > div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.run-meta {
+  color: var(--kanban-text-secondary);
+  font-size: 12px;
+}
+
+.run-row {
+  padding: 9px;
+  border: 1px solid var(--kanban-border);
+  border-radius: var(--kanban-radius-sm);
+  background: var(--kanban-surface-muted);
+}
+
+.run-row strong {
+  font-size: 12px;
+}
+
+.run-row span,
+.run-row p {
+  color: var(--kanban-text-secondary);
+  font-size: 12px;
+}
+
+.run-row p {
+  margin: 5px 0 0;
+  line-height: 1.45;
 }
 
 .confidence-track {

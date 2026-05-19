@@ -260,3 +260,25 @@ export interface PlannerScanReportDTO {
     noOpResults: number;
   };
 }
+
+export interface PlannerRunDTO {
+  id: string;
+  trigger: "manual" | "automatic";
+  startedAt: string;
+  finishedAt: string;
+  inspectedIssues: number;
+  createdActions: number;
+  skippedActions: number;
+  noOpResults: number;
+  queueRisks: number;
+  recommendedNextStep: string;
+}
+
+export interface PlannerWatchStatusDTO {
+  enabled: boolean;
+  lastRunAt?: string | null;
+  lastAutomaticRunAt?: string | null;
+  nextExpectedRunAt?: string | null;
+  pollIntervalMs: number;
+  recentRuns: PlannerRunDTO[];
+}

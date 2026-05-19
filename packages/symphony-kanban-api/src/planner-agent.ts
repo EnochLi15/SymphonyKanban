@@ -13,6 +13,7 @@ import {
   listNotifications,
   listPlannerChatMessages,
   listPointLedger,
+  recordPlannerRun,
 } from "./planner-store.js";
 
 export const isPlannerEnabled = () =>
@@ -412,9 +413,11 @@ const recommendNextStep = ({
 export const runPlannerCycle = ({
   now = new Date().toISOString(),
   issueIds,
+  trigger = "manual",
 }: {
   now?: string;
   issueIds?: string[];
+  trigger?: "manual" | "automatic";
 } = {}) => {
   const issueFilter = issueIds ? new Set(issueIds) : null;
   const issues = issueFilter
@@ -596,7 +599,7 @@ export const runPlannerCycle = ({
   ).length;
   const queueRisks = buildQueueRisks(insights);
 
-  return {
+  const report = {
     generatedAt: now,
     inspectedIssues,
     insights,
@@ -622,6 +625,18 @@ export const runPlannerCycle = ({
       noOpResults: noOpResults.length,
     },
   };
+  recordPlannerRun({
+    trigger,
+    startedAt: now,
+    finishedAt: new Date().toISOString(),
+    inspectedIssues: report.summary.inspectedIssues,
+    createdActions: report.summary.createdActions,
+    skippedActions: report.summary.skippedActions,
+    noOpResults: report.summary.noOpResults,
+    queueRisks: report.summary.queueRisks,
+    recommendedNextStep: report.recommendedNextStep,
+  });
+  return report;
 };
 
 const buildPlannerStateSummary = () => {

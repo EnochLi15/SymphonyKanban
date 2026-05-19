@@ -32,6 +32,7 @@ import {
 import { listOpenCodeProjects } from "./opencode-client.js";
 import { BUILTIN_TAG_NAMES } from "./builtin-tags.js";
 import {
+  isPlannerEnabled,
   PlannerModelNotConfiguredError,
   runPlannerChat,
   runPlannerCycle,
@@ -46,6 +47,7 @@ import {
   listMemories,
   listNotifications,
   listPointLedger,
+  listPlannerRuns,
   markNotificationRead,
   submitBounty,
   updateMemory,
@@ -375,6 +377,30 @@ app.post("/planner/cycle", (req, res) => {
     ? req.body.issueIds.filter((id: unknown) => typeof id === "string")
     : undefined;
   res.json({ data: runPlannerCycle({ issueIds }) });
+});
+
+app.get("/planner/status", (_req, res) => {
+  const runs = listPlannerRuns(12);
+  const lastRun = runs[0] ?? null;
+  const lastAutomaticRun = runs.find((run) => run.trigger === "automatic") ?? null;
+  const settings = getSchedulerSettings();
+  const enabled = isPlannerEnabled();
+  const nextExpectedRunAt =
+    enabled && lastAutomaticRun
+      ? new Date(
+          Date.parse(lastAutomaticRun.finishedAt) + settings.pollIntervalMs,
+        ).toISOString()
+      : null;
+  res.json({
+    data: {
+      enabled,
+      lastRunAt: lastRun?.finishedAt ?? null,
+      lastAutomaticRunAt: lastAutomaticRun?.finishedAt ?? null,
+      nextExpectedRunAt,
+      pollIntervalMs: settings.pollIntervalMs,
+      recentRuns: runs,
+    },
+  });
 });
 
 app.get("/planner/chat", (_req, res) => {

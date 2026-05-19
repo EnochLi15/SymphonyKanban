@@ -6,6 +6,7 @@ import {
 } from "./execution-store.js";
 import { claimNextTodoIssue, transitionIssueStatus } from "./issue-store.js";
 import { runOpencode } from "./opencode-runner.js";
+import { isPlannerEnabled, runPlannerCycle } from "./planner-agent.js";
 import { getSchedulerSettings } from "./settings-store.js";
 import { listTags } from "./tag-store.js";
 import { listWorkspaces } from "./workspace-store.js";
@@ -70,6 +71,9 @@ export const createScheduler = ({
 
   const tick = async () => {
     const settings = readSettings();
+    if (isPlannerEnabled()) {
+      runPlannerCycle({ trigger: "automatic" });
+    }
     if (running >= settings.maxConcurrency) return;
 
     const issue = claimNextTodoIssue();
