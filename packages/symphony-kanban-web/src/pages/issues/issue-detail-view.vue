@@ -46,6 +46,21 @@
               @blur="flushDescription"
             />
           </div>
+
+          <div v-if="handoffEvents.length > 0" class="field-card evidence-card">
+            <div class="field-label">人类接入证据</div>
+            <article
+              v-for="event in handoffEvents"
+              :key="event.id"
+              class="evidence-row"
+            >
+              <div class="evidence-topline">
+                <strong>{{ recoveryActionLabel(event) }}</strong>
+                <span>{{ relativeTime(event.createdAt) }}</span>
+              </div>
+              <p>{{ handoffResponse(event) }}</p>
+            </article>
+          </div>
         </div>
 
         <aside class="side-col">
@@ -136,7 +151,7 @@ import { buildApi } from "../../lib/api";
 import { resolveIssueDetailRoute } from "./issue-detail-routing";
 import OpencodeSessionPanel from "../../components/opencode-session-panel.vue";
 import { resolveOpencodeSessionUrl } from "../sessions/opencode-session";
-import type { ReviewDTO } from "symphony-kanban-shared";
+import type { IssueEventDTO, ReviewDTO } from "symphony-kanban-shared";
 
 const router = useRouter();
 const route = useRoute();
@@ -151,6 +166,7 @@ const tagOptions = ref<Array<{ id: string; name: string }>>([]);
 const executionStatus = ref<string | null>(null);
 const executionId = ref<string | null>(null);
 const review = ref<ReviewDTO | null>(null);
+const issueEvents = ref<IssueEventDTO[]>([]);
 let executionTimer: number | undefined;
 let issueStatusTimer: number | undefined;
 
@@ -187,6 +203,35 @@ const isEditing = computed(
     draft.title !== snapshot.value.title ||
     draft.description !== snapshot.value.description,
 );
+const handoffEvents = computed(() =>
+  issueEvents.value.filter((event) => event.eventType === "human_handoff_accepted"),
+);
+
+const eventPayload = (event: IssueEventDTO) =>
+  event.payload && typeof event.payload === "object"
+    ? (event.payload as Record<string, unknown>)
+    : {};
+
+const recoveryActionLabel = (event: IssueEventDTO) =>
+  eventPayload(event).recoveryAction === "retry" ? "已验收并重试" : "已验收并保持阻塞";
+
+const handoffResponse = (event: IssueEventDTO) => {
+  const response = eventPayload(event).response;
+  return typeof response === "string" && response.trim().length > 0
+    ? response
+    : "已记录人类接入答案。";
+};
+
+const relativeTime = (value: string) => {
+  const timestamp = Date.parse(value);
+  if (Number.isNaN(timestamp)) return "";
+  const minutes = Math.max(0, Math.floor((Date.now() - timestamp) / 60000));
+  if (minutes < 1) return "刚刚";
+  if (minutes < 60) return `${minutes} 分钟前`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours} 小时前`;
+  return `${Math.floor(hours / 24)} 天前`;
+};
 
 const ensureRouteForStatus = (status: string) => {
   const target = resolveIssueDetailRoute({
@@ -234,6 +279,16 @@ const loadIssue = async () => {
     router.push("/board");
   } finally {
     loading.value = false;
+  }
+};
+
+const loadIssueEvents = async () => {
+  if (!route.params.id) return;
+  try {
+    const response = await api.listIssueEvents(String(route.params.id));
+    issueEvents.value = response.data ?? [];
+  } catch (error) {
+    issueEvents.value = [];
   }
 };
 
@@ -386,7 +441,7 @@ const goBack = () => {
 };
 
 onMounted(async () => {
-  await Promise.all([loadOptions(), loadIssue(), loadExecution()]);
+  await Promise.all([loadOptions(), loadIssue(), loadExecution(), loadIssueEvents()]);
   await loadReview();
   executionTimer = window.setInterval(() => {
     pollExecution();
@@ -502,6 +557,40 @@ const sessionUrl = computed(() =>
 .status-text {
   font-size: 14px;
   color: var(--kanban-text-secondary);
+}
+
+.evidence-card {
+  gap: 12px;
+}
+
+.evidence-row {
+  padding: 10px;
+  border: 1px solid var(--kanban-border);
+  border-left: 3px solid var(--kanban-primary);
+  border-radius: var(--kanban-radius-sm);
+  background: var(--kanban-surface-muted);
+}
+
+.evidence-topline {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  color: var(--kanban-text-secondary);
+  font-size: 12px;
+}
+
+.evidence-topline strong {
+  color: var(--kanban-text-primary);
+  font-size: 13px;
+}
+
+.evidence-row p {
+  margin: 8px 0 0;
+  color: var(--kanban-text-secondary);
+  font-size: 13px;
+  line-height: 1.5;
+  white-space: pre-wrap;
 }
 
 .danger-button {

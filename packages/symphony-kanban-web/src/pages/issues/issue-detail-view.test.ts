@@ -42,6 +42,7 @@ vi.mock("../../lib/api", () => ({
       },
     })),
     listExecutions: vi.fn(async () => ({ data: [] })),
+    listIssueEvents: vi.fn(async () => ({ data: [] })),
     getExecutionStatus: vi.fn(async () => ({ data: { status: "running" } })),
     getReview: vi.fn(async () => ({ data: null })),
     updateIssue: vi.fn(async () => ({

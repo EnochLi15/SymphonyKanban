@@ -724,9 +724,29 @@ const submitAnswer = async () => {
 };
 
 const accept = async (bounty: BountyTaskDTO) => {
+  let recoveryAction: "retry" | "keep_blocked" = "keep_blocked";
+  try {
+    await ElMessageBox.confirm(
+      "验收后可以把答案写回任务描述并重试，也可以只记录证据并保持阻塞。",
+      "验收人类答案",
+      {
+        confirmButtonText: "写回并重试",
+        cancelButtonText: "保持阻塞",
+        distinguishCancelAndClose: true,
+        type: "info",
+      },
+    );
+    recoveryAction = "retry";
+  } catch (action) {
+    if (action !== "cancel") return;
+  }
+
   acceptingId.value = bounty.id;
   try {
-    await api.acceptBounty(bounty.id);
+    await api.acceptBounty(bounty.id, {
+      recoveryAction,
+      applyToContext: recoveryAction === "retry",
+    });
     await load();
     ElMessage.success("已验收并记忆");
   } catch (error) {

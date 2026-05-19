@@ -5,6 +5,11 @@ export const buildApi = (base: string) => ({
     if (!res.ok) throw new Error("not_found");
     return res.json();
   },
+  async listIssueEvents(id: string) {
+    const res = await fetch(`${base}/issues/${id}/events`);
+    if (!res.ok) throw new Error("issue_events_failed");
+    return res.json();
+  },
   async listIssues() {
     const res = await fetch(`${base}/issues`);
     if (!res.ok) throw new Error("load_failed");
@@ -203,9 +208,14 @@ export const buildApi = (base: string) => ({
     if (!res.ok) throw new Error("bounty_submit_failed");
     return res.json();
   },
-  async acceptBounty(id: string) {
+  async acceptBounty(
+    id: string,
+    payload?: { recoveryAction?: "retry" | "keep_blocked"; applyToContext?: boolean },
+  ) {
     const res = await fetch(`${base}/bounties/${id}/accept`, {
       method: "POST",
+      headers: payload ? { "Content-Type": "application/json" } : undefined,
+      body: payload ? JSON.stringify(payload) : undefined,
     });
     if (!res.ok) throw new Error("bounty_accept_failed");
     return res.json();

@@ -280,6 +280,58 @@ describe("planner bounty flow", () => {
       });
   });
 
+  it("records accepted human answers as recovery evidence and can retry the issue", async () => {
+    const issueId = insertBlockedIssue();
+    const run = await request(app)
+      .post("/planner/cycle")
+      .send({ issueIds: [issueId] })
+      .expect(200);
+    const handoffAction = run.body.data.createdActions.find(
+      (action: { type: string }) => action.type === "bounty",
+    );
+    const handoffId = handoffAction.actionId as string;
+    createdBountyIds.push(handoffId);
+
+    await request(app)
+      .post(`/bounties/${handoffId}/submit`)
+      .send({ assigneeName: "Enoch", response: "补齐 API token 后可以重试。" })
+      .expect(200);
+
+    await request(app)
+      .post(`/bounties/${handoffId}/accept`)
+      .send({ recoveryAction: "retry", applyToContext: true })
+      .expect(200)
+      .expect(({ body }) => {
+        expect(body.data.status).toBe("accepted");
+        expect(body.recovery).toEqual(
+          expect.objectContaining({
+            id: issueId,
+            status: "Todo",
+            description: expect.stringContaining("补齐 API token 后可以重试。"),
+          }),
+        );
+      });
+
+    await request(app)
+      .get(`/issues/${issueId}/events`)
+      .expect(200)
+      .expect(({ body }) => {
+        expect(body.data).toEqual(
+          expect.arrayContaining([
+            expect.objectContaining({
+              eventType: "human_handoff_accepted",
+              payload: expect.objectContaining({
+                bountyId: handoffId,
+                recoveryAction: "retry",
+                appliedToContext: true,
+                response: "补齐 API token 后可以重试。",
+              }),
+            }),
+          ]),
+        );
+      });
+  });
+
   it("emits explainable insights across the full work queue without side effects", async () => {
     const staleUpdatedAt = new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString();
     const issueIds = [
