@@ -189,3 +189,18 @@ CREATE TABLE IF NOT EXISTS point_ledger (
 );
 
 CREATE UNIQUE INDEX IF NOT EXISTS point_ledger_bounty_id_idx ON point_ledger(bounty_id);
+
+CREATE TABLE IF NOT EXISTS planner_runs (
+  id TEXT PRIMARY KEY,
+  trigger TEXT NOT NULL,
+  started_at TEXT NOT NULL,
+  finished_at TEXT NOT NULL,
+  inspected_issues INTEGER NOT NULL,
+  created_actions INTEGER NOT NULL,
+  skipped_actions INTEGER NOT NULL,
+  no_op_results INTEGER NOT NULL,
+  queue_risks INTEGER NOT NULL,
+  recommended_next_step TEXT NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS planner_runs_started_at_idx ON planner_runs(started_at);

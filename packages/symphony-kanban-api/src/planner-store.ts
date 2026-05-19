@@ -68,6 +68,19 @@ type PointRow = {
   created_at: string;
 };
 
+type PlannerRunRow = {
+  id: string;
+  trigger: "manual" | "automatic";
+  started_at: string;
+  finished_at: string;
+  inspected_issues: number;
+  created_actions: number;
+  skipped_actions: number;
+  no_op_results: number;
+  queue_risks: number;
+  recommended_next_step: string;
+};
+
 const mapBountyRow = (row: BountyRow) => ({
   id: row.id,
   issueId: row.issue_id,
@@ -138,6 +151,19 @@ const mapPointRow = (row: PointRow) => ({
   points: row.points,
   reason: row.reason,
   createdAt: row.created_at,
+});
+
+const mapPlannerRunRow = (row: PlannerRunRow) => ({
+  id: row.id,
+  trigger: row.trigger,
+  startedAt: row.started_at,
+  finishedAt: row.finished_at,
+  inspectedIssues: row.inspected_issues,
+  createdActions: row.created_actions,
+  skippedActions: row.skipped_actions,
+  noOpResults: row.no_op_results,
+  queueRisks: row.queue_risks,
+  recommendedNextStep: row.recommended_next_step,
 });
 
 export const listBounties = () =>
@@ -420,3 +446,54 @@ export const listPointLedger = () =>
       .prepare("SELECT * FROM point_ledger ORDER BY created_at DESC")
       .all() as PointRow[]
   ).map(mapPointRow);
+
+export const recordPlannerRun = ({
+  trigger,
+  startedAt,
+  finishedAt,
+  inspectedIssues,
+  createdActions,
+  skippedActions,
+  noOpResults,
+  queueRisks,
+  recommendedNextStep,
+}: {
+  trigger: "manual" | "automatic";
+  startedAt: string;
+  finishedAt: string;
+  inspectedIssues: number;
+  createdActions: number;
+  skippedActions: number;
+  noOpResults: number;
+  queueRisks: number;
+  recommendedNextStep: string;
+}) => {
+  const id = randomUUID();
+  db.prepare(
+    `INSERT INTO planner_runs
+      (id, trigger, started_at, finished_at, inspected_issues, created_actions, skipped_actions, no_op_results, queue_risks, recommended_next_step)
+     VALUES
+      (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+  ).run(
+    id,
+    trigger,
+    startedAt,
+    finishedAt,
+    inspectedIssues,
+    createdActions,
+    skippedActions,
+    noOpResults,
+    queueRisks,
+    recommendedNextStep,
+  );
+  return mapPlannerRunRow(
+    db.prepare("SELECT * FROM planner_runs WHERE id = ?").get(id) as PlannerRunRow,
+  );
+};
+
+export const listPlannerRuns = (limit = 20) =>
+  (
+    db
+      .prepare("SELECT * FROM planner_runs ORDER BY started_at DESC LIMIT ?")
+      .all(limit) as PlannerRunRow[]
+  ).map(mapPlannerRunRow);

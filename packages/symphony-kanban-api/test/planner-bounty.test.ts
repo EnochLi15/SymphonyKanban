@@ -33,6 +33,7 @@ const insertIssue = (status: string, updatedAt = new Date().toISOString()) => {
 };
 
 afterEach(() => {
+  db.prepare("DELETE FROM planner_runs").run();
   for (const bountyId of createdBountyIds) {
     db.prepare("DELETE FROM point_ledger WHERE bounty_id = ?").run(bountyId);
     db.prepare("DELETE FROM planner_memories WHERE source_type = 'bounty' AND source_id = ?").run(
@@ -274,6 +275,25 @@ describe("planner bounty flow", () => {
           }),
         ]);
         expect(body.data.recommendedNextStep).toContain("没有需要创建");
+      });
+  });
+
+  it("records manual planner runs in watch status history", async () => {
+    const issueId = insertIssue("Todo");
+    await request(app).post("/planner/cycle").send({ issueIds: [issueId] }).expect(200);
+
+    await request(app)
+      .get("/planner/status")
+      .expect(200)
+      .expect(({ body }) => {
+        expect(body.data.enabled).toBe(false);
+        expect(body.data.lastRunAt).toBeTruthy();
+        expect(body.data.recentRuns).toEqual([
+          expect.objectContaining({
+            trigger: "manual",
+            inspectedIssues: 1,
+          }),
+        ]);
       });
   });
 

@@ -21,6 +21,7 @@ describe("schema", () => {
     expect(names).toContain("bounty_tasks");
     expect(names).toContain("planner_notifications");
     expect(names).toContain("planner_memories");
+    expect(names).toContain("planner_runs");
     expect(names).toContain("point_ledger");
   });
 
