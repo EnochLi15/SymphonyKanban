@@ -160,4 +160,84 @@ export const buildApi = (base: string) => ({
     if (!res.ok) throw new Error("scheduler_settings_update_failed");
     return res.json();
   },
+  async runPlannerCycle() {
+    const res = await fetch(`${base}/planner/cycle`, { method: "POST" });
+    if (!res.ok) throw new Error("planner_cycle_failed");
+    return res.json();
+  },
+  async listPlannerChatMessages() {
+    const res = await fetch(`${base}/planner/chat`);
+    if (!res.ok) throw new Error("planner_chat_failed");
+    return res.json();
+  },
+  async sendPlannerChatMessage(message: string) {
+    const res = await fetch(`${base}/planner/chat`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ message }),
+    });
+    if (!res.ok) {
+      const errorJson = await res.json().catch(() => ({}));
+      const error = new Error(
+        errorJson.message || errorJson.error || "planner_chat_send_failed",
+      ) as Error & { code?: string };
+      error.code = errorJson.error;
+      throw error;
+    }
+    return res.json();
+  },
+  async listBounties() {
+    const res = await fetch(`${base}/bounties`);
+    if (!res.ok) throw new Error("bounties_failed");
+    return res.json();
+  },
+  async submitBounty(
+    id: string,
+    payload: { assigneeName: string; response: string },
+  ) {
+    const res = await fetch(`${base}/bounties/${id}/submit`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    if (!res.ok) throw new Error("bounty_submit_failed");
+    return res.json();
+  },
+  async acceptBounty(id: string) {
+    const res = await fetch(`${base}/bounties/${id}/accept`, {
+      method: "POST",
+    });
+    if (!res.ok) throw new Error("bounty_accept_failed");
+    return res.json();
+  },
+  async cancelBounty(id: string) {
+    const res = await fetch(`${base}/bounties/${id}/cancel`, {
+      method: "POST",
+    });
+    if (!res.ok) throw new Error("bounty_cancel_failed");
+    return res.json();
+  },
+  async listPlannerNotifications() {
+    const res = await fetch(`${base}/planner/notifications`);
+    if (!res.ok) throw new Error("planner_notifications_failed");
+    return res.json();
+  },
+  async markPlannerNotificationRead(id: string) {
+    const res = await fetch(`${base}/planner/notifications/${id}/read`, {
+      method: "POST",
+    });
+    if (!res.ok) throw new Error("planner_notification_read_failed");
+    return res.json();
+  },
+  async listPlannerMemories(scope?: string) {
+    const query = scope ? `?scope=${encodeURIComponent(scope)}` : "";
+    const res = await fetch(`${base}/planner/memories${query}`);
+    if (!res.ok) throw new Error("planner_memories_failed");
+    return res.json();
+  },
+  async listPointLedger() {
+    const res = await fetch(`${base}/points`);
+    if (!res.ok) throw new Error("points_failed");
+    return res.json();
+  },
 });

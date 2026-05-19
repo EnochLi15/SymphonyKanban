@@ -27,6 +27,10 @@
           <span class="menu-icon menu-icon--workflow" aria-hidden="true"></span>
           工作流
         </el-menu-item>
+        <el-menu-item index="bounties">
+          <span class="menu-icon menu-icon--bounty" aria-hidden="true"></span>
+          规划
+        </el-menu-item>
         <el-menu-item index="settings">
           <span class="menu-icon menu-icon--settings" aria-hidden="true"></span>
           设置
@@ -70,6 +74,7 @@ const activeKey = computed(() => {
   if (route.path.startsWith("/workspaces")) return "workspaces";
   if (route.path.startsWith("/board")) return "boards";
   if (route.path.startsWith("/workflow")) return "tags";
+  if (route.path.startsWith("/bounties")) return "bounties";
   if (route.path.startsWith("/settings")) return "settings";
   return "";
 });
@@ -85,6 +90,9 @@ const handleSelect = (index: string) => {
       break;
     case "tags":
       router.push("/workflow");
+      break;
+    case "bounties":
+      router.push("/bounties");
       break;
     case "settings":
       router.push("/settings");

@@ -11,4 +11,8 @@ describe("routes", () => {
       "error",
     ]);
   });
+
+  it("has a bounty center route", () => {
+    expect(routes.some((route) => route.path === "/bounties")).toBe(true);
+  });
 });

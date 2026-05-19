@@ -60,6 +60,11 @@ export const routes: RouteRecordRaw[] = [
     component: () => import("../pages/workflow/tag-workflow-view.vue"),
   },
   {
+    path: "/bounties",
+    name: "bounties",
+    component: () => import("../pages/bounties/bounty-center-view.vue"),
+  },
+  {
     path: "/workspaces",
     name: "workspaces",
     component: () => import("../pages/workspace/workspace-management-view.vue"),
