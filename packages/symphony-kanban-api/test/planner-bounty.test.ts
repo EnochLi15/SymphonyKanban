@@ -219,6 +219,67 @@ describe("planner bounty flow", () => {
       });
   });
 
+  it("keeps the human handoff flow usable for submit, accept, cancel, and view issue", async () => {
+    const acceptedIssueId = insertBlockedIssue();
+    const canceledIssueId = insertBlockedIssue();
+
+    const acceptedRun = await request(app)
+      .post("/planner/cycle")
+      .send({ issueIds: [acceptedIssueId] })
+      .expect(200);
+    const acceptedAction = acceptedRun.body.data.createdActions.find(
+      (action: { type: string }) => action.type === "bounty",
+    );
+    const acceptedHandoffId = acceptedAction.actionId as string;
+    createdBountyIds.push(acceptedHandoffId);
+
+    await request(app)
+      .get(`/bounties/${acceptedHandoffId}`)
+      .expect(200)
+      .expect(({ body }) => {
+        expect(body.data).toEqual(
+          expect.objectContaining({
+            id: acceptedHandoffId,
+            issueId: acceptedIssueId,
+            status: "open",
+          }),
+        );
+      });
+    await request(app).get(`/issues/${acceptedIssueId}`).expect(200);
+
+    await request(app)
+      .post(`/bounties/${acceptedHandoffId}/submit`)
+      .send({ assigneeName: "Enoch", response: "允许重试并补充缺失权限。" })
+      .expect(200)
+      .expect(({ body }) => {
+        expect(body.data.status).toBe("submitted");
+      });
+    await request(app)
+      .post(`/bounties/${acceptedHandoffId}/accept`)
+      .expect(200)
+      .expect(({ body }) => {
+        expect(body.data.status).toBe("accepted");
+      });
+
+    const canceledRun = await request(app)
+      .post("/planner/cycle")
+      .send({ issueIds: [canceledIssueId] })
+      .expect(200);
+    const canceledAction = canceledRun.body.data.createdActions.find(
+      (action: { type: string }) => action.type === "bounty",
+    );
+    const canceledHandoffId = canceledAction.actionId as string;
+    createdBountyIds.push(canceledHandoffId);
+
+    await request(app)
+      .post(`/bounties/${canceledHandoffId}/cancel`)
+      .expect(200)
+      .expect(({ body }) => {
+        expect(body.data.status).toBe("canceled");
+        expect(body.data.issueId).toBe(canceledIssueId);
+      });
+  });
+
   it("emits explainable insights across the full work queue without side effects", async () => {
     const staleUpdatedAt = new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString();
     const issueIds = [
