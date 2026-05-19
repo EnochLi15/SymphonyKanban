@@ -246,12 +246,12 @@ export const acceptBounty = (id: string, now: string) => {
       `INSERT OR IGNORE INTO planner_memories
         (id, scope, source_type, source_id, title, content, confidence, status, created_at)
        VALUES
-        (?, ?, 'bounty', ?, ?, ?, 0.85, 'approved', ?)`,
+        (?, ?, 'bounty', ?, ?, ?, 0.85, 'candidate', ?)`,
     ).run(
       randomUUID(),
       `issue:${bounty.issueId}`,
       bounty.id,
-      `悬赏解决经验: ${bounty.title}`,
+      `人类接入候选记忆: ${bounty.title}`,
       [
         `问题: ${bounty.question}`,
         `人类答案: ${bounty.response}`,
@@ -370,15 +370,48 @@ export const createPlannerChatMessage = ({
   );
 };
 
-export const listMemories = (scope?: string) => {
-  const rows = scope
-    ? (db
-        .prepare("SELECT * FROM planner_memories WHERE scope = ? ORDER BY created_at DESC")
-        .all(scope) as MemoryRow[])
-    : (db
-        .prepare("SELECT * FROM planner_memories ORDER BY created_at DESC")
-        .all() as MemoryRow[]);
+export const listMemories = (scope?: string, status?: MemoryRow["status"]) => {
+  const clauses: string[] = [];
+  const values: string[] = [];
+  if (scope) {
+    clauses.push("scope = ?");
+    values.push(scope);
+  }
+  if (status) {
+    clauses.push("status = ?");
+    values.push(status);
+  }
+  const where = clauses.length > 0 ? `WHERE ${clauses.join(" AND ")}` : "";
+  const rows = db
+    .prepare(`SELECT * FROM planner_memories ${where} ORDER BY created_at DESC`)
+    .all(...values) as MemoryRow[];
   return rows.map(mapMemoryRow);
+};
+
+export const updateMemory = ({
+  id,
+  title,
+  content,
+  status,
+}: {
+  id: string;
+  title?: string;
+  content?: string;
+  status?: MemoryRow["status"];
+}) => {
+  const current = db
+    .prepare("SELECT * FROM planner_memories WHERE id = ?")
+    .get(id) as MemoryRow | undefined;
+  if (!current) return null;
+  const nextTitle = title?.trim() || current.title;
+  const nextContent = content?.trim() || current.content;
+  const nextStatus = status ?? current.status;
+  db.prepare(
+    "UPDATE planner_memories SET title = ?, content = ?, status = ? WHERE id = ?",
+  ).run(nextTitle, nextContent, nextStatus, id);
+  return mapMemoryRow(
+    db.prepare("SELECT * FROM planner_memories WHERE id = ?").get(id) as MemoryRow,
+  );
 };
 
 export const listPointLedger = () =>

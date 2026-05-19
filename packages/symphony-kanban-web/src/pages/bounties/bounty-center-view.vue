@@ -358,22 +358,49 @@
             <div class="side-head">
               <div>
                 <h2 class="side-title">长期记忆</h2>
-                <div class="side-subtitle">{{ approvedMemories.length }} 条已沉淀</div>
+                <div class="side-subtitle">
+                  {{ candidateMemories.length }} 条候选 · {{ approvedMemories.length }} 条已批准
+                </div>
               </div>
             </div>
             <div class="memory-list">
               <article
-                v-for="memory in approvedMemories"
+                v-for="memory in sortedMemories"
                 :key="memory.id"
                 class="memory-row"
+                :class="`memory-row--${memory.status}`"
               >
-                <div class="memory-title">{{ memory.title }}</div>
+                <div class="memory-title">
+                  <span>{{ memory.title }}</span>
+                  <strong>{{ memoryStatusLabel(memory.status) }}</strong>
+                </div>
                 <div class="memory-content">{{ memory.content }}</div>
                 <div class="confidence-track" aria-hidden="true">
                   <span :style="{ width: `${Math.round(memory.confidence * 100)}%` }"></span>
                 </div>
+                <div class="memory-actions">
+                  <el-button
+                    v-if="memory.status !== 'approved'"
+                    class="inline-action"
+                    text
+                    @click="approveMemory(memory)"
+                  >
+                    批准
+                  </el-button>
+                  <el-button class="inline-action" text @click="editMemory(memory)">
+                    编辑
+                  </el-button>
+                  <el-button
+                    v-if="memory.status !== 'revoked'"
+                    class="inline-action"
+                    text
+                    @click="revokeMemory(memory)"
+                  >
+                    撤销
+                  </el-button>
+                </div>
               </article>
-              <div v-if="approvedMemories.length === 0" class="empty-text">暂无记忆</div>
+              <div v-if="sortedMemories.length === 0" class="empty-text">暂无记忆</div>
             </div>
           </section>
         </aside>
@@ -488,6 +515,17 @@ const criticalCount = computed(
 const approvedMemories = computed(() =>
   memories.value.filter((memory) => memory.status === "approved"),
 );
+const candidateMemories = computed(() =>
+  memories.value.filter((memory) => memory.status === "candidate"),
+);
+const sortedMemories = computed(() => {
+  const rank = { candidate: 0, approved: 1, revoked: 2 };
+  return [...memories.value].sort((left, right) => {
+    const statusDiff = rank[left.status] - rank[right.status];
+    if (statusDiff !== 0) return statusDiff;
+    return Date.parse(right.createdAt) - Date.parse(left.createdAt);
+  });
+});
 const totalPoints = computed(() =>
   points.value.reduce((total, point) => total + point.points, 0),
 );
@@ -787,6 +825,41 @@ const markRead = async (notice: PlannerNotificationDTO) => {
   }
 };
 
+const approveMemory = async (memory: PlannerMemoryDTO) => {
+  try {
+    await api.updatePlannerMemory(memory.id, { status: "approved" });
+    await load();
+  } catch (error) {
+    ElMessage.error("批准记忆失败");
+  }
+};
+
+const revokeMemory = async (memory: PlannerMemoryDTO) => {
+  try {
+    await api.updatePlannerMemory(memory.id, { status: "revoked" });
+    await load();
+  } catch (error) {
+    ElMessage.error("撤销记忆失败");
+  }
+};
+
+const editMemory = async (memory: PlannerMemoryDTO) => {
+  try {
+    const result = await ElMessageBox.prompt("编辑记忆内容", "编辑记忆", {
+      inputValue: memory.content,
+      inputType: "textarea",
+      confirmButtonText: "保存",
+      cancelButtonText: "取消",
+    });
+    await api.updatePlannerMemory(memory.id, {
+      content: String(result.value ?? memory.content),
+    });
+    await load();
+  } catch (error) {
+    if (error !== "cancel") ElMessage.error("编辑记忆失败");
+  }
+};
+
 const goIssue = (id: string) => {
   router.push(`/issues/${id}`);
 };
@@ -826,6 +899,13 @@ const severityLabel = (severity: PlannerNotificationDTO["severity"]) =>
     warning: "风险",
     critical: "关键",
   })[severity];
+
+const memoryStatusLabel = (status: PlannerMemoryDTO["status"]) =>
+  ({
+    candidate: "候选",
+    approved: "已批准",
+    revoked: "已撤销",
+  })[status];
 
 const ruleOutcomeLabel = (outcome: PlannerRuleOutcome) =>
   ({
@@ -1515,6 +1595,19 @@ onMounted(load);
   background: var(--kanban-surface-muted);
 }
 
+.memory-row--candidate {
+  border-color: color-mix(in srgb, var(--kanban-warning) 34%, var(--kanban-border));
+  background: var(--kanban-warning-soft);
+}
+
+.memory-row--approved {
+  border-color: color-mix(in srgb, var(--kanban-success) 34%, var(--kanban-border));
+}
+
+.memory-row--revoked {
+  opacity: 0.62;
+}
+
 .notice-row--critical {
   border-color: color-mix(in srgb, var(--kanban-error) 30%, var(--kanban-border));
   background: var(--kanban-error-soft);
@@ -1542,6 +1635,19 @@ onMounted(load);
   font-weight: 720;
 }
 
+.memory-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.memory-title strong {
+  flex: 0 0 auto;
+  color: var(--kanban-text-secondary);
+  font-size: 11px;
+}
+
 .notice-message {
   margin-top: 5px;
   color: var(--kanban-text-secondary);
@@ -1553,6 +1659,13 @@ onMounted(load);
   min-height: 32px;
   margin-top: 4px;
   padding: 0;
+}
+
+.memory-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 8px;
 }
 
 .score-row {

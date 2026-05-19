@@ -153,9 +153,67 @@ describe("planner bounty flow", () => {
           expect.objectContaining({
             sourceType: "bounty",
             sourceId: bounty.id,
+            status: "candidate",
+          }),
+        );
+      });
+  });
+
+  it("approves, edits, revokes, and filters candidate planner memories", async () => {
+    const issueId = insertBlockedIssue();
+    const run = await request(app)
+      .post("/planner/cycle")
+      .send({ issueIds: [issueId] })
+      .expect(200);
+    const handoffAction = run.body.data.createdActions.find(
+      (action: { type: string }) => action.type === "bounty",
+    );
+    const handoffId = handoffAction.actionId as string;
+    createdBountyIds.push(handoffId);
+
+    await request(app)
+      .post(`/bounties/${handoffId}/submit`)
+      .send({ assigneeName: "Enoch", response: "保留这条答案作为候选记忆。" })
+      .expect(200);
+    await request(app).post(`/bounties/${handoffId}/accept`).expect(200);
+
+    const candidateResponse = await request(app)
+      .get(`/planner/memories?scope=issue:${issueId}&status=candidate`)
+      .expect(200);
+    const memory = candidateResponse.body.data[0];
+    expect(memory).toEqual(
+      expect.objectContaining({
+        sourceId: handoffId,
+        status: "candidate",
+      }),
+    );
+
+    await request(app)
+      .patch(`/planner/memories/${memory.id}`)
+      .send({ content: "编辑后的候选记忆", status: "approved" })
+      .expect(200)
+      .expect(({ body }) => {
+        expect(body.data).toEqual(
+          expect.objectContaining({
+            content: "编辑后的候选记忆",
             status: "approved",
           }),
         );
+      });
+    await request(app)
+      .get(`/planner/memories?scope=issue:${issueId}&status=approved`)
+      .expect(200)
+      .expect(({ body }) => {
+        expect(body.data).toEqual([
+          expect.objectContaining({ id: memory.id, status: "approved" }),
+        ]);
+      });
+    await request(app)
+      .patch(`/planner/memories/${memory.id}`)
+      .send({ status: "revoked" })
+      .expect(200)
+      .expect(({ body }) => {
+        expect(body.data.status).toBe("revoked");
       });
   });
 

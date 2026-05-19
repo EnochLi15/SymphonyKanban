@@ -239,10 +239,25 @@ export const buildApi = (base: string) => ({
     if (!res.ok) throw new Error("planner_notification_read_failed");
     return res.json();
   },
-  async listPlannerMemories(scope?: string) {
-    const query = scope ? `?scope=${encodeURIComponent(scope)}` : "";
+  async listPlannerMemories(scope?: string, status?: string) {
+    const params = new URLSearchParams();
+    if (scope) params.set("scope", scope);
+    if (status) params.set("status", status);
+    const query = params.toString() ? `?${params.toString()}` : "";
     const res = await fetch(`${base}/planner/memories${query}`);
     if (!res.ok) throw new Error("planner_memories_failed");
+    return res.json();
+  },
+  async updatePlannerMemory(
+    id: string,
+    payload: { title?: string; content?: string; status?: string },
+  ) {
+    const res = await fetch(`${base}/planner/memories/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    if (!res.ok) throw new Error("planner_memory_update_failed");
     return res.json();
   },
   async listPointLedger() {

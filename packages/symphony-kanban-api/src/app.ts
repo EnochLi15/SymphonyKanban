@@ -48,6 +48,7 @@ import {
   listPointLedger,
   markNotificationRead,
   submitBounty,
+  updateMemory,
 } from "./planner-store.js";
 
 export const app = express();
@@ -551,7 +552,33 @@ app.post("/planner/notifications/:id/read", (req, res) => {
 
 app.get("/planner/memories", (req, res) => {
   const scope = typeof req.query.scope === "string" ? req.query.scope : undefined;
-  res.json({ data: listMemories(scope) });
+  const status =
+    req.query.status === "candidate" ||
+    req.query.status === "approved" ||
+    req.query.status === "revoked"
+      ? req.query.status
+      : undefined;
+  res.json({ data: listMemories(scope, status) });
+});
+
+app.patch("/planner/memories/:id", (req, res) => {
+  const status =
+    req.body?.status === "candidate" ||
+    req.body?.status === "approved" ||
+    req.body?.status === "revoked"
+      ? req.body.status
+      : undefined;
+  const memory = updateMemory({
+    id: req.params.id,
+    title: typeof req.body?.title === "string" ? req.body.title : undefined,
+    content: typeof req.body?.content === "string" ? req.body.content : undefined,
+    status,
+  });
+  if (!memory) {
+    res.status(404).json({ error: "memory_not_found" });
+    return;
+  }
+  res.json({ data: memory });
 });
 
 app.get("/points", (_req, res) => {
