@@ -2,6 +2,7 @@ import request from "supertest";
 import { afterEach, describe, expect, it } from "vitest";
 import { app } from "../src/app.js";
 import { db } from "../src/db.js";
+import { runPlannerChat } from "../src/planner-agent.js";
 
 const createdIssueIds: string[] = [];
 const createdBountyIds: string[] = [];
@@ -260,7 +261,8 @@ describe("planner bounty flow", () => {
       });
   });
 
-  it("does not fake chat responses when no model provider is configured", async () => {
+  it("runs deterministic planning from chat when no model provider is configured", async () => {
+    const issueId = insertIssue("Todo");
     const oldModel = process.env.MASTRA_PLANNER_MODEL;
     const oldMastraModel = process.env.MASTRA_MODEL;
     const oldOpenAiKey = process.env.OPENAI_API_KEY;
@@ -273,13 +275,21 @@ describe("planner bounty flow", () => {
     delete process.env.MASTRA_PLANNER_MODEL_URL;
 
     try {
-      await request(app)
-        .post("/planner/chat")
-        .send({ message: "运行规划" })
-        .expect(503)
-        .expect(({ body }) => {
-          expect(body.error).toBe("planner_model_not_configured");
-        });
+      const result = await runPlannerChat({
+        message: "运行规划",
+        issueIds: [issueId],
+      });
+      createdChatIds.push(...result.messages.map((message) => message.id));
+      expect(result.report?.summary.inspectedIssues).toBe(1);
+      expect(result.report?.noOpResults[0]).toEqual(
+        expect.objectContaining({ issueId, status: "Todo" }),
+      );
+      expect(result.messages[1]).toEqual(
+        expect.objectContaining({
+          actionType: "planner_cycle_degraded",
+          content: expect.stringContaining("未配置 Planner 大模型"),
+        }),
+      );
     } finally {
       if (oldModel) process.env.MASTRA_PLANNER_MODEL = oldModel;
       if (oldMastraModel) process.env.MASTRA_MODEL = oldMastraModel;
@@ -287,5 +297,38 @@ describe("planner bounty flow", () => {
       if (oldPlannerKey) process.env.MASTRA_PLANNER_MODEL_API_KEY = oldPlannerKey;
       if (oldPlannerUrl) process.env.MASTRA_PLANNER_MODEL_URL = oldPlannerUrl;
     }
+  });
+
+  it("passes the latest scan report to model-backed planner chat", async () => {
+    const issueId = insertIssue("Review");
+    let capturedPrompt = "";
+
+    const result = await runPlannerChat({
+      message: "运行规划",
+      model: "openai/test-planner",
+      issueIds: [issueId],
+      generate: async (prompt) => {
+        capturedPrompt = prompt;
+        return { text: "这次扫描发现 Review 等待人类验收。" };
+      },
+    });
+    createdChatIds.push(...result.messages.map((message) => message.id));
+
+    expect(result.report?.queueRisks).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          type: "review_waiting",
+          issueIds: expect.arrayContaining([issueId]),
+        }),
+      ]),
+    );
+    expect(capturedPrompt).toContain("最新规划扫描报告");
+    expect(capturedPrompt).toContain("review_waiting");
+    expect(result.messages[1]).toEqual(
+      expect.objectContaining({
+        actionType: "planner_cycle_explained",
+        content: "这次扫描发现 Review 等待人类验收。",
+      }),
+    );
   });
 });
