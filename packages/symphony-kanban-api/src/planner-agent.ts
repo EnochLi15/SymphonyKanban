@@ -648,7 +648,13 @@ const buildPlannerStateSummary = () => {
   };
 };
 
-const buildPlannerChatPrompt = (message: string) => {
+export const isPlannerCycleRequest = (message: string) =>
+  /运行规划|跑规划|规划扫描|扫描队列|刷新规划|run planner|scan/i.test(message);
+
+const buildPlannerChatPrompt = (
+  message: string,
+  latestReport?: ReturnType<typeof runPlannerCycle> | null,
+) => {
   const state = buildPlannerStateSummary();
   const history = listPlannerChatMessages(12).map((item) => ({
     role: item.role,
@@ -677,9 +683,16 @@ const buildPlannerChatPrompt = (message: string) => {
     ),
     "最近对话:",
     JSON.stringify(history, null, 2),
+    latestReport
+      ? [
+          "最新规划扫描报告:",
+          JSON.stringify(latestReport, null, 2),
+          "如果用户要求运行规划，请解释这份报告，不要编造另一套扫描结果。",
+        ].join("\n")
+      : "",
     "用户本轮消息:",
     message,
-  ].join("\n\n");
+  ].filter((part) => part.length > 0).join("\n\n");
 };
 
 const extractMastraText = (result: unknown) => {
@@ -708,31 +721,64 @@ export const runPlannerChat = async ({
   message,
   now = new Date().toISOString(),
   model,
+  issueIds,
+  generate,
 }: {
   message: string;
   now?: string;
   model?: MastraModelConfig;
+  issueIds?: string[];
+  generate?: (prompt: string) => Promise<unknown>;
 }) => {
   const cleanMessage = message.trim();
-  const agentModel = model ?? resolvePlannerModelConfig();
-  const agent = createPlannerAgent(agentModel);
   const userMessage = createPlannerChatMessage({
     role: "user",
     content: cleanMessage,
     now,
   });
+  const shouldRunCycle = isPlannerCycleRequest(cleanMessage);
+  const latestReport = shouldRunCycle ? runPlannerCycle({ now, issueIds }) : null;
 
-  const result = await agent.generate(buildPlannerChatPrompt(cleanMessage));
+  let agentModel: MastraModelConfig;
+  try {
+    agentModel = model ?? resolvePlannerModelConfig();
+  } catch (error) {
+    if (shouldRunCycle && error instanceof PlannerModelNotConfiguredError) {
+      const assistantMessage = createPlannerChatMessage({
+        role: "assistant",
+        content: [
+          "已完成确定性规划扫描。",
+          `检查 ${latestReport?.summary.inspectedIssues ?? 0} 个任务，创建 ${latestReport?.summary.createdActions ?? 0} 个动作，跳过 ${latestReport?.summary.skippedActions ?? 0} 个动作。`,
+          latestReport?.recommendedNextStep ? `建议: ${latestReport.recommendedNextStep}` : "",
+          "当前未配置 Planner 大模型，因此只能返回扫描事实，暂不能生成进一步解释。",
+        ].filter((part) => part.length > 0).join("\n"),
+        actionType: "planner_cycle_degraded",
+        metadata: { report: latestReport, degraded: true },
+        now,
+      });
+      return {
+        messages: [userMessage, assistantMessage],
+        history: listPlannerChatMessages(),
+        report: latestReport,
+      };
+    }
+    throw error;
+  }
+
+  const agent = generate ? null : createPlannerAgent(agentModel);
+  const prompt = buildPlannerChatPrompt(cleanMessage, latestReport);
+  const result = generate ? await generate(prompt) : await agent!.generate(prompt);
   const reply = extractMastraText(result);
   const metadata = {
     model: typeof agentModel === "string" ? agentModel : "openai-compatible",
     mastra: extractMastraMetadata(result),
+    report: latestReport,
   };
 
   const assistantMessage = createPlannerChatMessage({
     role: "assistant",
     content: reply,
-    actionType: "mastra_agent_generate",
+    actionType: shouldRunCycle ? "planner_cycle_explained" : "mastra_agent_generate",
     metadata,
     now,
   });
@@ -740,5 +786,6 @@ export const runPlannerChat = async ({
   return {
     messages: [userMessage, assistantMessage],
     history: listPlannerChatMessages(),
+    report: latestReport,
   };
 };
