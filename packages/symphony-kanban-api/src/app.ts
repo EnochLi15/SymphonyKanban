@@ -30,6 +30,24 @@ import {
 } from "./workspace-store.js";
 import { listOpenCodeProjects } from "./opencode-client.js";
 import { BUILTIN_TAG_NAMES } from "./builtin-tags.js";
+import {
+  PlannerModelNotConfiguredError,
+  runPlannerChat,
+  runPlannerCycle,
+} from "./planner-agent.js";
+import {
+  acceptBounty,
+  cancelBounty,
+  createBounty,
+  getBountyById,
+  listBounties,
+  listPlannerChatMessages,
+  listMemories,
+  listNotifications,
+  listPointLedger,
+  markNotificationRead,
+  submitBounty,
+} from "./planner-store.js";
 
 export const app = express();
 app.use(express.json({ limit: "5mb" }));
@@ -348,6 +366,152 @@ app.patch("/settings/scheduler", (req, res) => {
   const now = new Date().toISOString();
   updateSchedulerSettings(maxConcurrency, pollIntervalMs, now);
   res.json({ ok: true });
+});
+
+app.post("/planner/cycle", (req, res) => {
+  const issueIds = Array.isArray(req.body?.issueIds)
+    ? req.body.issueIds.filter((id: unknown) => typeof id === "string")
+    : undefined;
+  res.json({ data: runPlannerCycle({ issueIds }) });
+});
+
+app.get("/planner/chat", (_req, res) => {
+  res.json({ data: listPlannerChatMessages() });
+});
+
+app.post("/planner/chat", async (req, res) => {
+  const { message } = req.body ?? {};
+  if (typeof message !== "string" || message.trim().length === 0) {
+    res.status(400).json({ error: "message required" });
+    return;
+  }
+  try {
+    res.json({ data: await runPlannerChat({ message }) });
+  } catch (error) {
+    if (error instanceof PlannerModelNotConfiguredError) {
+      res.status(503).json({
+        error: "planner_model_not_configured",
+        message: error.message,
+      });
+      return;
+    }
+    // eslint-disable-next-line no-console
+    console.error("Planner chat failed", error);
+    res.status(502).json({
+      error: "planner_agent_failed",
+      message: error instanceof Error ? error.message : String(error),
+    });
+  }
+});
+
+app.get("/bounties", (_req, res) => {
+  res.json({ data: listBounties() });
+});
+
+app.post("/bounties", (req, res) => {
+  const {
+    issueId,
+    title,
+    question,
+    context,
+    acceptanceCriteria,
+    points,
+    createdBy,
+  } = req.body ?? {};
+  if (
+    typeof issueId !== "string" ||
+    typeof title !== "string" ||
+    typeof question !== "string" ||
+    typeof acceptanceCriteria !== "string" ||
+    typeof points !== "number"
+  ) {
+    res.status(400).json({ error: "invalid bounty" });
+    return;
+  }
+  const issue = getIssueById(issueId);
+  if (!issue) {
+    res.status(404).json({ error: "issue not found" });
+    return;
+  }
+  const now = new Date().toISOString();
+  const bounty = createBounty({
+    issueId,
+    title: title.trim(),
+    question: question.trim(),
+    context: typeof context === "string" ? context : null,
+    acceptanceCriteria: acceptanceCriteria.trim(),
+    points,
+    createdBy:
+      typeof createdBy === "string" && createdBy.trim().length > 0
+        ? createdBy.trim()
+        : "user",
+    now,
+  });
+  res.status(201).json({ data: bounty });
+});
+
+app.post("/bounties/:id/submit", (req, res) => {
+  const { assigneeName, response } = req.body ?? {};
+  if (typeof assigneeName !== "string" || typeof response !== "string") {
+    res.status(400).json({ error: "invalid submission" });
+    return;
+  }
+  const bounty = submitBounty(
+    req.params.id,
+    assigneeName.trim(),
+    response.trim(),
+    new Date().toISOString(),
+  );
+  if (!bounty || bounty.status !== "submitted") {
+    res.status(409).json({ error: "bounty_not_open" });
+    return;
+  }
+  res.json({ data: bounty });
+});
+
+app.post("/bounties/:id/accept", (req, res) => {
+  const bounty = acceptBounty(req.params.id, new Date().toISOString());
+  if (!bounty) {
+    res.status(409).json({ error: "bounty_not_submitted" });
+    return;
+  }
+  res.json({ data: bounty });
+});
+
+app.post("/bounties/:id/cancel", (req, res) => {
+  const bounty = cancelBounty(req.params.id, new Date().toISOString());
+  if (!bounty) {
+    res.status(404).json({ error: "bounty_not_found" });
+    return;
+  }
+  res.json({ data: bounty });
+});
+
+app.get("/bounties/:id", (req, res) => {
+  const bounty = getBountyById(req.params.id);
+  if (!bounty) {
+    res.status(404).json({ error: "bounty_not_found" });
+    return;
+  }
+  res.json({ data: bounty });
+});
+
+app.get("/planner/notifications", (_req, res) => {
+  res.json({ data: listNotifications() });
+});
+
+app.post("/planner/notifications/:id/read", (req, res) => {
+  markNotificationRead(req.params.id, new Date().toISOString());
+  res.json({ ok: true });
+});
+
+app.get("/planner/memories", (req, res) => {
+  const scope = typeof req.query.scope === "string" ? req.query.scope : undefined;
+  res.json({ data: listMemories(scope) });
+});
+
+app.get("/points", (_req, res) => {
+  res.json({ data: listPointLedger() });
 });
 
 app.get("/issues/:id", (req, res) => {

@@ -18,6 +18,10 @@ describe("schema", () => {
     expect(names).toContain("execution_artifacts");
     expect(names).toContain("workflow_defs");
     expect(names).toContain("scheduler_settings");
+    expect(names).toContain("bounty_tasks");
+    expect(names).toContain("planner_notifications");
+    expect(names).toContain("planner_memories");
+    expect(names).toContain("point_ledger");
   });
 
   it("adds workspace context columns", () => {
@@ -39,9 +43,9 @@ describe("app", () => {
 describe("issue-store", () => {
   it("returns tags as name list", async () => {
     const { getIssueById } = await import("../src/issue-store.js");
-    const row = db.prepare("SELECT id FROM issues LIMIT 1").get() as
-      | { id: string }
-      | undefined;
+    const row = db
+      .prepare("SELECT id FROM issues WHERE deleted_at IS NULL LIMIT 1")
+      .get() as { id: string } | undefined;
     if (!row) return;
     const issue = getIssueById(row.id);
     expect(issue?.tags).toBeDefined();
