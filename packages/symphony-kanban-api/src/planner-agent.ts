@@ -75,7 +75,7 @@ export const resolvePlannerModelConfig = (): MastraModelConfig => {
 const plannerStateTool = createTool({
   id: "get_planner_state",
   description:
-    "读取 Symphony Planner 当前状态，包括悬赏、通知、记忆、积分和任务概览。回答状态、风险、下一步建议前必须调用。",
+    "读取 Symphony Planner 当前状态，包括人类接入请求、通知、记忆、积分账本和任务概览。回答状态、风险、下一步建议前必须调用。",
   inputSchema: z.object({}),
   execute: async () => buildPlannerStateSummary(),
 });
@@ -83,7 +83,7 @@ const plannerStateTool = createTool({
 const runPlannerCycleTool = createTool({
   id: "run_planner_cycle",
   description:
-    "运行一次 planner 扫描，识别阻塞任务、创建通知和最小悬赏任务。用户要求规划、扫描、检查、刷新时使用。",
+    "运行一次 planner 扫描，识别队列风险、创建通知和最小人类接入请求。用户要求规划、扫描、检查、刷新时使用。",
   inputSchema: z.object({
     issueIds: z.array(z.string()).optional(),
   }),
@@ -93,7 +93,7 @@ const runPlannerCycleTool = createTool({
 const createBountyTool = createTool({
   id: "create_bounty",
   description:
-    "创建一个人类悬赏求助任务。只在问题已经被拆成最小、可验收的求助单元时调用。",
+    "创建一个人类接入请求。只在问题已经被拆成最小、可验收的恢复动作时调用。",
   inputSchema: z.object({
     issueId: z.string(),
     title: z.string(),
@@ -130,7 +130,7 @@ export const createPlannerAgent = (model: MastraModelConfig = resolvePlannerMode
       "你是一个真实的大模型 agent，必须基于工具返回的事实回答；不知道就说不知道并请求更多上下文。",
       "业务事实源是 Symphony API 与 SQLite repository；所有副作用必须走工具或 store 边界。",
       "你自己不实际执行开发任务；执行任务由 scheduler 通过 tmux 调度 claude-glm 完成，你负责规划、看护、识别风险和发起求助。",
-      "把求助拆成一个最小、可验证的人类悬赏任务；不要把未验证的 agent 自述沉淀为事实记忆。",
+      "把求助拆成一个最小、可验证的人类接入请求；不要把未验证的 agent 自述沉淀为事实记忆。",
       "长期记忆只保存可复用的决策、问题模式、人类答案与验收结论。",
       "用户要求扫描、刷新、运行规划时，调用 run_planner_cycle。",
       "用户要求当前状态、风险、队列、积分、记忆时，先调用 get_planner_state。",
@@ -319,7 +319,7 @@ const buildIssueInsight = (issue: {
         status: issue.status,
         type: "blocked-needs-recovery",
         severity: "critical",
-        reason: "Blocked 任务需要恢复动作；该规则允许创建通知和最小人类接入悬赏。",
+        reason: "Blocked 任务需要恢复动作；该规则允许创建通知和最小人类接入请求。",
         recommendedAction: "查看阻塞摘要，处理或回答 Planner 创建的人类接入请求。",
         sideEffectAllowed: true,
       };
@@ -383,7 +383,7 @@ const recommendNextStep = ({
   queueRisks: PlannerQueueRisk[];
 }) => {
   if (createdActions.some((action) => action.type === "bounty")) {
-    return "查看人类接入队列，推动新建悬赏获得最小可验收答案。";
+    return "查看人类接入队列，推动新建接入请求获得最小可验收答案。";
   }
   if (queueRisks.some((risk) => risk.type === "blocked_recovery")) {
     return "优先处理 Blocked 队列中的恢复风险。";
@@ -395,7 +395,7 @@ const recommendNextStep = ({
     return "处理等待人类动作的 Review 任务，释放已完成工作。";
   }
   if (skippedActions.some((action) => action.type === "bounty")) {
-    return "继续处理已有悬赏，避免为同一个阻塞点创建重复求助。";
+    return "继续处理已有接入请求，避免为同一个阻塞点创建重复求助。";
   }
   if (createdActions.some((action) => action.type === "notification")) {
     return "查看 Planner 通知，确认需要关注的队列风险。";
@@ -512,13 +512,13 @@ export const runPlannerCycle = ({
         issueId: issue.id,
         existingActionId: activeBounty.id,
         title: activeBounty.title,
-        reason: "该阻塞任务已有开放或待验收悬赏，避免重复求助。",
+        reason: "该阻塞任务已有开放或待验收人类接入请求，避免重复求助。",
       });
       inspected.matchedRules.push({
         ruleId: "blocked-bounty",
-        label: "阻塞任务悬赏",
+        label: "阻塞任务人类接入",
         outcome: "skipped",
-        reason: "已存在活动悬赏。",
+        reason: "已存在活动人类接入请求。",
         actionType: "bounty",
         actionId: activeBounty.id,
       });
@@ -542,13 +542,13 @@ export const runPlannerCycle = ({
         issueId: issue.id,
         actionId: bounty.id,
         title: bounty.title,
-        reason: "阻塞任务没有活动悬赏，已创建最小人类接入请求。",
+        reason: "阻塞任务没有活动人类接入请求，已创建最小恢复动作。",
       });
       inspected.matchedRules.push({
         ruleId: "blocked-bounty",
-        label: "阻塞任务悬赏",
+        label: "阻塞任务人类接入",
         outcome: "created",
-        reason: "已创建最小悬赏求助。",
+        reason: "已创建最小人类接入请求。",
         actionType: "bounty",
         actionId: bounty.id,
       });
@@ -556,8 +556,8 @@ export const runPlannerCycle = ({
         severity: "info",
         eventType: "bounty_created",
         dedupeKey: `bounty-created:${bounty.id}`,
-        title: `已创建悬赏: ${bounty.title}`,
-        message: `悬赏积分 ${bounty.points}，等待人类补充最小求助单元。`,
+        title: `已创建人类接入: ${bounty.title}`,
+        message: `等待人类补充最小恢复答案；${bounty.points} 分仅用于结算记录。`,
         sourceType: "bounty",
         sourceId: bounty.id,
         now,
@@ -567,14 +567,14 @@ export const runPlannerCycle = ({
           type: "notification",
           issueId: issue.id,
           actionId: bountyNotification.notification?.id ?? null,
-          title: `已创建悬赏: ${bounty.title}`,
-          reason: "新悬赏需要通知操作员接入。",
+          title: `已创建人类接入: ${bounty.title}`,
+          reason: "新人类接入请求需要通知操作员处理。",
         });
         inspected.matchedRules.push({
           ruleId: "bounty-created-notification",
-          label: "悬赏创建通知",
+          label: "人类接入创建通知",
           outcome: "created",
-          reason: "已创建悬赏通知。",
+          reason: "已创建人类接入通知。",
           actionType: "notification",
           actionId: bountyNotification.notification?.id ?? null,
         });
@@ -583,8 +583,8 @@ export const runPlannerCycle = ({
           type: "notification",
           issueId: issue.id,
           existingActionId: bountyNotification.notification?.id ?? null,
-          title: `已创建悬赏: ${bounty.title}`,
-          reason: "悬赏通知已存在，跳过重复创建。",
+          title: `已创建人类接入: ${bounty.title}`,
+          reason: "人类接入通知已存在，跳过重复创建。",
         });
       }
     }

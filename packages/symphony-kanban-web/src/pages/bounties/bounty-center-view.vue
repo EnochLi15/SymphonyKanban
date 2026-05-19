@@ -4,7 +4,7 @@
       <header class="planner-header">
         <div class="planner-heading">
           <div class="eyebrow">Planner Console</div>
-          <h1 class="planner-title">编排规划</h1>
+          <h1 class="planner-title">队列看护</h1>
           <div class="planner-subtitle">
             {{ runnerLabel }} · {{ openCount }} 个待接入 · {{ unreadCount }} 条未读通知
           </div>
@@ -169,7 +169,7 @@
                   <div class="bounty-main">
                     <div class="bounty-kicker">
                       <span>{{ statusLabel(bounty.status) }}</span>
-                      <span>{{ bounty.points }} 分</span>
+                      <span>记账 {{ bounty.points }} 分</span>
                       <span>{{ relativeTime(bounty.createdAt) }}</span>
                     </div>
                     <h3 class="bounty-title">{{ bounty.title }}</h3>
@@ -214,7 +214,7 @@
                     :loading="acceptingId === bounty.id"
                     @click="accept(bounty)"
                   >
-                    验收并发分
+                    验收并记账
                   </el-button>
                   <el-button
                     v-if="bounty.status === 'open' || bounty.status === 'submitted'"
@@ -234,7 +234,7 @@
 
             <el-empty
               v-if="filteredBounties.length === 0"
-              description="没有匹配的悬赏任务"
+              description="没有匹配的人类接入请求"
             />
           </div>
         </section>
@@ -337,8 +337,8 @@
           <section class="side-section">
             <div class="side-head">
               <div>
-                <h2 class="side-title">积分</h2>
-                <div class="side-subtitle">{{ contributors.length }} 人贡献</div>
+                <h2 class="side-title">积分账本</h2>
+                <div class="side-subtitle">二级结算记录 · {{ contributors.length }} 人</div>
               </div>
               <strong class="side-total">{{ totalPoints }}</strong>
             </div>
@@ -350,7 +350,7 @@
                 </div>
                 <strong>+{{ contributor.points }}</strong>
               </div>
-              <div v-if="contributors.length === 0" class="empty-text">暂无积分</div>
+              <div v-if="contributors.length === 0" class="empty-text">暂无结算记录</div>
             </div>
           </section>
 
@@ -513,15 +513,15 @@ const plannerState = computed(() => {
       tone: "warning",
       label: "等待验收",
       title: "人类答案已提交",
-      detail: `${submittedCount.value} 条悬赏可以结算并沉淀记忆`,
+      detail: `${submittedCount.value} 条人类答案可以验收并沉淀记忆`,
     };
   }
   if (openCount.value > 0) {
     return {
       tone: "active",
       label: "接入中",
-      title: "阻塞点正在悬赏",
-      detail: `${openCount.value} 个最小求助单元对外开放`,
+      title: "阻塞点等待人类接入",
+      detail: `${openCount.value} 个最小恢复请求待回答`,
     };
   }
   return {
@@ -534,7 +534,7 @@ const plannerState = computed(() => {
 
 const metrics = computed(() => [
   {
-    label: "活动悬赏",
+    label: "接入请求",
     value: openCount.value + submittedCount.value,
     note: `${submittedCount.value} 个待验收`,
   },
@@ -570,8 +570,8 @@ const pipeline = computed(() => [
   },
   {
     index: "03",
-    label: "悬赏",
-    value: `${openCount.value} 个开放`,
+    label: "人类接入",
+    value: `${openCount.value} 个待回答`,
     active: openCount.value > 0,
   },
   {
@@ -738,8 +738,8 @@ const accept = async (bounty: BountyTaskDTO) => {
 
 const cancel = async (bounty: BountyTaskDTO) => {
   try {
-    await ElMessageBox.confirm("取消后这条悬赏会从活动队列移除。", "取消悬赏", {
-      confirmButtonText: "取消悬赏",
+    await ElMessageBox.confirm("取消后这条人类接入请求会从活动队列移除。", "取消接入请求", {
+      confirmButtonText: "取消请求",
       cancelButtonText: "保留",
       type: "warning",
     });
